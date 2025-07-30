@@ -3,13 +3,285 @@ from .template import GameState, GameRule, Agent
 import random
 import numpy
 import copy
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
 from . import azul_utils as utils
+
+
+@dataclass(frozen=True)
+class ImmutableTileDisplay:
+    """Immutable tile display for factories and center pool."""
+    tiles: Dict[int, int] = field(default_factory=dict)
+    total: int = 0
+    
+    def __post_init__(self):
+        """Initialize tiles dict if not provided."""
+        if not self.tiles:
+            object.__setattr__(self, 'tiles', {tile: 0 for tile in utils.Tile})
+    
+    def reaction_tiles(self, number: int, tile_type: int) -> 'ImmutableTileDisplay':
+        """Create new display with tiles removed."""
+        new_tiles = self.tiles.copy()
+        new_tiles[tile_type] -= number
+        return ImmutableTileDisplay(new_tiles, self.total - number)
+    
+    def add_tiles(self, number: int, tile_type: int) -> 'ImmutableTileDisplay':
+        """Create new display with tiles added."""
+        new_tiles = self.tiles.copy()
+        new_tiles[tile_type] += number
+        return ImmutableTileDisplay(new_tiles, self.total + number)
+
+
+@dataclass(frozen=True)
+class ImmutableAgentState:
+    """Immutable agent state for efficient copying."""
+    id: int
+    score: int = 0
+    lines_number: List[int] = field(default_factory=lambda: [0] * 5)
+    lines_tile: List[int] = field(default_factory=lambda: [-1] * 5)
+    grid_state: Any = field(default_factory=lambda: numpy.zeros((5, 5)))
+    floor: List[int] = field(default_factory=lambda: [0] * 7)
+    floor_tiles: List[int] = field(default_factory=list)
+    number_of: Dict[int, int] = field(default_factory=dict)
+    grid_scheme: Any = field(default_factory=lambda: numpy.zeros((5, 5)))
+    
+    def __post_init__(self):
+        """Initialize grid scheme and number_of dict."""
+        if not self.number_of:
+            object.__setattr__(self, 'number_of', {tile: 0 for tile in utils.Tile})
+        
+        if numpy.array_equal(self.grid_scheme, numpy.zeros((5, 5))):
+            # Initialize grid scheme
+            scheme = numpy.zeros((5, 5))
+            # Set up the grid scheme (this is the same logic as in the original)
+            scheme[0][utils.Tile.BLUE] = 0
+            scheme[1][utils.Tile.BLUE] = 1
+            scheme[2][utils.Tile.BLUE] = 2
+            scheme[3][utils.Tile.BLUE] = 3
+            scheme[4][utils.Tile.BLUE] = 4
+            
+            scheme[1][utils.Tile.WHITE] = 0
+            scheme[2][utils.Tile.WHITE] = 1
+            scheme[3][utils.Tile.WHITE] = 2
+            scheme[4][utils.Tile.WHITE] = 3 
+            scheme[0][utils.Tile.WHITE] = 4
+            
+            scheme[2][utils.Tile.BLACK] = 0 
+            scheme[3][utils.Tile.BLACK] = 1
+            scheme[4][utils.Tile.BLACK] = 2
+            scheme[0][utils.Tile.BLACK] = 3
+            scheme[1][utils.Tile.BLACK] = 4
+            
+            scheme[3][utils.Tile.RED] = 0
+            scheme[4][utils.Tile.RED] = 1
+            scheme[0][utils.Tile.RED] = 2
+            scheme[1][utils.Tile.RED] = 3
+            scheme[2][utils.Tile.RED] = 4
+            
+            scheme[4][utils.Tile.YELLOW] = 0
+            scheme[0][utils.Tile.YELLOW] = 1
+            scheme[1][utils.Tile.YELLOW] = 2
+            scheme[2][utils.Tile.YELLOW] = 3
+            scheme[3][utils.Tile.YELLOW] = 4
+            
+            object.__setattr__(self, 'grid_scheme', scheme)
+    
+    def with_score(self, new_score: int) -> 'ImmutableAgentState':
+        """Create new state with updated score."""
+        return ImmutableAgentState(
+            id=self.id,
+            score=new_score,
+            lines_number=self.lines_number,
+            lines_tile=self.lines_tile,
+            grid_state=self.grid_state,
+            floor=self.floor,
+            floor_tiles=self.floor_tiles,
+            number_of=self.number_of,
+            grid_scheme=self.grid_scheme
+        )
+    
+    def with_lines(self, lines_number: List[int], lines_tile: List[int]) -> 'ImmutableAgentState':
+        """Create new state with updated pattern lines."""
+        return ImmutableAgentState(
+            id=self.id,
+            score=self.score,
+            lines_number=lines_number,
+            lines_tile=lines_tile,
+            grid_state=self.grid_state,
+            floor=self.floor,
+            floor_tiles=self.floor_tiles,
+            number_of=self.number_of,
+            grid_scheme=self.grid_scheme
+        )
+    
+    def with_grid_state(self, new_grid_state: Any) -> 'ImmutableAgentState':
+        """Create new state with updated grid."""
+        return ImmutableAgentState(
+            id=self.id,
+            score=self.score,
+            lines_number=self.lines_number,
+            lines_tile=self.lines_tile,
+            grid_state=new_grid_state,
+            floor=self.floor,
+            floor_tiles=self.floor_tiles,
+            number_of=self.number_of,
+            grid_scheme=self.grid_scheme
+        )
+    
+    def with_floor(self, new_floor: List[int], new_floor_tiles: List[int]) -> 'ImmutableAgentState':
+        """Create new state with updated floor."""
+        return ImmutableAgentState(
+            id=self.id,
+            score=self.score,
+            lines_number=self.lines_number,
+            lines_tile=self.lines_tile,
+            grid_state=self.grid_state,
+            floor=new_floor,
+            floor_tiles=new_floor_tiles,
+            number_of=self.number_of,
+            grid_scheme=self.grid_scheme
+        )
+
+
+@dataclass(frozen=True)
+class ImmutableAzulState:
+    """Immutable version of AzulState for functional programming."""
+    agents: List[ImmutableAgentState]
+    bag: List[int]
+    bag_used: List[int]
+    factories: List[ImmutableTileDisplay]
+    centre_pool: ImmutableTileDisplay
+    first_agent_taken: bool
+    first_agent: int
+    next_first_agent: int
+    
+    def to_mutable(self) -> 'AzulState':
+        """Convert immutable state back to mutable AzulState."""
+        # This would need to be implemented to convert back
+        # For now, we'll create a new AzulState and populate it
+        state = AzulState(len(self.agents))
+        state.from_immutable(self)
+        return state
 
 
 class AzulState(GameState):
     NUM_FACTORIES = [5,7,9]
     NUM_TILE_TYPE = 20
     NUM_ON_FACTORY = 4
+
+    # Zobrist hash tables for efficient position identification
+    _ZOBRIST_TABLES = None
+    
+    @classmethod
+    def _initialize_zobrist_tables(cls):
+        """Initialize Zobrist hash tables for efficient position hashing."""
+        if cls._ZOBRIST_TABLES is not None:
+            return
+            
+        import random
+        # Use a fixed seed for reproducible hashes
+        random.seed(42)
+        
+        cls._ZOBRIST_TABLES = {
+            # Hash for each tile position on each agent's grid (agent, row, col, tile_type)
+            'grid': numpy.random.randint(0, 2**64, (4, 5, 5, 5), dtype=numpy.uint64),
+            # Hash for each tile in floor line (agent, position, tile_type) 
+            'floor': numpy.random.randint(0, 2**64, (4, 7, 5), dtype=numpy.uint64),
+            # Hash for each tile in pattern lines (agent, line, tile_type)
+            'pattern': numpy.random.randint(0, 2**64, (4, 5, 5), dtype=numpy.uint64),
+            # Hash for factory tiles (factory_id, tile_type)
+            'factory': numpy.random.randint(0, 2**64, (9, 5), dtype=numpy.uint64),
+            # Hash for center pool tiles (tile_type)
+            'center': numpy.random.randint(0, 2**64, 5, dtype=numpy.uint64),
+            # Hash for first player token (agent_id)
+            'first_player': numpy.random.randint(0, 2**64, 4, dtype=numpy.uint64),
+            # Hash for bag contents (tile_type)
+            'bag': numpy.random.randint(0, 2**64, 5, dtype=numpy.uint64),
+        }
+        random.seed()  # Reset to random seed
+    
+    def _compute_zobrist_hash(self):
+        """Compute the Zobrist hash for the current game state."""
+        if self._ZOBRIST_TABLES is None:
+            self._initialize_zobrist_tables()
+            
+        hash_value = 0
+        
+        # Hash agent scores and states
+        for agent_id, agent in enumerate(self.agents):
+            # Hash agent score (for simplicity, we'll use a simple hash of the score)
+            score_hash = hash(str(agent.score)) & 0xFFFFFFFFFFFFFFFF
+            hash_value ^= score_hash
+            
+            # Hash agent grid states
+            for row in range(5):
+                for col in range(5):
+                    if agent.grid_state[row][col] == 1:
+                        # Find which tile type should be at this position
+                        tile_type = self._get_tile_at_position(agent, row, col)
+                        hash_value ^= self._ZOBRIST_TABLES['grid'][agent_id][row][col][tile_type]
+        
+        # Hash floor tiles
+        for agent_id, agent in enumerate(self.agents):
+            for pos, tile in enumerate(agent.floor_tiles):
+                if tile is not None:
+                    hash_value ^= self._ZOBRIST_TABLES['floor'][agent_id][pos][tile]
+        
+        # Hash pattern lines
+        for agent_id, agent in enumerate(self.agents):
+            for line in range(5):
+                if agent.lines_tile[line] != -1:
+                    hash_value ^= self._ZOBRIST_TABLES['pattern'][agent_id][line][agent.lines_tile[line]]
+        
+        # Hash factory tiles
+        for factory_id, factory in enumerate(self.factories):
+            for tile_type in utils.Tile:
+                if factory.tiles[tile_type] > 0:
+                    hash_value ^= self._ZOBRIST_TABLES['factory'][factory_id][tile_type]
+        
+        # Hash center pool tiles
+        for tile_type in utils.Tile:
+            if self.centre_pool.tiles[tile_type] > 0:
+                hash_value ^= self._ZOBRIST_TABLES['center'][tile_type]
+        
+        # Hash first player token
+        if hasattr(self, 'first_agent') and self.first_agent >= 0:
+            hash_value ^= self._ZOBRIST_TABLES['first_player'][self.first_agent]
+        
+        return hash_value
+    
+    def _get_tile_at_position(self, agent, row, col):
+        """Get the tile type that should be at the given position based on the grid scheme."""
+        # Find which tile type should be at this position
+        for tile_type in utils.Tile:
+            if agent.grid_scheme[row][tile_type] == col:
+                return tile_type
+        return -1  # Should not happen
+    
+    def get_zobrist_hash(self):
+        """Get the Zobrist hash for this position."""
+        # Always recompute to ensure accuracy
+        self._zobrist_hash = self._compute_zobrist_hash()
+        return self._zobrist_hash
+    
+    def update_zobrist_hash(self, old_hash, changes):
+        """Efficiently update the Zobrist hash based on changes made to the state.
+        
+        Args:
+            old_hash: The previous hash value
+            changes: List of (table, *indices) tuples representing what changed
+            
+        Returns:
+            Updated hash value
+        """
+        if self._ZOBRIST_TABLES is None:
+            self._initialize_zobrist_tables()
+            
+        new_hash = old_hash
+        for table_name, *indices in changes:
+            new_hash ^= self._ZOBRIST_TABLES[table_name][indices]
+        
+        return new_hash
 
 
     class TileDisplay:
@@ -335,7 +607,126 @@ class AzulState(GameState):
         self.first_agent_taken = False
         self.first_agent = random.randrange(num_agents)
         self.next_first_agent = -1
-
+        
+        # Immutability validation
+        self._validate_immutability()
+    
+    def _validate_immutability(self):
+        """Validate that the state is properly initialized for immutability."""
+        # Ensure all arrays are properly initialized
+        for agent in self.agents:
+            assert isinstance(agent.lines_number, list)
+            assert isinstance(agent.lines_tile, list)
+            assert isinstance(agent.grid_state, numpy.ndarray)
+            assert isinstance(agent.floor, list)
+            assert isinstance(agent.floor_tiles, list)
+            assert isinstance(agent.number_of, dict)
+            assert isinstance(agent.grid_scheme, numpy.ndarray)
+        
+        # Ensure bags are lists
+        assert isinstance(self.bag, list)
+        assert isinstance(self.bag_used, list)
+        
+        # Ensure factories are properly initialized
+        for factory in self.factories:
+            assert isinstance(factory.tiles, dict)
+            assert isinstance(factory.total, int)
+        
+        # Ensure center pool is properly initialized
+        assert isinstance(self.centre_pool.tiles, dict)
+        assert isinstance(self.centre_pool.total, int)
+    
+    def _check_mutation_attempt(self, operation: str):
+        """Check if a mutation operation is being attempted in debug mode."""
+        import os
+        if os.environ.get('AZUL_DEBUG_IMMUTABILITY', 'false').lower() == 'true':
+            import warnings
+            warnings.warn(f"Mutation attempt detected: {operation}. Consider using immutable methods instead.")
+    
+    def _create_immutable_copy(self) -> 'ImmutableAzulState':
+        """Create an immutable copy of the current state."""
+        # Convert agent states to immutable versions
+        immutable_agents = []
+        for agent in self.agents:
+            immutable_agent = ImmutableAgentState(
+                id=agent.id,
+                score=agent.score,
+                lines_number=agent.lines_number.copy(),
+                lines_tile=agent.lines_tile.copy(),
+                grid_state=agent.grid_state.copy(),
+                floor=agent.floor.copy(),
+                floor_tiles=agent.floor_tiles.copy(),
+                number_of=agent.number_of.copy(),
+                grid_scheme=agent.grid_scheme.copy()
+            )
+            immutable_agents.append(immutable_agent)
+        
+        # Convert factories to immutable versions
+        immutable_factories = []
+        for factory in self.factories:
+            immutable_factory = ImmutableTileDisplay(
+                tiles=factory.tiles.copy(),
+                total=factory.total
+            )
+            immutable_factories.append(immutable_factory)
+        
+        # Convert center pool to immutable version
+        immutable_center = ImmutableTileDisplay(
+            tiles=self.centre_pool.tiles.copy(),
+            total=self.centre_pool.total
+        )
+        
+        return ImmutableAzulState(
+            agents=immutable_agents,
+            bag=self.bag.copy(),
+            bag_used=self.bag_used.copy(),
+            factories=immutable_factories,
+            centre_pool=immutable_center,
+            first_agent_taken=self.first_agent_taken,
+            first_agent=self.first_agent,
+            next_first_agent=self.next_first_agent
+        )
+    
+    def to_immutable(self) -> 'ImmutableAzulState':
+        """Convert current state to immutable version."""
+        return self._create_immutable_copy()
+    
+    def from_immutable(self, immutable_state: 'ImmutableAzulState'):
+        """Update current state from immutable version."""
+        # Update agent states
+        for i, immutable_agent in enumerate(immutable_state.agents):
+            agent = self.agents[i]
+            agent.score = immutable_agent.score
+            agent.lines_number = list(immutable_agent.lines_number)
+            agent.lines_tile = list(immutable_agent.lines_tile)
+            agent.grid_state = immutable_agent.grid_state.copy()
+            agent.floor = list(immutable_agent.floor)
+            agent.floor_tiles = list(immutable_agent.floor_tiles)
+            agent.number_of = immutable_agent.number_of.copy()
+            agent.grid_scheme = immutable_agent.grid_scheme.copy()
+        
+        # Update bags
+        self.bag = list(immutable_state.bag)
+        self.bag_used = list(immutable_state.bag_used)
+        
+        # Update factories
+        for i, immutable_factory in enumerate(immutable_state.factories):
+            factory = self.factories[i]
+            factory.tiles = immutable_factory.tiles.copy()
+            factory.total = immutable_factory.total
+        
+        # Update center pool
+        self.centre_pool.tiles = immutable_state.centre_pool.tiles.copy()
+        self.centre_pool.total = immutable_state.centre_pool.total
+        
+        # Update game state flags
+        self.first_agent_taken = immutable_state.first_agent_taken
+        self.first_agent = immutable_state.first_agent
+        self.next_first_agent = immutable_state.next_first_agent
+        
+        # Reset hash since state has changed
+        if hasattr(self, '_zobrist_hash'):
+            delattr(self, '_zobrist_hash')
 
     def TilesRemaining(self):
         if self.centre_pool.total > 0:
@@ -377,6 +768,140 @@ class AzulState(GameState):
         for plr in self.agents:
             _,used = plr.ScoreRound()
             self.bag_used.extend(used)
+
+    def clone(self):
+        """Create a deep copy of the current game state for search algorithms."""
+        import copy
+        
+        # Create a new state with the same number of agents
+        new_state = AzulState(len(self.agents))
+        
+        # Copy agent states
+        for i, agent in enumerate(self.agents):
+            new_agent = new_state.agents[i]
+            new_agent.score = agent.score
+            new_agent.lines_number = agent.lines_number.copy()
+            new_agent.lines_tile = agent.lines_tile.copy()
+            new_agent.grid_state = agent.grid_state.copy()
+            new_agent.floor = agent.floor.copy()
+            new_agent.floor_tiles = agent.floor_tiles.copy()
+            new_agent.agent_trace = copy.deepcopy(agent.agent_trace)
+        
+        # Copy bag states
+        new_state.bag = self.bag.copy()
+        new_state.bag_used = self.bag_used.copy()
+        
+        # Copy factory states
+        for i, factory in enumerate(self.factories):
+            new_factory = new_state.factories[i]
+            new_factory.total = factory.total
+            new_factory.tiles = factory.tiles.copy()
+        
+        # Copy center pool
+        new_state.centre_pool.total = self.centre_pool.total
+        new_state.centre_pool.tiles = self.centre_pool.tiles.copy()
+        
+        # Copy game state flags
+        new_state.first_agent_taken = self.first_agent_taken
+        new_state.first_agent = self.first_agent
+        new_state.next_first_agent = self.next_first_agent
+        
+        # Reset hash since state has changed
+        if hasattr(self, '_zobrist_hash'):
+            delattr(new_state, '_zobrist_hash')
+        
+        return new_state
+    
+    def undo_move(self, move_info):
+        """Undo a move using the provided move information.
+        
+        Args:
+            move_info: Dictionary containing the move details and state changes
+        """
+        # Restore agent states
+        for agent_id, agent_changes in move_info.get('agents', {}).items():
+            agent = self.agents[agent_id]
+            if 'score' in agent_changes:
+                agent.score = agent_changes['score']
+            if 'lines_number' in agent_changes:
+                agent.lines_number = agent_changes['lines_number']
+            if 'lines_tile' in agent_changes:
+                agent.lines_tile = agent_changes['lines_tile']
+            if 'grid_state' in agent_changes:
+                agent.grid_state = agent_changes['grid_state']
+            if 'floor' in agent_changes:
+                agent.floor = agent_changes['floor']
+            if 'floor_tiles' in agent_changes:
+                agent.floor_tiles = agent_changes['floor_tiles']
+        
+        # Restore bag states
+        if 'bag' in move_info:
+            self.bag = move_info['bag']
+        if 'bag_used' in move_info:
+            self.bag_used = move_info['bag_used']
+        
+        # Restore factory states
+        for factory_id, factory_changes in move_info.get('factories', {}).items():
+            factory = self.factories[factory_id]
+            factory.total = factory_changes['total']
+            factory.tiles = factory_changes['tiles']
+        
+        # Restore center pool
+        if 'centre_pool' in move_info:
+            self.centre_pool.total = move_info['centre_pool']['total']
+            self.centre_pool.tiles = move_info['centre_pool']['tiles']
+        
+        # Restore game state flags
+        if 'first_agent_taken' in move_info:
+            self.first_agent_taken = move_info['first_agent_taken']
+        if 'first_agent' in move_info:
+            self.first_agent = move_info['first_agent']
+        if 'next_first_agent' in move_info:
+            self.next_first_agent = move_info['next_first_agent']
+        
+        # Reset hash since state has changed
+        if hasattr(self, '_zobrist_hash'):
+            delattr(self, '_zobrist_hash')
+    
+    def get_move_info(self):
+        """Capture current state for potential undo operations.
+        
+        Returns:
+            Dictionary containing the current state for undo operations
+        """
+        move_info = {
+            'agents': {},
+            'factories': {},
+            'bag': self.bag.copy(),
+            'bag_used': self.bag_used.copy(),
+            'centre_pool': {
+                'total': self.centre_pool.total,
+                'tiles': self.centre_pool.tiles.copy()
+            },
+            'first_agent_taken': self.first_agent_taken,
+            'first_agent': self.first_agent,
+            'next_first_agent': self.next_first_agent
+        }
+        
+        # Capture agent states
+        for i, agent in enumerate(self.agents):
+            move_info['agents'][i] = {
+                'score': agent.score,
+                'lines_number': agent.lines_number.copy(),
+                'lines_tile': agent.lines_tile.copy(),
+                'grid_state': agent.grid_state.copy(),
+                'floor': agent.floor.copy(),
+                'floor_tiles': agent.floor_tiles.copy()
+            }
+        
+        # Capture factory states
+        for i, factory in enumerate(self.factories):
+            move_info['factories'][i] = {
+                'total': factory.total,
+                'tiles': factory.tiles.copy()
+            }
+        
+        return move_info
 
 
 class AzulGameRule(GameRule):
