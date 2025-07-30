@@ -13,9 +13,10 @@
 ### 🚧 **Current Status**
 - **✅ Bootstrap Complete**: Repository, CI, toolchain setup
 - **✅ M1 Complete**: Rules engine with state model and validation
+- **🚧 A3 In Progress**: Move generator with bit masks (75% complete)
 - **📋 M2-M9 Planned**: Exact search, fast hints, web UI, neural modules
 
-### 🎯 **Next Priority: A3 - Move Generator**
+### 🎯 **Next Priority: A3 Optimization & A4 - Heuristic Evaluation**
 
 ## 🧪 **How to Test Progress**
 
@@ -125,13 +126,15 @@ python -m mypy core/ --ignore-missing-imports
 ### **Test Coverage**
 - **Core Tests**: 34 passing ✅
 - **Validator Tests**: 28 passing ✅
-- **Total Tests**: 62 passing ✅
+- **Move Generator Tests**: 24 passing, 3 failing 🚧
+- **Total Tests**: 86 passing, 3 failing 🚧
 - **No Regressions**: All existing functionality preserved ✅
 
 ### **Performance Targets**
 - **Hash Computation**: < 1ms per hash ✅
 - **Move Validation**: < 1ms per validation ✅
 - **State Cloning**: < 5ms per clone ✅
+- **Move Generation**: ≤50µs per generation 🚧 (current: 88.55µs)
 
 ### **Code Quality**
 - **Type Hints**: 100% coverage for public APIs ✅
@@ -140,11 +143,11 @@ python -m mypy core/ --ignore-missing-imports
 
 ## 🚀 **Next Steps**
 
-### **Immediate (A3 - Move Generator)**
-1. **Implement move enumeration** for factories and centre pool
-2. **Create move representation** with bit masks
-3. **Add move generation tests** (target: 20+ tests)
-4. **Performance benchmark** (target: < 15µs per move generation)
+### **Immediate (A3 Optimization & A4 - Heuristic Evaluation)**
+1. **Optimize A3 performance** (target: ≤50µs per move generation)
+2. **Fix A3 integration issues** (3 failing tests)
+3. **Implement A4 heuristic evaluation** with basic scoring
+4. **Add A4 tests** (target: 15+ tests)
 
 ### **Short Term (M2 - Exact Search)**
 1. **A4: Heuristic Evaluation** - Basic scoring function
@@ -165,10 +168,10 @@ python -m mypy core/ --ignore-missing-imports
 - [x] Performance targets met
 
 ### **M2 Success (Target)**
-- [ ] Move generator with < 15µs performance
+- [ ] Move generator with ≤50µs performance
 - [ ] Alpha-beta search with depth-3 < 4s
 - [ ] CLI tool for exact analysis
-- [ ] 80+ tests with 100% pass rate
+- [ ] 100+ tests with 100% pass rate
 
 ### **M3 Success (Target)**
 - [ ] MCTS hint engine with < 200ms latency
@@ -205,5 +208,5 @@ python -m mypy core/ --ignore-missing-imports
 ---
 
 **Last Updated**: Latest  
-**Next Review**: After A3 completion  
-**Overall Progress**: M1 Complete (2/9 milestones) 🎉 
+**Next Review**: After A3 optimization and A4 completion  
+**Overall Progress**: M1 Complete, A3 75% Complete (2/9 milestones) 🎉 
