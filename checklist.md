@@ -9,8 +9,8 @@
 ## 1 · Game Engine Core (MVP) 🚧
 - [x] Import / re‑implement Azul rules engine (start from AzulRL MIT code).
 - [x] Encode state as immutable dataclass of NumPy arrays + 64‑bit Zobrist key.
-- [ ] Implement fast clone / undo helpers (struct copy or diff stack).
-- [ ] Unit‑test 100 official rule cases (wall color, floor overflow, final bonuses).
+- [x] Implement fast clone / undo helpers (struct copy or diff stack).
+- [x] Unit‑test 100 official rule cases (wall color, floor overflow, final bonuses).
 
 ## 2 · Exact Search Prototype 📋
 - [ ] Implement depth‑limited alpha‑beta with:

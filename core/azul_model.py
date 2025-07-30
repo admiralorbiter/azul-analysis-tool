@@ -807,7 +807,7 @@ class AzulState(GameState):
         new_state.next_first_agent = self.next_first_agent
         
         # Reset hash since state has changed
-        if hasattr(self, '_zobrist_hash'):
+        if hasattr(new_state, '_zobrist_hash'):
             delattr(new_state, '_zobrist_hash')
         
         return new_state
