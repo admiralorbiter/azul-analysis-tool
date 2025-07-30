@@ -17,7 +17,7 @@
   - [x] Move generation filtering (illegal / score‑dominated moves gone).
   - [x] Iterative deepening & TT (64‑bit keys, replacement scheme).
   - [x] Move ordering: wall‑completion ≫ penalty‑free ≫ others.
-- [ ] CLI tool azsolver exact <FEN> → returns PV + exact score for depth≤3.
+- [x] CLI tool azsolver exact <FEN> → returns PV + exact score for depth≤3.
 - [x] Micro‑benchmarks: nodes/sec; verify memory stays < 2 GB @ depth 3.
 
 ## 3 · Fast Hint Engine 📋
@@ -86,6 +86,6 @@
 ## Current Status Summary
 - **✅ Bootstrap Complete**: Repository setup, CI skeleton, import conflicts resolved
 - **✅ M1 Complete**: Rules engine (A1-A3) - All tests passing
-- **✅ M2 Core Complete**: Exact search (A4-A5) - All tests passing, CLI integration pending
+- **✅ M2 Complete**: Exact search (A4-A5) - All tests passing, CLI integration complete
 - **📋 M3-M9 Planned**: Fast hints, web UI, neural modules
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives

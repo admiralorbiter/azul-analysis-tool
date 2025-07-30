@@ -18,7 +18,7 @@
 - **✅ A5 Complete**: Alpha-beta search with depth-3 < 4s target (24 tests passing)
 - **📋 M2-M9 Planned**: Fast hints, web UI, neural modules
 
-### 🎯 **Next Priority: M2 Integration & CLI Tools**
+### 🎯 **Next Priority: M3 Fast Hint Engine**
 
 ## 🧪 **How to Test Progress**
 
@@ -262,7 +262,7 @@ python -m mypy core/ --ignore-missing-imports
 ### **M2 Success (✅ ACHIEVED)**
 - [x] Heuristic evaluation with comprehensive scoring
 - [x] Alpha-beta search with depth-3 < 4s
-- [ ] CLI tool for exact analysis (next priority)
+- [x] CLI tool for exact analysis
 - [x] 133 tests with 100% pass rate
 
 ### **M3 Success (Target)**
@@ -300,5 +300,5 @@ python -m mypy core/ --ignore-missing-imports
 ---
 
 **Last Updated**: Latest  
-**Next Review**: After CLI integration completion  
+**Next Review**: After M3 Fast Hint Engine completion  
 **Overall Progress**: M1 Complete, M2 Complete (3/9 milestones) 🎉 
