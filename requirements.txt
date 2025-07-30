@@ -1,0 +1,15 @@
+# Core dependencies
+numpy>=1.24.0
+flask>=2.3.0
+click>=8.1.0
+pydantic>=2.0.0
+requests>=2.31.0
+
+# Optional GUI dependencies
+# tkinter (usually comes with Python)
+
+# Optional neural dependencies (uncomment if needed)
+# torch>=2.0.0
+# torchvision>=0.15.0
+
+# Development dependencies (install with pip install -r requirements-dev.txt)

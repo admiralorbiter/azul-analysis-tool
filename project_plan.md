@@ -10,7 +10,7 @@
 | **Speed** | ≤ 200 ms hint latency on laptop (8‑core CPU) for 95th %ile mid‑game positions. |
 | **Extensibility** | Plug‑in search modules (Alpha‑Beta, MCTS, Neural) & UI widgets without core rewrites. |
 | **Reproducibility** | Docker image + CI matrix for Linux/macOS/Win. |
-| **Licensing** | MIT for engine/UI; third‑party assets clearly attributed. |
+| **Licensing** | GPL v3 for engine/UI; third‑party assets clearly attributed. |
 
 ---
 

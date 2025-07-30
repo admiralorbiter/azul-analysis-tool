@@ -2,67 +2,146 @@
 
 > **Goal:** Deliver a Python‑based engine, web UI, and research tools that (i) compute *exact* values for tactical depths, (ii) return sub‑200 ms live hints, and (iii) support long‑term strategy research.
 
-## 🎯 Project Overview
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-15%20passed-brightgreen.svg)](https://github.com/your-username/azul-solver)
 
-This repository contains a comprehensive Azul game engine and analysis toolkit built on top of the original Azul framework. The project provides:
+## 🎯 Project Vision
 
-- **Fast Game Engine**: Deterministic, rules-compliant Azul implementation with sub-200ms hint generation
-- **Exact Search**: Alpha-beta and MCTS algorithms for tactical analysis
-- **Web UI**: Interactive board visualization with heatmaps and move analysis
-- **Research Tools**: Opening explorer, replay annotator, and quiz generator
-- **Neural Integration**: Optional PyTorch-based neural evaluation (GPU support)
+| Pillar | Must‑Have Outcome |
+| ------ | ---------------- |
+| **Correctness** | Full rules compliance; deterministic engines yield identical outputs given identical seeds. |
+| **Speed** | ≤ 200 ms hint latency on laptop (8‑core CPU) for 95th %ile mid‑game positions. |
+| **Extensibility** | Plug‑in search modules (Alpha‑Beta, MCTS, Neural) & UI widgets without core rewrites. |
+| **Reproducibility** | Docker image + CI matrix for Linux/macOS/Win. |
+| **Licensing** | GPL v3 for engine/UI; third‑party assets clearly attributed. |
 
-## 🚀 Key Features
+## 🚀 Quick Start
 
-| Feature | Status | Target |
-|---------|--------|--------|
-| **Engine Core** | 🚧 In Progress | Rules compliance, immutable state model |
-| **Exact Search** | 📋 Planned | Depth-3 analysis in ≤4s |
-| **Fast Hints** | 📋 Planned | ≤200ms response time |
-| **Web UI** | 📋 Planned | React + SVG board renderer |
-| **Neural Module** | 📋 Planned | GPU-accelerated evaluation |
+### Prerequisites
+- Python 3.11+
+- Git
 
-## 🛠️ Quick Start
-
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/azul-solver.git
+cd azul-solver
+
 # Install dependencies
 pip install -r requirements.txt
 
-# Run exact analysis
-python run.py exact "<fen_string>" --depth 3
-
-# Start web server
-python run.py serve --host 0.0.0.0 --port 8000
+# For development
+pip install -r requirements-dev.txt
 ```
 
-## 📋 Development Roadmap
+### Basic Usage
+```bash
+# Test the engine
+python main.py test
 
-See [project_plan.md](project_plan.md) for detailed development roadmap and [checklist.md](checklist.md) for build tasks.
+# Check project status
+python main.py status
 
-### Current Milestone: M1 - Rules Engine
-- [ ] State model with immutable dataclass + NumPy arrays
-- [ ] Rule validator with 100 golden tests
-- [ ] Move generator for compound moves
-- [ ] Basic CLI interface
+# See all available commands
+python main.py --help
+```
+
+## 📊 Current Status
+
+### ✅ Completed (M0 - Bootstrap)
+- [x] Repository setup and cleanup
+- [x] Import conflicts resolved
+- [x] Project structure organized (`core/`, `api/`, `ui/`, `neural/`, `tools/`, `tests/`)
+- [x] Python packaging setup (`pyproject.toml`, `requirements.txt`)
+- [x] CLI interface and basic testing (15 tests passing)
+- [x] Professional package structure with proper exports
+
+### 🚧 In Progress (M1 - Rules Engine)
+- [x] **A1 State Model**: Basic structure ✅
+  - [x] Immutable dataclass structure (AzulState)
+  - [x] NumPy arrays for grid state
+  - [ ] 64-bit Zobrist key implementation
+  - [ ] clone() and undo() methods
+  
+- [ ] **A2 Rule Validator**: Partial ⚠️
+  - [x] Basic rule structure exists
+  - [ ] 100 golden tests for rule compliance
+  - [ ] Full validation of drafting → placement → scoring
+
+- [ ] **A3 Move Generator**: Not started 📋
+  - [ ] Enumerate legal compound moves
+  - [ ] Return vector mask for policy networks
+  - [ ] Performance optimization (≤15 µs/call target)
+
+### 📋 Planned Milestones
+- **M2** (2 weeks): Exact Search α - Alpha-Beta, CLI exact analysis
+- **M3** (2 weeks): Fast Hint β - MCTS, 200ms budget
+- **M4** (3 weeks): Web UI α - React board, live hints
+- **M5** (2 weeks): Research Tools - Database, analysis tools
+- **M6** (3 weeks): Neural Add-on - PyTorch models, GPU support
+- **M7** (1 week): Endgame DB - Retrograde tables
+- **M8** (2 weeks): Performance & Harden - Profiling, deployment
+- **M9** (1 week): v1 Release - Documentation, demo
 
 ## 🏗️ Architecture
 
 ```
-azul-solver/
-├── core/           # Game engine (state, rules, search)
-├── api/            # REST API (Flask)
-├── ui/             # Web interface (React)
-├── neural/         # PyTorch models
-├── tools/          # Research utilities
-└── tests/          # Comprehensive test suite
+AZUL-RESEARCH/
+├── core/                    # ✅ Game engine
+│   ├── __init__.py         # Package exports
+│   ├── template.py         # Base classes
+│   ├── azul_model.py       # Game state & rules
+│   ├── azul_utils.py       # Constants & utilities
+│   └── azul_displayer.py   # Display interfaces
+├── api/                    # 📋 REST API (planned)
+├── ui/                     # 📋 Web interface (planned)
+├── neural/                 # 📋 PyTorch models (planned)
+├── tools/                  # ✅ CLI utilities
+├── tests/                  # ✅ Test suite (15 passing tests)
+├── legacy/                 # 📋 Original framework
+├── resources/              # 🎨 Assets
+├── main.py                 # ✅ CLI entry point
+└── pyproject.toml          # ✅ Package configuration
 ```
 
-## 📊 Performance Targets
+## 🧪 Testing
 
-- **Hint Latency**: ≤200ms on 8-core laptop (95th percentile)
-- **Exact Search**: Depth-3 analysis in ≤4s
-- **Memory Usage**: <2GB for depth-3 search
-- **Database**: ≤30MB for 1M compressed states
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test file
+python -m pytest tests/test_core.py -v
+
+# Run with coverage
+python -m pytest tests/ --cov=core --cov-report=html
+```
+
+## 🎲 CLI Commands
+
+```bash
+# Basic engine verification
+python main.py test
+
+# Project status and milestones
+python main.py status
+
+# Exact analysis (planned for M2)
+python main.py exact "<fen>" --depth 3
+
+# Fast hints (planned for M3)
+python main.py hint "<fen>" --budget 0.2
+
+# Web server (planned for M4)
+python main.py serve --host 127.0.0.1 --port 8000
+```
+
+## 📚 Documentation
+
+- [Project Plan](project_plan.md) - Detailed roadmap and milestones
+- [Checklist](checklist.md) - Build checklist with current status
+- [Setup Summary](SETUP_SUMMARY.md) - Repository setup and cleanup details
 
 ## 🤝 Contributing
 
@@ -74,24 +153,19 @@ azul-solver/
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-This project is built on top of the original Azul framework that provided the base game implementation. The original framework was designed to support policy learning for the Azul board game, published by Plan B Games.
+- Original Azul framework by Michelle Blom (GPL v3)
+- Azul board game by Plan B Games
+- Research community for feedback and testing
 
-### Original Framework Purpose
-The original framework allowed students to implement algorithms for learning AI players for Azul and evaluate the performance of these players against human/other AI players. Students could create Player subclasses for their AI players that select moves based on learned policies.
+## 📞 Contact
 
-### Game Information
-- [Azul on Wikipedia](https://en.wikipedia.org/wiki/Azul_(board_game))
-- [Azul on BoardGameGeek](https://boardgamegeek.com/boardgame/230802/azul)
-- [Plan B Games - Azul](https://www.planbgames.com/en/news/azul-c16.html)
-
-## 📈 Project Status
-
-This project is actively under development. See the [project board](https://github.com/your-username/azul-solver/projects) for current progress and upcoming milestones.
+- **Repository**: [https://github.com/your-username/azul-solver](https://github.com/your-username/azul-solver)
+- **Issues**: [https://github.com/your-username/azul-solver/issues](https://github.com/your-username/azul-solver/issues)
 
 ---
 
-**Note**: This project extends the original educational framework into a production-ready Azul analysis toolkit while maintaining the core game logic and rules compliance.
+**Current Status**: ✅ Bootstrap Complete → Ready for M1 Implementation
