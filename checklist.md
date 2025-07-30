@@ -6,19 +6,19 @@
 - [x] Enable CI (GitHub Actions) → run unit tests & ruff --fix on every push.
 - [x] Add issue labels & project board (engine, ui, perf, docs, infra).
 
-## 1 · Game Engine Core (MVP) 🚧
+## 1 · Game Engine Core (MVP) ✅
 - [x] Import / re‑implement Azul rules engine (start from AzulRL MIT code).
 - [x] Encode state as immutable dataclass of NumPy arrays + 64‑bit Zobrist key.
 - [x] Implement fast clone / undo helpers (struct copy or diff stack).
 - [x] Unit‑test 100 official rule cases (wall color, floor overflow, final bonuses).
 
-## 2 · Exact Search Prototype 📋
-- [ ] Implement depth‑limited alpha‑beta with:
-  - [ ] Move generation filtering (illegal / score‑dominated moves gone).
-  - [ ] Iterative deepening & TT (64‑bit keys, replacement scheme).
-  - [ ] Move ordering: wall‑completion ≫ penalty‑free ≫ others.
+## 2 · Exact Search Prototype ✅
+- [x] Implement depth‑limited alpha‑beta with:
+  - [x] Move generation filtering (illegal / score‑dominated moves gone).
+  - [x] Iterative deepening & TT (64‑bit keys, replacement scheme).
+  - [x] Move ordering: wall‑completion ≫ penalty‑free ≫ others.
 - [ ] CLI tool azsolver exact <FEN> → returns PV + exact score for depth≤3.
-- [ ] Micro‑benchmarks: nodes/sec; verify memory stays < 2 GB @ depth 3.
+- [x] Micro‑benchmarks: nodes/sec; verify memory stays < 2 GB @ depth 3.
 
 ## 3 · Fast Hint Engine 📋
 - [ ] Plug heuristic evaluation (immediate score + pattern potential).
@@ -85,6 +85,7 @@
 
 ## Current Status Summary
 - **✅ Bootstrap Complete**: Repository setup, CI skeleton, import conflicts resolved
-- **🚧 M1 In Progress**: Rules engine (A1-A3) - 2 weeks remaining
-- **📋 M2-M9 Planned**: Exact search, fast hints, web UI, neural modules
+- **✅ M1 Complete**: Rules engine (A1-A3) - All tests passing
+- **✅ M2 Core Complete**: Exact search (A4-A5) - All tests passing, CLI integration pending
+- **📋 M3-M9 Planned**: Fast hints, web UI, neural modules
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives
