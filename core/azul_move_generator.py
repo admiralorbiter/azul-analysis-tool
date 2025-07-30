@@ -1,5 +1,5 @@
 """
-Azul Move Generator - A3 Implementation
+Azul Move Generator - A3 Implementation (Optimized)
 
 This module provides efficient move generation for Azul with:
 - Bit mask representations for fast move filtering
@@ -71,6 +71,244 @@ class Move:
     
     def __hash__(self):
         return self.bit_mask
+
+
+class OptimizedMoveGenerator:
+    """
+    Highly optimized move generator for Azul.
+    
+    Key optimizations:
+    - Pre-computed pattern line validation cache
+    - Reduced function calls and object creation
+    - Bit operations for fast validation
+    - Inline critical path operations
+    """
+    
+    def __init__(self):
+        self.validator = AzulRuleValidator()
+        self._init_validation_cache()
+    
+    def _init_validation_cache(self):
+        """Initialize validation cache for fast pattern line checking."""
+        # Pre-compute grid positions for each tile type and pattern line
+        self._grid_positions = {}
+        for tile_type in utils.Tile:
+            self._grid_positions[tile_type] = []
+            for pattern_line in range(5):
+                # Calculate grid position for this tile type in this pattern line
+                # This is the same logic as in the original grid_scheme
+                if pattern_line == 0:
+                    if tile_type == utils.Tile.BLUE:
+                        grid_col = 0
+                    elif tile_type == utils.Tile.WHITE:
+                        grid_col = 4
+                    elif tile_type == utils.Tile.BLACK:
+                        grid_col = 3
+                    elif tile_type == utils.Tile.RED:
+                        grid_col = 2
+                    elif tile_type == utils.Tile.YELLOW:
+                        grid_col = 1
+                elif pattern_line == 1:
+                    if tile_type == utils.Tile.BLUE:
+                        grid_col = 1
+                    elif tile_type == utils.Tile.WHITE:
+                        grid_col = 0
+                    elif tile_type == utils.Tile.BLACK:
+                        grid_col = 4
+                    elif tile_type == utils.Tile.RED:
+                        grid_col = 3
+                    elif tile_type == utils.Tile.YELLOW:
+                        grid_col = 2
+                elif pattern_line == 2:
+                    if tile_type == utils.Tile.BLUE:
+                        grid_col = 2
+                    elif tile_type == utils.Tile.WHITE:
+                        grid_col = 1
+                    elif tile_type == utils.Tile.BLACK:
+                        grid_col = 0
+                    elif tile_type == utils.Tile.RED:
+                        grid_col = 4
+                    elif tile_type == utils.Tile.YELLOW:
+                        grid_col = 3
+                elif pattern_line == 3:
+                    if tile_type == utils.Tile.BLUE:
+                        grid_col = 3
+                    elif tile_type == utils.Tile.WHITE:
+                        grid_col = 2
+                    elif tile_type == utils.Tile.BLACK:
+                        grid_col = 1
+                    elif tile_type == utils.Tile.RED:
+                        grid_col = 0
+                    elif tile_type == utils.Tile.YELLOW:
+                        grid_col = 4
+                elif pattern_line == 4:
+                    if tile_type == utils.Tile.BLUE:
+                        grid_col = 4
+                    elif tile_type == utils.Tile.WHITE:
+                        grid_col = 3
+                    elif tile_type == utils.Tile.BLACK:
+                        grid_col = 2
+                    elif tile_type == utils.Tile.RED:
+                        grid_col = 1
+                    elif tile_type == utils.Tile.YELLOW:
+                        grid_col = 0
+                
+                self._grid_positions[tile_type].append(grid_col)
+    
+    def generate_moves(self, state: AzulState, agent_id: int) -> List[Move]:
+        """
+        Generate all legal moves for the given agent (optimized version).
+        
+        Args:
+            state: Current game state
+            agent_id: Agent to generate moves for
+            
+        Returns:
+            List of legal moves with bit mask representations
+        """
+        moves = []
+        agent_state = state.agents[agent_id]
+        
+        # Pre-compute valid pattern lines for each tile type
+        valid_pattern_lines = self._get_valid_pattern_lines_fast(agent_state)
+        
+        # Generate factory moves
+        for factory_id, factory in enumerate(state.factories):
+            moves.extend(self._generate_factory_moves_optimized(
+                agent_state, factory, factory_id, valid_pattern_lines
+            ))
+        
+        # Generate centre pool moves
+        moves.extend(self._generate_centre_moves_optimized(
+            agent_state, state.centre_pool, valid_pattern_lines
+        ))
+        
+        return moves
+    
+    def _get_valid_pattern_lines_fast(self, agent_state) -> Dict[int, List[int]]:
+        """Get valid pattern lines for each tile type (optimized)."""
+        valid_lines = {}
+        
+        for tile_type in utils.Tile:
+            valid_lines[tile_type] = []
+            for pattern_line in range(5):
+                # Quick validation using pre-computed grid positions
+                if (agent_state.lines_tile[pattern_line] == -1 or 
+                    agent_state.lines_tile[pattern_line] == tile_type):
+                    
+                    grid_col = self._grid_positions[tile_type][pattern_line]
+                    if agent_state.grid_state[pattern_line][grid_col] == 0:
+                        valid_lines[tile_type].append(pattern_line)
+        
+        return valid_lines
+    
+    def _generate_factory_moves_optimized(self, agent_state, factory, factory_id: int, 
+                                        valid_pattern_lines: Dict[int, List[int]]) -> List[Move]:
+        """Generate factory moves with minimal object creation."""
+        moves = []
+        
+        # Iterate through tile types more efficiently
+        for tile_type in range(5):  # Direct integer iteration instead of enum
+            num_available = factory.tiles[tile_type]
+            if num_available == 0:
+                continue
+            
+            # Generate pattern line moves
+            if tile_type in valid_pattern_lines:
+                for pattern_line in valid_pattern_lines[tile_type]:
+                    slots_free = (pattern_line + 1) - agent_state.lines_number[pattern_line]
+                    if slots_free <= 0:
+                        continue
+                    
+                    num_to_pattern = min(num_available, slots_free)
+                    num_to_floor = num_available - num_to_pattern
+                    
+                    # Create move directly without intermediate objects
+                    moves.append(Move(
+                        action_type=utils.Action.TAKE_FROM_FACTORY,
+                        source_id=factory_id,
+                        tile_type=tile_type,
+                        pattern_line_dest=pattern_line,
+                        num_to_pattern_line=num_to_pattern,
+                        num_to_floor_line=num_to_floor
+                    ))
+            
+            # Generate floor-only move
+            moves.append(Move(
+                action_type=utils.Action.TAKE_FROM_FACTORY,
+                source_id=factory_id,
+                tile_type=tile_type,
+                pattern_line_dest=-1,
+                num_to_pattern_line=0,
+                num_to_floor_line=num_available
+            ))
+        
+        return moves
+    
+    def _generate_centre_moves_optimized(self, agent_state, centre_pool, 
+                                       valid_pattern_lines: Dict[int, List[int]]) -> List[Move]:
+        """Generate centre pool moves with minimal object creation."""
+        moves = []
+        
+        for tile_type in range(5):  # Direct integer iteration
+            num_available = centre_pool.tiles[tile_type]
+            if num_available == 0:
+                continue
+            
+            # Generate pattern line moves
+            if tile_type in valid_pattern_lines:
+                for pattern_line in valid_pattern_lines[tile_type]:
+                    slots_free = (pattern_line + 1) - agent_state.lines_number[pattern_line]
+                    if slots_free <= 0:
+                        continue
+                    
+                    num_to_pattern = min(num_available, slots_free)
+                    num_to_floor = num_available - num_to_pattern
+                    
+                    moves.append(Move(
+                        action_type=utils.Action.TAKE_FROM_CENTRE,
+                        source_id=-1,
+                        tile_type=tile_type,
+                        pattern_line_dest=pattern_line,
+                        num_to_pattern_line=num_to_pattern,
+                        num_to_floor_line=num_to_floor
+                    ))
+            
+            # Generate floor-only move
+            moves.append(Move(
+                action_type=utils.Action.TAKE_FROM_CENTRE,
+                source_id=-1,
+                tile_type=tile_type,
+                pattern_line_dest=-1,
+                num_to_pattern_line=0,
+                num_to_floor_line=num_available
+            ))
+        
+        return moves
+    
+    def get_move_count(self, state: AzulState, agent_id: int) -> int:
+        """Get the number of legal moves without generating them all."""
+        count = 0
+        agent_state = state.agents[agent_id]
+        valid_pattern_lines = self._get_valid_pattern_lines_fast(agent_state)
+        
+        # Count factory moves
+        for factory in state.factories:
+            for tile_type in range(5):
+                if factory.tiles[tile_type] > 0:
+                    count += len(valid_pattern_lines.get(tile_type, [])) + 1  # +1 for floor
+        
+        # Count centre moves
+        for tile_type in range(5):
+            if state.centre_pool.tiles[tile_type] > 0:
+                count += len(valid_pattern_lines.get(tile_type, [])) + 1  # +1 for floor
+        
+        return count
+    
+    def validate_move(self, move: Move, state: AzulState, agent_id: int) -> bool:
+        """Validate a specific move using the rule validator."""
+        move_dict = move.to_dict()
+        return self.validator.validate_move(state, move_dict, agent_id)
 
 
 class AzulMoveGenerator:

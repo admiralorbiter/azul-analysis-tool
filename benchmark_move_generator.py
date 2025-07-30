@@ -8,7 +8,7 @@ detailed timing information to help optimize the implementation.
 
 import time
 import statistics
-from core.azul_move_generator import AzulMoveGenerator, FastMoveGenerator
+from core.azul_move_generator import AzulMoveGenerator, FastMoveGenerator, OptimizedMoveGenerator
 from core.azul_model import AzulState
 from core import azul_utils as utils
 
@@ -18,7 +18,7 @@ def create_test_states():
     states = []
     
     # Initial state
-    states.append(("Initial", AzulState(2)))
+    states.append(AzulState(2))
     
     # Mid-game state with some pattern lines filled
     mid_state = AzulState(2)
@@ -26,14 +26,14 @@ def create_test_states():
     mid_state.agents[0].lines_tile[0] = utils.Tile.BLUE
     mid_state.agents[0].lines_number[1] = 2
     mid_state.agents[0].lines_tile[1] = utils.Tile.RED
-    states.append(("Mid-game", mid_state))
+    states.append(mid_state)
     
     # Late-game state with many pattern lines filled
     late_state = AzulState(2)
     for i in range(3):
         late_state.agents[0].lines_number[i] = i + 1
         late_state.agents[0].lines_tile[i] = utils.Tile.BLUE
-    states.append(("Late-game", late_state))
+    states.append(late_state)
     
     return states
 
@@ -77,6 +77,7 @@ def main():
     # Create generators
     regular_generator = AzulMoveGenerator()
     fast_generator = FastMoveGenerator()
+    optimized_generator = OptimizedMoveGenerator()
     
     # Create test states
     test_states = create_test_states()
@@ -86,7 +87,7 @@ def main():
     
     results = {}
     
-    for state_name, state in test_states:
+    for state_name, state in enumerate(test_states):
         print(f"\n📊 {state_name} State:")
         print("-" * 30)
         
@@ -110,36 +111,52 @@ def main():
         print(f"  Std: {fast_results['std']:.2f}µs")
         print(f"  Moves: {fast_results['num_moves']}")
         
-        # Calculate improvement
-        improvement = ((regular_results['mean'] - fast_results['mean']) / regular_results['mean']) * 100
-        print(f"  Improvement: {improvement:.1f}%")
+        # Benchmark optimized generator
+        optimized_results = benchmark_generator(optimized_generator, state, 0)
+        print(f"Optimized Generator:")
+        print(f"  Mean: {optimized_results['mean']:.2f}µs")
+        print(f"  Median: {optimized_results['median']:.2f}µs")
+        print(f"  Min: {optimized_results['min']:.2f}µs")
+        print(f"  Max: {optimized_results['max']:.2f}µs")
+        print(f"  Std: {optimized_results['std']:.2f}µs")
+        print(f"  Moves: {optimized_results['num_moves']}")
+        
+        # Calculate improvements
+        fast_improvement = ((regular_results['mean'] - fast_results['mean']) / regular_results['mean']) * 100
+        optimized_improvement = ((regular_results['mean'] - optimized_results['mean']) / regular_results['mean']) * 100
+        print(f"  Fast improvement: {fast_improvement:.1f}%")
+        print(f"  Optimized improvement: {optimized_improvement:.1f}%")
         
         results[state_name] = {
             'regular': regular_results,
             'fast': fast_results,
-            'improvement': improvement
+            'optimized': optimized_results,
+            'fast_improvement': fast_improvement,
+            'optimized_improvement': optimized_improvement
         }
     
     # Summary
     print(f"\n📈 Summary:")
     print("=" * 50)
     
-    avg_improvement = statistics.mean([r['improvement'] for r in results.values()])
-    print(f"Average improvement: {avg_improvement:.1f}%")
+    avg_fast_improvement = statistics.mean([r['fast_improvement'] for r in results.values()])
+    avg_optimized_improvement = statistics.mean([r['optimized_improvement'] for r in results.values()])
+    print(f"Average fast improvement: {avg_fast_improvement:.1f}%")
+    print(f"Average optimized improvement: {avg_optimized_improvement:.1f}%")
     
     # Check performance targets
     target_met = True
     for state_name, result in results.items():
-        if result['fast']['mean'] > 50.0:  # Relaxed target
-            print(f"❌ {state_name}: {result['fast']['mean']:.2f}µs (target: ≤50µs)")
+        if result['optimized']['mean'] > 50.0:  # Target
+            print(f"❌ {state_name}: {result['optimized']['mean']:.2f}µs (target: ≤50µs)")
             target_met = False
         else:
-            print(f"✅ {state_name}: {result['fast']['mean']:.2f}µs (target: ≤50µs)")
+            print(f"✅ {state_name}: {result['optimized']['mean']:.2f}µs (target: ≤50µs)")
     
     if target_met:
         print(f"\n🎉 All performance targets met!")
     else:
-        print(f"\n⚠️  Some performance targets not met. Consider optimization.")
+        print(f"\n⚠️  Some performance targets not met. Consider further optimization.")
     
     return results
 
