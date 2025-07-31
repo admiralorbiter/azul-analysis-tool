@@ -92,6 +92,29 @@
         .status-error { color: #dc2626; }
         .status-warning { color: #d97706; }
         
+        /* Click selection visual feedback */
+        .tile.selected {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 3px #3b82f6;
+            z-index: 10;
+        }
+        
+        .pattern-line.valid-drop {
+            border-color: #10b981;
+            background-color: rgba(16, 185, 129, 0.1);
+            border-style: solid;
+        }
+        
+        .wall-cell.valid-drop {
+            background-color: rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+        }
+        
+        .factory.valid-source {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
         /* Drag and drop visual feedback */
         .drag-ghost {
             position: fixed;
@@ -311,7 +334,7 @@
         };
 
         // Tile Component with proper drag-and-drop
-        function Tile({ color, onClick, className = "", draggable = false, onDragStart, onDragEnd, dataAttributes = {} }) {
+        function Tile({ color, onClick, className = "", draggable = false, onDragStart, onDragEnd, dataAttributes = {}, isSelected = false }) {
             const tileRef = React.useRef(null);
             
             useEffect(() => {
@@ -342,7 +365,7 @@
             return (
                 <div 
                     ref={tileRef}
-                    className={`tile ${className}`}
+                    className={`tile ${className} ${isSelected ? 'selected' : ''}`}
                     style={{ backgroundColor: TILE_COLORS[color] || '#6b7280' }}
                     onClick={onClick}
                     title={color}
@@ -353,7 +376,7 @@
         }
 
         // Factory Component with drag-and-drop
-        function Factory({ tiles, onTileClick, heatmap = null, factoryIndex }) {
+        function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTile = null, onTileSelection = null }) {
             const factoryRef = React.useRef(null);
             
             useEffect(() => {
@@ -396,52 +419,72 @@
                 <div ref={factoryRef} className="factory">
                     <div className="text-xs text-gray-600 mb-2">Factory {factoryIndex + 1}</div>
                     <div className="flex flex-wrap gap-1">
-                        {tiles.map((tile, index) => (
-                            <Tile 
-                                key={index}
-                                color={tile}
-                                onClick={() => onTileClick(tile, index)}
-                                className={heatmap ? `heatmap-${heatmap}` : ""}
-                                draggable={tile !== 'W'} // Only non-empty tiles are draggable
-                                onDragStart={(e, tileElement) => {
-                                    console.log('Factory tile drag start:', tile, factoryIndex, index);
-                                    
-                                    const tileData = {
-                                        tile: tile,
-                                        factoryIndex: factoryIndex,
-                                        tileIndex: index,
-                                        sourceId: factoryIndex
-                                    };
-                                    console.log('Setting drag data:', tileData);
-                                    
-                                    e.dataTransfer.setData('application/json', JSON.stringify(tileData));
-                                    e.dataTransfer.effectAllowed = 'move';
-                                    tileElement.classList.add('dragging');
-                                    
-                                    // Create drag ghost
-                                    dragGhost = tileElement.cloneNode(true);
-                                    dragGhost.classList.add('drag-ghost');
-                                    dragGhost.style.width = '40px';
-                                    dragGhost.style.height = '40px';
-                                    document.body.appendChild(dragGhost);
-                                    e.dataTransfer.setDragImage(dragGhost, 20, 20);
-                                }}
-                                onDragEnd={(e, tileElement) => {
-                                    tileElement.classList.remove('dragging');
-                                    if (dragGhost) {
-                                        document.body.removeChild(dragGhost);
-                                        dragGhost = null;
-                                    }
-                                }}
-                            />
-                        ))}
+                        {tiles.map((tile, index) => {
+                            const tileData = {
+                                tile: tile,
+                                factoryIndex: factoryIndex,
+                                tileIndex: index,
+                                sourceId: factoryIndex
+                            };
+                            const isSelected = selectedTile && 
+                                selectedTile.tile === tile && 
+                                selectedTile.factoryIndex === factoryIndex && 
+                                selectedTile.tileIndex === index;
+                            
+                            return (
+                                <Tile 
+                                    key={index}
+                                    color={tile}
+                                    onClick={() => {
+                                        if (onTileSelection) {
+                                            onTileSelection(tileData);
+                                        } else {
+                                            onTileClick(tile, index);
+                                        }
+                                    }}
+                                    className={`${heatmap ? `heatmap-${heatmap}` : ""} ${selectedTile && !isSelected ? 'valid-source' : ''}`}
+                                    draggable={tile !== 'W'} // Only non-empty tiles are draggable
+                                    isSelected={isSelected}
+                                    onDragStart={(e, tileElement) => {
+                                        console.log('Factory tile drag start:', tile, factoryIndex, index);
+                                        
+                                        const tileData = {
+                                            tile: tile,
+                                            factoryIndex: factoryIndex,
+                                            tileIndex: index,
+                                            sourceId: factoryIndex
+                                        };
+                                        console.log('Setting drag data:', tileData);
+                                        
+                                        e.dataTransfer.setData('application/json', JSON.stringify(tileData));
+                                        e.dataTransfer.effectAllowed = 'move';
+                                        tileElement.classList.add('dragging');
+                                        
+                                        // Create drag ghost
+                                        dragGhost = tileElement.cloneNode(true);
+                                        dragGhost.classList.add('drag-ghost');
+                                        dragGhost.style.width = '40px';
+                                        dragGhost.style.height = '40px';
+                                        document.body.appendChild(dragGhost);
+                                        e.dataTransfer.setDragImage(dragGhost, 20, 20);
+                                    }}
+                                    onDragEnd={(e, tileElement) => {
+                                        tileElement.classList.remove('dragging');
+                                        if (dragGhost) {
+                                            document.body.removeChild(dragGhost);
+                                            dragGhost = null;
+                                        }
+                                    }}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             );
         }
 
         // Pattern Line Component with drop zones
-        function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop }) {
+        function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null }) {
             const patternLineRef = React.useRef(null);
             
             useEffect(() => {
@@ -492,13 +535,21 @@
             }, [onDrop, rowIndex, patternLineRef]);
             
             const emptySlots = Math.max(0, maxTiles - tiles.length);
+            const isValidDestination = selectedTile && onDestinationClick;
+            
             return (
-                <div ref={patternLineRef} className="pattern-line">
+                <div ref={patternLineRef} className={`pattern-line ${isValidDestination ? 'valid-drop' : ''}`}>
                     {tiles.map((tile, index) => (
                         <Tile 
                             key={index}
                             color={tile}
-                            onClick={() => onTileClick(rowIndex, index)}
+                            onClick={() => {
+                                if (isValidDestination) {
+                                    onDestinationClick('pattern', { rowIndex, tileIndex: index });
+                                } else {
+                                    onTileClick(rowIndex, index);
+                                }
+                            }}
                         />
                     ))}
                     {Array.from({ length: emptySlots }, (_, index) => (
@@ -506,7 +557,13 @@
                             key={`empty-${index}`}
                             className="tile"
                             style={{ backgroundColor: 'transparent', border: '2px dashed #d1d5db' }}
-                            onClick={() => onTileClick(rowIndex, tiles.length + index)}
+                            onClick={() => {
+                                if (isValidDestination) {
+                                    onDestinationClick('pattern', { rowIndex, tileIndex: tiles.length + index });
+                                } else {
+                                    onTileClick(rowIndex, tiles.length + index);
+                                }
+                            }}
                         />
                     ))}
                 </div>
@@ -514,7 +571,7 @@
         }
 
         // Wall Component with drop zones
-        function Wall({ wall, onWallClick, onDrop }) {
+        function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationClick = null }) {
             const wallRef = React.useRef(null);
             
             useEffect(() => {
@@ -564,24 +621,34 @@
             return (
                 <div ref={wallRef} className="wall">
                     {wall.map((row, rowIndex) => (
-                        row.map((cell, colIndex) => (
-                            <div 
-                                key={`${rowIndex}-${colIndex}`}
-                                className={`wall-cell ${cell ? 'occupied' : ''}`}
-                                onClick={() => onWallClick(rowIndex, colIndex)}
-                                data-row={rowIndex}
-                                data-col={colIndex}
-                            >
-                                {cell && <Tile color={cell} />}
-                            </div>
-                        ))
+                        row.map((cell, colIndex) => {
+                            const isValidDestination = selectedTile && onDestinationClick && !cell;
+                            
+                            return (
+                                <div 
+                                    key={`${rowIndex}-${colIndex}`}
+                                    className={`wall-cell ${cell ? 'occupied' : ''} ${isValidDestination ? 'valid-drop' : ''}`}
+                                    onClick={() => {
+                                        if (isValidDestination) {
+                                            onDestinationClick('wall', { rowIndex, colIndex });
+                                        } else {
+                                            onWallClick(rowIndex, colIndex);
+                                        }
+                                    }}
+                                    data-row={rowIndex}
+                                    data-col={colIndex}
+                                >
+                                    {cell && <Tile color={cell} />}
+                                </div>
+                            );
+                        })
                     ))}
                 </div>
             );
         }
 
         // Player Board Component
-        function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onPatternLineDrop, onWallDrop }) {
+        function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onPatternLineDrop, onWallDrop, selectedTile = null, onDestinationClick = null }) {
             return (
                 <div className="bg-gray-50 p-4 rounded-lg mb-4">
                     <h4 className="text-lg font-medium mb-3">Player {playerIndex + 1}</h4>
@@ -589,7 +656,7 @@
                     {/* Pattern Lines */}
                     <div className="mb-4">
                         <h5 className="text-sm font-medium mb-2">Pattern Lines</h5>
-                        {player.pattern_lines.map((line, index) => (
+                                                {player.pattern_lines.map((line, index) => (
                             <PatternLine 
                                 key={index}
                                 tiles={line}
@@ -597,10 +664,12 @@
                                 maxTiles={index + 1}
                                 onTileClick={onPatternLineClick}
                                 onDrop={onPatternLineDrop}
+                                selectedTile={selectedTile}
+                                onDestinationClick={onDestinationClick}
                             />
                         ))}
                     </div>
-                    
+
                     {/* Wall */}
                     <div className="mb-4">
                         <h5 className="text-sm font-medium mb-2">Wall</h5>
@@ -608,6 +677,8 @@
                             wall={player.wall}
                             onWallClick={onWallClick}
                             onDrop={onWallDrop}
+                            selectedTile={selectedTile}
+                            onDestinationClick={onDestinationClick}
                         />
                     </div>
                     
@@ -672,6 +743,10 @@
             const [hint, setHint] = useState(null);
             const [selectedMove, setSelectedMove] = useState(null);
             const [fenString, setFenString] = useState('initial');
+            
+            // Click selection state
+            const [selectedTile, setSelectedTile] = useState(null);
+            const [selectionMode, setSelectionMode] = useState('none'); // 'none', 'tile', 'destination'
 
             // Initialize session and game state on component mount
             useEffect(() => {
@@ -707,6 +782,9 @@
                             e.preventDefault();
                             redoMove();
                         }
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        clearSelection();
                     }
                 };
                 
@@ -776,7 +854,8 @@
                     agent_id: 0
                 };
                 
-                console.log('Sending request to API:', requestData);
+                console.log('DEBUG: Move data received:', moveData);
+                console.log('DEBUG: Request data:', requestData);
                 
                 try {
                     const response = await fetch(`${API_BASE}/execute_move`, {
@@ -906,15 +985,33 @@
             const handlePatternLineDrop = (tileData, rowIndex) => {
                 console.log('handlePatternLineDrop called with:', tileData, rowIndex);
                 
+                // Calculate how many tiles of this type are available
+                let totalTilesAvailable = 0;
+                if (tileData.sourceId >= 0) {
+                    // From factory - count all tiles of this type in the factory
+                    const factory = gameState.factories[tileData.sourceId];
+                    totalTilesAvailable = factory.filter(tile => tile === tileData.tile).length;
+                } else {
+                    // From center - count all tiles of this type in center
+                    totalTilesAvailable = gameState.center.filter(tile => tile === tileData.tile).length;
+                }
+
+                // Calculate placement for pattern line
+                const maxForPatternLine = rowIndex + 1; // Pattern line 0 holds 1, line 1 holds 2, etc.
+                const numToPattern = Math.min(totalTilesAvailable, maxForPatternLine);
+                const numToFloor = Math.max(0, totalTilesAvailable - numToPattern);
+                
                 const move = {
                     source_id: tileData.sourceId,
                     tile_type: getTileTypeFromColor(tileData.tile),
                     pattern_line_dest: rowIndex,
-                    num_to_pattern_line: 1,
-                    num_to_floor_line: 0
+                    num_to_pattern_line: numToPattern,
+                    num_to_floor_line: numToFloor
                 };
                 
                 console.log('Tile data:', tileData);
+                console.log('Total tiles available:', totalTilesAvailable);
+                console.log('Calculated placement - pattern:', numToPattern, 'floor:', numToFloor);
                 console.log('Generated move:', move);
                 
                 executeMove(move);
@@ -933,6 +1030,83 @@
             // Handle wall click
             const handleWallClick = (rowIndex, colIndex) => {
                 setStatusMessage(`🎯 Wall cell ${rowIndex}, ${colIndex} clicked`);
+            };
+
+            // Click selection handlers
+            const handleTileSelection = (tileData) => {
+                // Clear any existing selection
+                clearSelection();
+                
+                // Set new selection
+                setSelectedTile(tileData);
+                setSelectionMode('tile');
+                setStatusMessage(`✅ Selected ${tileData.tile} tile from ${tileData.sourceId >= 0 ? `factory ${tileData.sourceId + 1}` : 'center'}`);
+            };
+
+            const handleDestinationClick = (destinationType, destinationData) => {
+                if (!selectedTile) {
+                    setStatusMessage('❌ No tile selected. Click a tile first.');
+                    return;
+                }
+
+                // Calculate how many tiles of this type are available
+                let totalTilesAvailable = 0;
+                if (selectedTile.sourceId >= 0) {
+                    // From factory - count all tiles of this type in the factory
+                    const factory = gameState.factories[selectedTile.sourceId];
+                    totalTilesAvailable = factory.filter(tile => tile === selectedTile.tile).length;
+                } else {
+                    // From center - count all tiles of this type in center
+                    totalTilesAvailable = gameState.center.filter(tile => tile === selectedTile.tile).length;
+                }
+
+                // Calculate placement based on destination
+                let numToPattern = 0;
+                let numToFloor = 0;
+                
+                if (destinationType === 'pattern') {
+                    const maxForPatternLine = destinationData.rowIndex + 1; // Pattern line 0 holds 1, line 1 holds 2, etc.
+                    numToPattern = Math.min(totalTilesAvailable, maxForPatternLine);
+                    numToFloor = Math.max(0, totalTilesAvailable - numToPattern);
+                } else if (destinationType === 'wall') {
+                    // Wall placement not implemented yet, put all on floor
+                    numToPattern = 0;
+                    numToFloor = totalTilesAvailable;
+                }
+
+                // Execute the move
+                const move = {
+                    source_id: selectedTile.sourceId,
+                    tile_type: getTileTypeFromColor(selectedTile.tile),
+                    pattern_line_dest: destinationType === 'pattern' ? destinationData.rowIndex : -1,
+                    wall_row: destinationType === 'wall' ? destinationData.rowIndex : -1,
+                    wall_col: destinationType === 'wall' ? destinationData.colIndex : -1,
+                    num_to_pattern_line: numToPattern,
+                    num_to_floor_line: numToFloor
+                };
+
+                console.log('DEBUG: Selected tile:', selectedTile);
+                console.log('DEBUG: Destination:', destinationType, destinationData);
+                console.log('DEBUG: Total tiles available:', totalTilesAvailable);
+                console.log('DEBUG: Calculated placement - pattern:', numToPattern, 'floor:', numToFloor);
+                console.log('DEBUG: Generated move:', move);
+
+                executeMove(move);
+                clearSelection();
+            };
+
+            const clearSelection = () => {
+                setSelectedTile(null);
+                setSelectionMode('none');
+            };
+
+            // Check if a destination is valid for the selected tile
+            const isValidDestination = (destinationType, destinationData) => {
+                if (!selectedTile) return false;
+                
+                // For now, allow all destinations
+                // In the future, add validation logic here
+                return true;
             };
 
             return (
@@ -974,6 +1148,8 @@
                                                         onTileClick={(tile, tileIndex) => {
                                                             setStatusMessage(`🎯 Selected ${tile} tile from factory ${index + 1}`);
                                                         }}
+                                                        selectedTile={selectedTile}
+                                                        onTileSelection={handleTileSelection}
                                                     />
                                                 ))}
                                             </div>
@@ -983,38 +1159,53 @@
                                         <div className="mb-6">
                                             <h3 className="text-lg font-medium mb-3">Center</h3>
                                             <div className="flex gap-2">
-                                                {gameState.center.map((tile, index) => (
-                                                    <Tile 
-                                                        key={index}
-                                                        color={tile}
-                                                        draggable={tile !== 'W'}
-                                                        onDragStart={(e, tileElement) => {
-                                                            const tileData = {
-                                                                tile: tile,
-                                                                sourceId: -1, // -1 indicates center pool
-                                                                tileIndex: index
-                                                            };
-                                                            e.dataTransfer.setData('application/json', JSON.stringify(tileData));
-                                                            e.dataTransfer.effectAllowed = 'move';
-                                                            tileElement.classList.add('dragging');
-                                                            
-                                                            // Create drag ghost
-                                                            dragGhost = tileElement.cloneNode(true);
-                                                            dragGhost.classList.add('drag-ghost');
-                                                            dragGhost.style.width = '40px';
-                                                            dragGhost.style.height = '40px';
-                                                            document.body.appendChild(dragGhost);
-                                                            e.dataTransfer.setDragImage(dragGhost, 20, 20);
-                                                        }}
-                                                        onDragEnd={(e, tileElement) => {
-                                                            tileElement.classList.remove('dragging');
-                                                            if (dragGhost) {
-                                                                document.body.removeChild(dragGhost);
-                                                                dragGhost = null;
-                                                            }
-                                                        }}
-                                                    />
-                                                ))}
+                                                {gameState.center.map((tile, index) => {
+                                                    const tileData = {
+                                                        tile: tile,
+                                                        sourceId: -1, // -1 indicates center pool
+                                                        tileIndex: index
+                                                    };
+                                                    const isSelected = selectedTile && 
+                                                        selectedTile.tile === tile && 
+                                                        selectedTile.sourceId === -1 && 
+                                                        selectedTile.tileIndex === index;
+                                                    
+                                                    return (
+                                                        <Tile 
+                                                            key={index}
+                                                            color={tile}
+                                                            draggable={tile !== 'W'}
+                                                            isSelected={isSelected}
+                                                            onClick={() => handleTileSelection(tileData)}
+                                                            onDragStart={(e, tileElement) => {
+                                                                const tileData = {
+                                                                    tile: tile,
+                                                                    sourceId: -1, // -1 indicates center pool
+                                                                    tileIndex: index
+                                                                };
+                                                                e.dataTransfer.setData('application/json', JSON.stringify(tileData));
+                                                                e.dataTransfer.effectAllowed = 'move';
+                                                                tileElement.classList.add('dragging');
+                                                                
+                                                                // Create drag ghost
+                                                                dragGhost = tileElement.cloneNode(true);
+                                                                dragGhost.classList.add('drag-ghost');
+                                                                dragGhost.classList.add('drag-ghost');
+                                                                dragGhost.style.width = '40px';
+                                                                dragGhost.style.height = '40px';
+                                                                document.body.appendChild(dragGhost);
+                                                                e.dataTransfer.setDragImage(dragGhost, 20, 20);
+                                                            }}
+                                                            onDragEnd={(e, tileElement) => {
+                                                                tileElement.classList.remove('dragging');
+                                                                if (dragGhost) {
+                                                                    document.body.removeChild(dragGhost);
+                                                                    dragGhost = null;
+                                                                }
+                                                            }}
+                                                        />
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 
@@ -1030,6 +1221,8 @@
                                                     onWallClick={handleWallClick}
                                                     onPatternLineDrop={handlePatternLineDrop}
                                                     onWallDrop={handleWallDrop}
+                                                    selectedTile={selectedTile}
+                                                    onDestinationClick={handleDestinationClick}
                                                 />
                                             ))}
                                         </div>
@@ -1086,9 +1279,19 @@
                                             ↷ Redo
                                         </button>
                                     </div>
+                                    <div className="mt-2">
+                                        <button 
+                                            onClick={clearSelection}
+                                            disabled={!selectedTile}
+                                            className="w-full bg-red-600 text-white py-2 px-3 rounded hover:bg-red-700 disabled:opacity-50 text-sm"
+                                        >
+                                            ✕ Clear Selection
+                                        </button>
+                                    </div>
                                     <div className="mt-2 text-xs text-gray-500">
                                         <p>💡 Drag tiles from factories to pattern lines</p>
-                                        <p>⌨️ Ctrl+Z: Undo, Ctrl+Y: Redo</p>
+                                        <p>🖱️ Click tiles to select, then click destination</p>
+                                        <p>⌨️ Ctrl+Z: Undo, Ctrl+Y: Redo, Esc: Clear selection</p>
                                     </div>
                                 </div>
                                 

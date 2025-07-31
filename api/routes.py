@@ -6,6 +6,8 @@ This module provides Flask blueprints for game analysis, hints, and research too
 
 import json
 import time
+import copy
+import random
 from typing import Dict, Any, Optional, List
 from flask import Blueprint, request, jsonify, current_app
 from pydantic import BaseModel, ValidationError, ConfigDict
@@ -100,19 +102,38 @@ api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
 # Global variable to store the current game state
 _current_game_state = None
+_initial_game_state = None  # Store the original initial state
 
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
-    global _current_game_state
+    global _current_game_state, _initial_game_state
     from core.azul_model import AzulState
     
     if fen_string.lower() == "initial":
-        # If we don't have a current state, create a new one
+        # Use a consistent initial state with fixed seed for reproducibility
+        if _initial_game_state is None:
+            # Set a fixed seed to ensure consistent initial state
+            random.seed(42)
+            _initial_game_state = AzulState(2)  # 2-player starting position
+            # Reset seed to random
+            random.seed()
+            # Initialize current state from initial state
+            _current_game_state = copy.deepcopy(_initial_game_state)
+        
+        # Always return the current game state (which starts as a copy of initial)
+        return _current_game_state
+    elif fen_string.startswith("state_"):
+        # This is a state identifier - return the current game state
         if _current_game_state is None:
-            _current_game_state = AzulState(2)  # 2-player starting position
+            # If we don't have a current state, create from initial state
+            if _initial_game_state is None:
+                random.seed(42)
+                _initial_game_state = AzulState(2)
+                random.seed()
+            _current_game_state = copy.deepcopy(_initial_game_state)
         return _current_game_state
     else:
-        raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial' for now.")
+        raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial' or state identifiers.")
 
 def update_current_game_state(new_state):
     """Update the current game state."""
@@ -1872,6 +1893,15 @@ def execute_move():
         
         print(f"DEBUG: Parsed state - agent count: {len(state.agents)}, factories: {len(state.factories)}")
         
+        # Debug: Print actual factory contents
+        for i, factory in enumerate(state.factories):
+            tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+            factory_tiles = []
+            for tile_type, count in factory.tiles.items():
+                for _ in range(count):
+                    factory_tiles.append(tile_colors.get(tile_type, f'T{tile_type}'))
+            print(f"DEBUG: API Factory {i}: {factory_tiles}")
+        
         # Convert frontend move format to engine move format
         move_data = request_model.move
         engine_move = convert_frontend_move_to_engine(move_data)
@@ -1882,6 +1912,12 @@ def execute_move():
         generator = FastMoveGenerator()
         legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
         print(f"DEBUG: Generated {len(legal_moves)} legal moves")
+        
+        # Debug: Show first few legal moves with same source and tile type
+        relevant_moves = [m for m in legal_moves if m.action_type == engine_move['action_type'] and m.source_id == engine_move['source_id'] and m.tile_type == engine_move['tile_type']]
+        print(f"DEBUG: Found {len(relevant_moves)} moves with same action_type, source_id, and tile_type")
+        for i, move in enumerate(relevant_moves[:3]):
+            print(f"DEBUG: Relevant move {i}: pattern_dest={move.pattern_line_dest}, num_pattern={move.num_to_pattern_line}, num_floor={move.num_to_floor_line}")
         
         # Find matching move
         matching_move = find_matching_move(engine_move, legal_moves)
@@ -1949,6 +1985,11 @@ def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]
     num_to_pattern_line = move_data.get('num_to_pattern_line', 0)
     num_to_floor_line = move_data.get('num_to_floor_line', 0)
     
+    # Ensure tile_type is an integer (convert from enum if needed)
+    if hasattr(tile_type, 'value'):
+        tile_type = tile_type.value
+    tile_type = int(tile_type)
+    
     # Determine action type based on source_id
     # Factory moves (source_id >= 0) are action_type 1, center moves (source_id < 0) are action_type 2
     action_type = 1 if source_id >= 0 else 2
@@ -2013,8 +2054,39 @@ def get_engine_response(state, agent_id: int) -> Optional[Dict[str, Any]]:
 
 def state_to_fen(state) -> str:
     """Convert game state to FEN string."""
-    # For now, return "initial" as the API only supports this format
-    # TODO: Implement proper FEN encoding when backend supports it
+    global _current_game_state
+    
+    # If this is the current game state, return a unique identifier
+    if state is _current_game_state:
+        # Generate a unique state identifier based on the state's content
+        # This is a simple hash-based approach for now
+        import hashlib
+        import pickle
+        
+        # Create a hash of the state's key components
+        state_data = {
+            'factories': [(i, dict(factory.tiles)) for i, factory in enumerate(state.factories)],
+            'center': dict(state.centre_pool.tiles),
+            'agents': [
+                {
+                    'lines_tile': agent.lines_tile,
+                    'lines_number': agent.lines_number,
+                    'grid_state': agent.grid_state,
+                    'floor_tiles': agent.floor_tiles,
+                    'score': agent.score
+                }
+                for agent in state.agents
+            ],
+            'current_player': getattr(state, 'current_player', state.first_agent)
+        }
+        
+        # Create a hash of the state data
+        state_bytes = pickle.dumps(state_data)
+        state_hash = hashlib.md5(state_bytes).hexdigest()[:8]
+        
+        return f"state_{state_hash}"
+    
+    # For other states, return "initial" for backward compatibility
     return "initial" 
 
 
@@ -2109,10 +2181,16 @@ def get_game_state():
 @api_bp.route('/reset_game', methods=['POST'])
 def reset_game():
     """Reset the current game state to initial position."""
-    global _current_game_state
+    global _current_game_state, _initial_game_state
     from core.azul_model import AzulState
     
-    _current_game_state = AzulState(2)  # Create new 2-player game
+    # Reset to the consistent initial state
+    if _initial_game_state is None:
+        random.seed(42)
+        _initial_game_state = AzulState(2)
+        random.seed()
+    
+    _current_game_state = copy.deepcopy(_initial_game_state)
     
     return jsonify({
         'success': True,
