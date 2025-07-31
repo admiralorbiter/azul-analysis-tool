@@ -290,9 +290,9 @@ class TestAPIHealthAndStats:
         assert data['version'] == '0.1.0'
         assert 'timestamp' in data
     
-    def test_root_endpoint(self):
-        """Test root endpoint."""
-        response = self.client.get('/')
+    def test_api_info_endpoint(self):
+        """Test API info endpoint."""
+        response = self.client.get('/api')
         
         assert response.status_code == 200
         data = json.loads(response.data)

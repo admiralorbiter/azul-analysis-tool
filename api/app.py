@@ -7,12 +7,13 @@ API endpoints, authentication, rate limiting, and database integration.
 
 import os
 import tempfile
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
 from .routes import api_bp
 from .auth import auth_bp, session_manager
 from .rate_limiter import RateLimiter
+from core.azul_database import AzulDatabase
 
 
 def create_app(config=None):
@@ -53,7 +54,6 @@ def create_app(config=None):
     # Initialize database if path is provided
     if app.config.get('DATABASE_PATH'):
         try:
-            from core.azul_database import AzulDatabase
             app.database = AzulDatabase(app.config['DATABASE_PATH'])
         except Exception as e:
             app.logger.warning(f"Failed to initialize database: {e}")
@@ -64,6 +64,35 @@ def create_app(config=None):
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(api_bp)
+    
+    # Serve static files from ui directory
+    @app.route('/ui/<path:filename>')
+    def ui_static(filename):
+        ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
+        return send_from_directory(ui_dir, filename)
+    
+    # API info endpoint
+    @app.route('/api')
+    def api_info():
+        """API information endpoint."""
+        return jsonify({
+            'name': 'Azul Solver & Analysis Toolkit API',
+            'version': '0.1.0',
+            'endpoints': {
+                'auth': '/api/v1/auth',
+                'analysis': '/api/v1/analyze',
+                'hint': '/api/v1/hint',
+                'health': '/api/v1/health',
+                'stats': '/api/v1/stats'
+            },
+            'documentation': 'See project README for API documentation'
+        })
+    
+    # Web UI route
+    @app.route('/')
+    def index():
+        ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
+        return send_from_directory(ui_dir, 'index.html')
     
     # Error handlers
     @app.errorhandler(404)
@@ -89,23 +118,6 @@ def create_app(config=None):
             'status': 'healthy',
             'version': '0.1.0',
             'database': 'connected' if app.database else 'disabled'
-        })
-    
-    # Root endpoint
-    @app.route('/')
-    def root():
-        """Root endpoint with API information."""
-        return jsonify({
-            'name': 'Azul Solver & Analysis Toolkit API',
-            'version': '0.1.0',
-            'endpoints': {
-                'auth': '/api/v1/auth',
-                'analysis': '/api/v1/analyze',
-                'hint': '/api/v1/hint',
-                'health': '/api/v1/health',
-                'stats': '/api/v1/stats'
-            },
-            'documentation': 'See project README for API documentation'
         })
     
     return app

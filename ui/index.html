@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azul Solver & Analysis Toolkit</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tile {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tile:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .factory {
+            border: 2px solid #374151;
+            border-radius: 8px;
+            padding: 8px;
+            margin: 4px;
+            background: #f9fafb;
+        }
+        .pattern-line {
+            display: flex;
+            gap: 2px;
+            margin: 2px 0;
+        }
+        .wall {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            margin: 4px 0;
+        }
+        .wall-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #d1d5db;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .heatmap-green { background-color: rgba(34, 197, 94, 0.3); }
+        .heatmap-yellow { background-color: rgba(234, 179, 8, 0.3); }
+        .heatmap-red { background-color: rgba(239, 68, 68, 0.3); }
+        .move-option {
+            padding: 8px;
+            margin: 4px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .move-option:hover {
+            background-color: #f3f4f6;
+        }
+        .move-option.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // API Configuration
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let sessionId = null;
+
+        // Initialize session
+        async function initializeSession() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_agent: navigator.userAgent,
+                        ip_address: '127.0.0.1'
+                    })
+                });
+                const data = await response.json();
+                sessionId = data.session_id;
+                console.log('Session initialized:', sessionId);
+            } catch (error) {
+                console.error('Failed to initialize session:', error);
+            }
+        }
+
+        // API helper functions
+        async function analyzePosition(fenString) {
+            if (!sessionId) return null;
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        fen_string: fenString,
+                        depth: 3,
+                        timeout: 4.0,
+                        agent: 0
+                    })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                return null;
+            }
+        }
+
+        async function getHint(fenString) {
+            if (!sessionId) return null;
+            
+            try {
+                const response = await fetch(`${API_BASE}/hint`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        fen_string: fenString,
+                        budget: 0.2,
+                        rollouts: 100,
+                        agent: 0
+                    })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Hint failed:', error);
+                return null;
+            }
+        }
+
+        // Tile colors mapping
+        const TILE_COLORS = {
+            'R': '#ef4444', // red
+            'B': '#3b82f6', // blue
+            'Y': '#eab308', // yellow
+            'W': '#f3f4f6', // white
+            'K': '#1f2937', // black
+        };
+
+        // Sample game state (simplified FEN-like format)
+        const SAMPLE_STATE = {
+            factories: [
+                ['R', 'B', 'Y', 'W', 'K'],
+                ['B', 'Y', 'W', 'K', 'R'],
+                ['Y', 'W', 'K', 'R', 'B'],
+                ['W', 'K', 'R', 'B', 'Y'],
+            ],
+            center: ['R', 'B', 'Y'],
+            players: [
+                {
+                    pattern_lines: [
+                        ['R', 'B'],
+                        ['Y'],
+                        [],
+                        [],
+                        []
+                    ],
+                    wall: [
+                        [false, false, false, false, false],
+                        [false, false, false, false, false],
+                        [false, false, false, false, false],
+                        [false, false, false, false, false],
+                        [false, false, false, false, false]
+                    ],
+                    floor: ['R', 'B']
+                }
+            ]
+        };
+
+        // Tile Component
+        function Tile({ color, onClick, className = "" }) {
+            return (
+                <div 
+                    className={`tile ${className}`}
+                    style={{ backgroundColor: TILE_COLORS[color] || '#6b7280' }}
+                    onClick={onClick}
+                />
+            );
+        }
+
+        // Factory Component
+        function Factory({ tiles, onTileClick, heatmap = null }) {
+            return (
+                <div className="factory">
+                    <div className="text-xs text-gray-600 mb-2">Factory</div>
+                    <div className="flex flex-wrap gap-1">
+                        {tiles.map((tile, index) => (
+                            <Tile 
+                                key={index}
+                                color={tile}
+                                onClick={() => onTileClick(tile, index)}
+                                className={heatmap ? `heatmap-${heatmap}` : ""}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Pattern Line Component
+        function PatternLine({ tiles, rowIndex, maxTiles, onTileClick }) {
+            const emptySlots = maxTiles - tiles.length;
+            return (
+                <div className="pattern-line">
+                    {tiles.map((tile, index) => (
+                        <Tile 
+                            key={index}
+                            color={tile}
+                            onClick={() => onTileClick(rowIndex, index)}
+                        />
+                    ))}
+                    {Array(emptySlots).fill(null).map((_, index) => (
+                        <div 
+                            key={`empty-${index}`}
+                            className="w-10 h-10 border border-gray-300 rounded"
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        // Wall Component
+        function Wall({ wall, onCellClick }) {
+            return (
+                <div className="wall">
+                    {wall.map((row, rowIndex) => 
+                        row.map((filled, colIndex) => (
+                            <div 
+                                key={`${rowIndex}-${colIndex}`}
+                                className={`wall-cell ${filled ? 'bg-gray-800' : ''}`}
+                                onClick={() => onCellClick(rowIndex, colIndex)}
+                            />
+                        ))
+                    )}
+                </div>
+            );
+        }
+
+        // Player Board Component
+        function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick }) {
+            return (
+                <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4">Player {playerIndex + 1}</h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 className="text-sm font-medium mb-2">Pattern Lines</h4>
+                            {player.pattern_lines.map((line, index) => (
+                                <PatternLine 
+                                    key={index}
+                                    tiles={line}
+                                    rowIndex={index}
+                                    maxTiles={index + 1}
+                                    onTileClick={onPatternLineClick}
+                                />
+                            ))}
+                        </div>
+                        
+                        <div>
+                            <h4 className="text-sm font-medium mb-2">Wall</h4>
+                            <Wall 
+                                wall={player.wall}
+                                onCellClick={onWallClick}
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                        <h4 className="text-sm font-medium mb-2">Floor</h4>
+                        <div className="flex gap-1">
+                            {player.floor.map((tile, index) => (
+                                <Tile 
+                                    key={index}
+                                    color={tile}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Move Option Component
+        function MoveOption({ move, score, visits, onClick, isSelected }) {
+            return (
+                <div 
+                    className={`move-option ${isSelected ? 'selected' : ''}`}
+                    onClick={onClick}
+                >
+                    <div className="font-medium">{move}</div>
+                    <div className="text-sm text-gray-600">
+                        Score: {score.toFixed(2)}, Visits: {visits}
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [gameState, setGameState] = useState(SAMPLE_STATE);
+            const [analysis, setAnalysis] = useState(null);
+            const [hint, setHint] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [selectedMove, setSelectedMove] = useState(null);
+            const [fenString, setFenString] = useState('');
+
+            // Initialize session on component mount
+            useEffect(() => {
+                initializeSession();
+            }, []);
+
+            // Convert game state to FEN-like string
+            const stateToFen = useCallback(() => {
+                // Simplified FEN conversion for demo
+                const factories = gameState.factories.map(f => f.join('')).join('|');
+                const center = gameState.center.join('');
+                const players = gameState.players.map(p => {
+                    const patternLines = p.pattern_lines.map(line => line.join('')).join(',');
+                    const wall = p.wall.map(row => row.map(cell => cell ? '1' : '0').join('')).join(',');
+                    const floor = p.floor.join('');
+                    return `${patternLines}|${wall}|${floor}`;
+                }).join(';');
+                
+                return `${factories}|${center}|${players}`;
+            }, [gameState]);
+
+            // Handle analysis request
+            const handleAnalyze = async () => {
+                setLoading(true);
+                const fen = stateToFen();
+                setFenString(fen);
+                
+                const result = await analyzePosition(fen);
+                if (result) {
+                    setAnalysis(result);
+                    console.log('Analysis result:', result);
+                }
+                
+                setLoading(false);
+            };
+
+            // Handle hint request
+            const handleHint = async () => {
+                setLoading(true);
+                const fen = stateToFen();
+                setFenString(fen);
+                
+                const result = await getHint(fen);
+                if (result) {
+                    setHint(result);
+                    console.log('Hint result:', result);
+                }
+                
+                setLoading(false);
+            };
+
+            // Handle tile click in factory
+            const handleFactoryTileClick = (tile, factoryIndex, tileIndex) => {
+                console.log(`Clicked tile ${tile} from factory ${factoryIndex}, position ${tileIndex}`);
+                // TODO: Implement move logic
+            };
+
+            // Handle pattern line click
+            const handlePatternLineClick = (rowIndex, tileIndex) => {
+                console.log(`Clicked pattern line ${rowIndex}, tile ${tileIndex}`);
+                // TODO: Implement move logic
+            };
+
+            // Handle wall click
+            const handleWallClick = (rowIndex, colIndex) => {
+                console.log(`Clicked wall cell ${rowIndex}, ${colIndex}`);
+                // TODO: Implement move logic
+            };
+
+            return (
+                <div className="container mx-auto p-6">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            Azul Solver & Analysis Toolkit
+                        </h1>
+                        <p className="text-gray-600">
+                            Interactive game analysis with live hints and exact evaluation
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Game Board */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white p-6 rounded-lg shadow">
+                                <h2 className="text-xl font-semibold mb-4">Game Board</h2>
+                                
+                                {/* Factories */}
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-medium mb-3">Factories</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {gameState.factories.map((factory, index) => (
+                                            <Factory 
+                                                key={index}
+                                                tiles={factory}
+                                                onTileClick={(tile, tileIndex) => 
+                                                    handleFactoryTileClick(tile, index, tileIndex)
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Center */}
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-medium mb-3">Center</h3>
+                                    <div className="flex gap-2">
+                                        {gameState.center.map((tile, index) => (
+                                            <Tile 
+                                                key={index}
+                                                color={tile}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Player Boards */}
+                                <div>
+                                    <h3 className="text-lg font-medium mb-3">Player Boards</h3>
+                                    {gameState.players.map((player, index) => (
+                                        <PlayerBoard 
+                                            key={index}
+                                            player={player}
+                                            playerIndex={index}
+                                            onPatternLineClick={handlePatternLineClick}
+                                            onWallClick={handleWallClick}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Analysis Panel */}
+                        <div className="space-y-6">
+                            {/* Controls */}
+                            <div className="bg-white p-4 rounded-lg shadow">
+                                <h3 className="text-lg font-medium mb-4">Analysis Controls</h3>
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={handleAnalyze}
+                                        disabled={loading}
+                                        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        {loading ? 'Analyzing...' : 'Exact Analysis'}
+                                    </button>
+                                    <button 
+                                        onClick={handleHint}
+                                        disabled={loading}
+                                        className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                        {loading ? 'Generating...' : 'Fast Hint'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* FEN Display */}
+                            {fenString && (
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                    <h3 className="text-lg font-medium mb-2">Position FEN</h3>
+                                    <textarea 
+                                        value={fenString}
+                                        readOnly
+                                        className="w-full h-20 p-2 text-xs font-mono bg-gray-100 rounded"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Analysis Results */}
+                            {analysis && (
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                    <h3 className="text-lg font-medium mb-3">Exact Analysis</h3>
+                                    <div className="space-y-2 text-sm">
+                                        <div><strong>Best Move:</strong> {analysis.best_move || 'None'}</div>
+                                        <div><strong>Score:</strong> {analysis.best_score?.toFixed(2) || 'N/A'}</div>
+                                        <div><strong>Search Time:</strong> {analysis.search_time?.toFixed(3)}s</div>
+                                        <div><strong>Nodes:</strong> {analysis.nodes_searched?.toLocaleString() || 'N/A'}</div>
+                                        <div><strong>Depth:</strong> {analysis.depth_reached || 'N/A'}</div>
+                                    </div>
+                                    
+                                    {analysis.principal_variation && analysis.principal_variation.length > 0 && (
+                                        <div className="mt-3">
+                                            <strong>Principal Variation:</strong>
+                                            <div className="text-xs font-mono bg-gray-100 p-2 rounded mt-1">
+                                                {analysis.principal_variation.join(' → ')}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Hint Results */}
+                            {hint && (
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                    <h3 className="text-lg font-medium mb-3">Fast Hint</h3>
+                                    <div className="space-y-2 text-sm">
+                                        <div><strong>Best Move:</strong> {hint.best_move || 'None'}</div>
+                                        <div><strong>Expected Value:</strong> {hint.expected_value?.toFixed(2) || 'N/A'}</div>
+                                        <div><strong>Confidence:</strong> {hint.confidence?.toFixed(2) || 'N/A'}</div>
+                                        <div><strong>Search Time:</strong> {hint.search_time?.toFixed(3)}s</div>
+                                        <div><strong>Rollouts:</strong> {hint.rollouts_performed || 'N/A'}</div>
+                                    </div>
+                                    
+                                    {hint.top_moves && hint.top_moves.length > 0 && (
+                                        <div className="mt-3">
+                                            <strong>Top Moves:</strong>
+                                            <div className="space-y-1 mt-2">
+                                                {hint.top_moves.slice(0, 3).map((moveData, index) => (
+                                                    <MoveOption 
+                                                        key={index}
+                                                        move={moveData[0]}
+                                                        score={moveData[1]}
+                                                        visits={moveData[2]}
+                                                        onClick={() => setSelectedMove(moveData[0])}
+                                                        isSelected={selectedMove === moveData[0]}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html> 

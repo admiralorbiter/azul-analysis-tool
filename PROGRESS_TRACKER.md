@@ -25,6 +25,13 @@
 
 **Total M5 Progress: 100% Complete**
 
+#### **M6 - Web UI Development (D1, D2, D3) - COMPLETE**
+- **D1: Board Renderer** ✅ - React + SVG board component with drag-and-drop
+- **D2: Heatmap Overlay** ✅ - EV delta visualization with color coding
+- **D3: PV Panel** ✅ - Principal variation display with move selection
+
+**Total M6 Progress: 100% Complete**
+
 ### 🚧 **Current Status**
 - **✅ Bootstrap Complete**: Repository, CI, toolchain setup
 - **✅ M1 Complete**: Rules engine with state model and validation
@@ -36,9 +43,10 @@
 - **✅ M3 Complete**: Fast hint engine with MCTS (159 total tests passing)
 - **✅ M4 Complete**: Database integration with SQLite caching (175 total tests passing)
 - **✅ M5 Complete**: REST API integration with authentication and rate limiting (195 total tests passing)
-- **📋 M6-M9 Planned**: Web UI, neural modules, endgame solver
+- **✅ M6 Complete**: Web UI development with React components and interactive analysis (201 total tests passing)
+- **📋 M7-M9 Planned**: Neural modules, endgame solver, performance optimization
 
-### 🎯 **Next Priority: M6 Web UI Development**
+### 🎯 **Next Priority: M7 Neural Integration**
 
 ## 🧪 **How to Test Progress**
 
@@ -47,7 +55,7 @@
 # Run all tests to verify everything works
 python -m pytest tests/ -v
 
-# Expected output: 175 tests passing, 0 failing
+# Expected output: 201 tests passing, 0 failing
 # - 34 core tests (A1 functionality)
 # - 28 validator tests (A2 functionality)
 # - 24 move generator tests (A3 functionality)
@@ -55,6 +63,8 @@ python -m pytest tests/ -v
 # - 24 search tests (A5 functionality)
 # - 26 MCTS tests (A6 functionality)
 # - 16 database tests (B1 functionality)
+# - 20 API tests (C1-C3 functionality)
+# - 6 web UI tests (D1-D3 functionality)
 ```
 
 ### **2. Test Specific Components**

@@ -90,5 +90,6 @@
 - **✅ M3 Complete**: Fast hint engine (A6) - All tests passing, < 200ms target achieved
 - **✅ M4 Complete**: Database integration (B1) - All tests passing, SQLite caching operational
 - **✅ M5 Complete**: REST API integration (C1, C2, C3) - All tests passing, authentication and rate limiting operational
-- **📋 M6-M9 Planned**: Web UI, neural modules, endgame solver
+- **✅ M6 Complete**: Web UI development (D1, D2, D3) - All tests passing, React components with interactive analysis
+- **📋 M7-M9 Planned**: Neural modules, endgame solver, performance optimization
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives

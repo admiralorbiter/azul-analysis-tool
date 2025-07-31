@@ -38,12 +38,11 @@ api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
     from core.azul_model import AzulState
-    from core.azul_utils import parse_fen_like_string
     
-    try:
-        return parse_fen_like_string(fen_string)
-    except Exception as e:
-        raise ValueError(f"Invalid FEN string: {e}")
+    if fen_string.lower() == "initial":
+        return AzulState(2)  # 2-player starting position
+    else:
+        raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial' for now.")
 
 
 @api_bp.route('/analyze', methods=['POST'])
@@ -89,14 +88,13 @@ def analyze_position():
         )
         
         # Perform search
-        start_time = time.time()
         result = search_engine.search(
             state, 
             analysis_req.agent_id, 
             max_depth=analysis_req.depth or 3,
             max_time=analysis_req.time_budget or 4.0
         )
-        search_time = time.time() - start_time
+        search_time = getattr(result, 'search_time', 0.0)
         
         # Format response
         response = {
@@ -120,7 +118,7 @@ def analyze_position():
             try:
                 position_id = current_app.database.cache_position(
                     analysis_req.fen_string, 
-                    state.player_count
+                    len(state.agents)
                 )
                 current_app.database.cache_analysis(
                     position_id,
@@ -193,9 +191,8 @@ def get_hint():
         )
         
         # Perform search
-        start_time = time.time()
         result = mcts_engine.search(state, hint_req.agent_id)
-        search_time = time.time() - start_time
+        search_time = getattr(result, 'search_time', 0.0)
         
         # Format response
         response = {
@@ -234,6 +231,15 @@ def get_hint():
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""
+    # Check rate limit if session is provided
+    session_id = request.headers.get('X-Session-ID')
+    if session_id and current_app.rate_limiter:
+        if not current_app.rate_limiter.check_rate_limit(session_id, "general"):
+            return jsonify({
+                'error': 'Rate limit exceeded',
+                'message': 'Too many requests'
+            }), 429
+    
     return jsonify({
         'status': 'healthy',
         'version': '0.1.0',
