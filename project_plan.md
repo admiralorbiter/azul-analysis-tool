@@ -16,7 +16,7 @@
 
 ## 2 · Epic Breakdown & Core Feature Sets
 
-### EPIC A — Engine (core/`azul_core`)
+### EPIC A — Engine (core/`azul_core`) ✅ **COMPLETE**
 | Story | Details | Done? |
 | ----- | ------- | ----- |
 | **A1 State Model** | Immutable dataclass + NumPy arrays; 64‑bit Zobrist key; `clone()`, `undo()` diff stack. | ☑ |
@@ -29,40 +29,40 @@
 | **A8 Exact Endgame Solver** | Retrograde DB for ≤ N‑tile positions; symmetry hashing. | ☑ |
 | **A9 Profiling Harness** | `pytest‑bench` benches, `cProfile` + `py‑spy` scripts; perf budget alerts. | ☑ |
 
-### EPIC B — Data & Storage (`azul_db`)
+### EPIC B — Data & Storage (`azul_db`) 🎯 **NEXT PRIORITY**
 | Story | Details | Done? |
 | ----- | ------- | ----- |
-| **B1 Schema v1** | SQLite WAL; tables: `position`, `analysis`, `game`; Zstd BLOB compression. | ☐ |
-| **B2 Migration Path** | Alembic scripts; CI test on Postgres. | ☐ |
-| **B3 Position Cache API** | `get(hash)`, `put(...)`, bulk import/export. | ☐ |
+| **B1 Schema v1** | SQLite WAL; tables: `position`, `analysis`, `game`; Zstd BLOB compression. | ☐ |
+| **B2 Position Cache API** | `get(hash)`, `put(...)`, bulk import/export. | ☐ |
+| **B3 PostgreSQL Migration** | Alembic migrations; connection pooling; performance optimization. | ☐ |
 
-### EPIC C — REST & CLI (`azul_api`, `azcli`)
+### EPIC C — REST & CLI (`azul_api`, `azcli`) 📋 **PLANNED**
 | Story | Path | Done? |
 | ----- | ---- | ----- |
-| **C1 Analyze** | `POST /api/v1/analyze` → `{bestMove, pv, evDelta}` | ☐ |
-| **C2 Quiz** | `GET /api/v1/quiz/random` with filters | ☐ |
-| **C3 CLI Exact** | `azcli exact "<fen>" --depth 3` | ☐ |
-| **C4 CLI Hint** | `azcli hint "<fen>" --budget 0.2s` | ☐ |
+| **C1 Analyze** | `POST /api/v1/analyze` → `{bestMove, pv, evDelta}` | ☐ |
+| **C2 Quiz** | `GET /api/v1/quiz/random` with filters | ☐ |
+| **C3 CLI Exact** | `azcli exact "<fen>" --depth 3` | ☐ |
+| **C4 CLI Hint** | `azcli hint "<fen>" --budget 0.2s` | ☐ |
 
-### EPIC D — Web UI (`ui/` React + Tailwind + SVG)
+### EPIC D — Web UI (`ui/` React + Tailwind + SVG) 📋 **PLANNED**
 | Story | Acceptance Criteria | Done? |
 | ----- | ------------------ | ----- |
-| **D1 Board Renderer** | Factories + center + player boards in responsive SVG; drag‑n‑drop tiles. | ☐ |
-| **D2 Heatmap Overlay** | Tiles/factories tinted according to EV delta (green→red); legend. | ☐ |
-| **D3 PV Panel** | Top‑3 moves list with score diff; click to load what‑if variation. | ☐ |
-| **D4 What‑if Sandbox** | User can play hypothetical moves; engine auto‑responds. | ☐ |
-| **D5 Replay Annotator** | Upload log → timeline w/ blunder markers ≥ Δ3. | ☐ |
-| **D6 Opening Explorer** | Tree browser: position thumbnails, frequency counts. | ☐ |
-| **D7 Auth & Rate‑Limit** | Session cookie + user DB; 10 heavy analyses/min. | ☐ |
+| **D1 Board Renderer** | Factories + center + player boards in responsive SVG; drag‑n‑drop tiles. | ☐ |
+| **D2 Heatmap Overlay** | Tiles/factories tinted according to EV delta (green→red); legend. | ☐ |
+| **D3 PV Panel** | Top‑3 moves list with score diff; click to load what‑if variation. | ☐ |
+| **D4 What‑if Sandbox** | User can play hypothetical moves; engine auto‑responds. | ☐ |
+| **D5 Replay Annotator** | Upload log → timeline w/ blunder markers ≥ Δ3. | ☐ |
+| **D6 Opening Explorer** | Tree browser: position thumbnails, frequency counts. | ☐ |
+| **D7 Auth & Rate‑Limit** | Session cookie + user DB; 10 heavy analyses/min. | ☐ |
 
-### EPIC E — Infrastructure
+### EPIC E — Infrastructure 📋 **PLANNED**
 | Story | Key Tasks | Done? |
 | ----- | -------- | ----- |
-| **E1 CI/CD** | GitHub Actions: lint, tests, bench thresholds, Docker build, push to GHCR. | ☐ |
-| **E2 Docker Image** | Multi‑stage `python:3.11-slim`; final < 300 MB; entry `gunicorn wsgi:app`. | ☐ |
-| **E3 Fly.io Deploy** | `fly launch` with 1 CPU / 256 MB; health‑check `/healthz`. | ☐ |
-| **E4 GPU Variant** | Optional Nvidia base + Torch CUDA; env flag `USE_GPU=1`. | ☐ |
-| **E5 Observability** | Prometheus metrics: request latency, nodes/sec, GPU util. | ☐ |
+| **E1 CI/CD** | GitHub Actions: lint, tests, bench thresholds, Docker build, push to GHCR. | ☐ |
+| **E2 Docker Image** | Multi‑stage `python:3.11-slim`; final < 300 MB; entry `gunicorn wsgi:app`. | ☐ |
+| **E3 Fly.io Deploy** | `fly launch` with 1 CPU / 256 MB; health‑check `/healthz`. | ☐ |
+| **E4 GPU Variant** | Optional Nvidia base + Torch CUDA; env flag `USE_GPU=1`. | ☐ |
+| **E5 Observability** | Prometheus metrics: request latency, nodes/sec, GPU util. | ☐ |
 
 ---
 

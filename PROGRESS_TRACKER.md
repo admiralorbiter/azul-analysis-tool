@@ -75,20 +75,45 @@
   - **✅ Report Generation**: JSON, CSV, and Markdown report formats
 - **📋 M10 Planned**: Final deployment and documentation
 
-### 🎯 **Current Priority: M10 Final Deployment & Documentation - NEXT**
+### 🎯 **Current Priority: Epic B - Data & Storage - NEXT**
 
-#### **M7 - Neural Integration (A7) - COMPLETE**
-- **A7: Neural Bridge** ✅ - PyTorch integration with tensor encoding, small MLP, MCTS integration
-  - **✅ Tensor Encoding**: AzulTensorEncoder for state representation
-  - **✅ AzulNet Model**: Small PyTorch MLP with policy and value heads
-  - **✅ Neural Rollout Policy**: Integration with MCTS rollout policies
-  - **✅ Training Pipeline**: Synthetic data generation and training script
-  - **✅ CLI Integration**: Neural training command added to main CLI
-  - **✅ Policy-to-Move Mapping**: Basic policy-to-move mapping implemented
-  - **✅ Neural API Endpoint**: Production neural analysis endpoint
-  - **✅ Web UI Integration**: Neural analysis button and results display
-  - **✅ Model Evaluation**: Comprehensive evaluation system
-  - **✅ CLI Evaluation**: Model evaluation command added
+#### **Epic A - Engine Core - COMPLETE** ✅
+- **A1: State Model** ✅ - Zobrist hashing, clone/undo, immutability (34 tests)
+- **A2: Rule Validator** ✅ - Comprehensive rule validation (28 tests)
+- **A3: Move Generator** ✅ - Fast move generation with bit masks (24 tests)
+- **A4: Heuristic Evaluation** ✅ - Comprehensive scoring with pattern potential (22 tests)
+- **A5: Alpha-Beta Search** ✅ - Iterative deepening with TT, depth-3 < 4s (24 tests)
+- **A6: MCTS Module** ✅ - UCT algorithm with rollout policies, < 200ms hints (26 tests)
+- **A7: Neural Bridge** ✅ - PyTorch integration with tensor encoding and MCTS integration
+- **A8: Exact Endgame Solver** ✅ - Retrograde analysis and symmetry hashing (25 tests)
+- **A9: Profiling Harness** ✅ - Comprehensive profiling with performance budgets (26 tests)
+
+#### **Epic B - Data & Storage - NEXT PRIORITY** 🎯
+- **B1: Schema v1** ☐ - SQLite WAL; tables: `position`, `analysis`, `game`; Zstd BLOB compression
+- **B2: Position Cache API** ☐ - `get(hash)`, `put(...)`, bulk import/export
+- **B3: PostgreSQL Migration** ☐ - Alembic migrations; connection pooling; performance optimization
+
+#### **Epic C - REST & CLI - PLANNED** 📋
+- **C1: Analyze** ☐ - `POST /api/v1/analyze` → `{bestMove, pv, evDelta}`
+- **C2: Quiz** ☐ - `GET /api/v1/quiz/random` with filters
+- **C3: CLI Exact** ☐ - `azcli exact "<fen>" --depth 3`
+- **C4: CLI Hint** ☐ - `azcli hint "<fen>" --budget 0.2s`
+
+#### **Epic D - Web UI - PLANNED** 📋
+- **D1: Board Renderer** ☐ - React + SVG board component with drag-and-drop
+- **D2: Heatmap Overlay** ☐ - EV delta visualization with color coding
+- **D3: PV Panel** ☐ - Principal variation display with move selection
+- **D4: What-if Sandbox** ☐ - User can play hypothetical moves; engine auto-responds
+- **D5: Replay Annotator** ☐ - Upload log → timeline w/ blunder markers ≥ Δ3
+- **D6: Opening Explorer** ☐ - Tree browser: position thumbnails, frequency counts
+- **D7: Auth & Rate-Limit** ☐ - Session cookie + user DB; 10 heavy analyses/min
+
+#### **Epic E - Infrastructure - PLANNED** 📋
+- **E1: CI/CD** ☐ - GitHub Actions: lint, tests, bench thresholds, Docker build
+- **E2: Docker Image** ☐ - Multi-stage `python:3.11-slim`; final < 300 MB
+- **E3: Fly.io Deploy** ☐ - `fly launch` with 1 CPU / 256 MB; health-check `/healthz`
+- **E4: GPU Variant** ☐ - Optional Nvidia base + Torch CUDA; env flag `USE_GPU=1`
+- **E5: Observability** ☐ - Prometheus metrics: request latency, nodes/sec, GPU util
 
 ### 🎯 **Key Achievements**
 - 🧠 **Neural Training**: Successfully trained models with 115,557 parameters
