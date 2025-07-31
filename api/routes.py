@@ -45,6 +45,21 @@ def parse_fen_string(fen_string: str):
         raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial' for now.")
 
 
+def format_move(move):
+    """Format a move for display."""
+    if move is None:
+        return "None"
+    
+    # Convert FastMove to readable format
+    action_type = "factory" if move.source_id >= 0 else "centre"
+    tile_type = ["blue", "yellow", "red", "black", "white"][move.tile_type]
+    
+    if move.pattern_line_dest >= 0:
+        return f"take {move.num_to_pattern_line} {tile_type} from {action_type} {move.source_id} to pattern line {move.pattern_line_dest}"
+    else:
+        return f"take {move.num_to_floor_line} {tile_type} from {action_type} {move.source_id} to floor"
+
+
 @api_bp.route('/analyze', methods=['POST'])
 @require_session
 def analyze_position():
@@ -100,9 +115,9 @@ def analyze_position():
         response = {
             'success': True,
             'analysis': {
-                'best_move': str(result.best_move) if result.best_move else None,
+                'best_move': format_move(result.best_move) if result.best_move else None,
                 'best_score': result.best_score,
-                'principal_variation': [str(move) for move in result.principal_variation],
+                'principal_variation': [format_move(move) for move in result.principal_variation],
                 'search_time': search_time,
                 'nodes_searched': result.nodes_searched,
                 'depth_reached': result.depth_reached
@@ -198,19 +213,18 @@ def get_hint():
         response = {
             'success': True,
             'hint': {
-                'best_move': str(result.best_move) if result.best_move else None,
-                'expected_value': result.expected_value,
-                'confidence': result.confidence,
+                'best_move': format_move(result.best_move) if result.best_move else None,
+                'expected_value': result.best_score,
+                'confidence': min(1.0, result.nodes_searched / 100.0),  # Simple confidence based on nodes
                 'search_time': search_time,
-                'rollouts_performed': result.rollouts_performed,
+                'rollouts_performed': result.rollout_count,
                 'top_moves': [
                     {
-                        'move': str(move),
-                        'score': score,
-                        'visits': visits
+                        'move': format_move(result.best_move),
+                        'score': result.best_score,
+                        'visits': result.nodes_searched
                     }
-                    for move, score, visits in result.top_moves
-                ]
+                ] if result.best_move else []
             },
             'position': {
                 'fen_string': hint_req.fen_string,

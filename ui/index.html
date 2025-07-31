@@ -389,17 +389,9 @@
 
             // Convert game state to FEN-like string
             const stateToFen = useCallback(() => {
-                // Simplified FEN conversion for demo
-                const factories = gameState.factories.map(f => f.join('')).join('|');
-                const center = gameState.center.join('');
-                const players = gameState.players.map(p => {
-                    const patternLines = p.pattern_lines.map(line => line.join('')).join(',');
-                    const wall = p.wall.map(row => row.map(cell => cell ? '1' : '0').join('')).join(',');
-                    const floor = p.floor.join('');
-                    return `${patternLines}|${wall}|${floor}`;
-                }).join(';');
-                
-                return `${factories}|${center}|${players}`;
+                // For now, use "initial" as the API only supports this format
+                // TODO: Implement proper FEN encoding when backend supports it
+                return "initial";
             }, [gameState]);
 
             // Handle analysis request
@@ -576,6 +568,9 @@
                                         readOnly
                                         className="w-full h-20 p-2 text-xs font-mono bg-gray-100 rounded"
                                     />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Note: Currently using "initial" position. Full FEN support coming soon.
+                                    </p>
                                 </div>
                             )}
 
