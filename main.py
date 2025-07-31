@@ -33,7 +33,8 @@ def cli():
 @click.option('--depth', '-d', default=3, help='Search depth for exact analysis')
 @click.option('--timeout', '-t', default=4.0, help='Timeout in seconds')
 @click.option('--agent', '-a', default=0, help='Agent ID to analyze for (default: 0)')
-def exact(fen_string, depth, timeout, agent):
+@click.option('--database', '-db', help='Path to SQLite database for caching')
+def exact(fen_string, depth, timeout, agent, database):
     """Perform exact analysis of a game position.
     
     FEN_STRING: The game position in FEN-like notation
@@ -41,10 +42,20 @@ def exact(fen_string, depth, timeout, agent):
     click.echo(f"Analyzing position: {fen_string}")
     click.echo(f"   Depth: {depth}, Timeout: {timeout}s, Agent: {agent}")
     
+    if database:
+        click.echo(f"   Database: {database}")
+    
     try:
         # Import search components
         from core.azul_search import AzulAlphaBetaSearch
         from core.azul_model import AzulState
+        
+        # Initialize database if provided
+        db = None
+        if database:
+            from core.azul_database import AzulDatabase
+            db = AzulDatabase(database)
+            click.echo("   ✅ Database connected for caching")
         
         # Parse FEN string to create game state
         state = parse_fen_string(fen_string)
@@ -73,6 +84,22 @@ def exact(fen_string, depth, timeout, agent):
         click.echo(f"   Nodes/sec: {stats['nodes_per_second']:.0f}")
         click.echo(f"   TT hits: {stats['transposition_table']['hits']}")
         
+        # Cache result if database is available
+        if db:
+            try:
+                position_id = db.cache_position(fen_string, state.player_count)
+                db.cache_analysis(position_id, agent, 'alpha_beta', {
+                    'best_move': str(result.best_move) if result.best_move else None,
+                    'best_score': result.best_score,
+                    'search_time': result.search_time,
+                    'nodes_searched': result.nodes_searched,
+                    'depth_reached': result.depth_reached,
+                    'principal_variation': [str(move) for move in result.principal_variation]
+                })
+                click.echo("   ✅ Analysis cached in database")
+            except Exception as e:
+                click.echo(f"   ⚠️  Failed to cache analysis: {e}")
+        
     except Exception as e:
         click.echo(f"Error during analysis: {e}")
         sys.exit(1)
@@ -82,31 +109,109 @@ def exact(fen_string, depth, timeout, agent):
 @click.argument('fen_string')
 @click.option('--budget', '-b', default=0.2, help='Time budget in seconds')
 @click.option('--rollouts', '-r', default=100, help='Number of MCTS rollouts')
-def hint(fen_string, budget, rollouts):
+@click.option('--agent', '-a', default=0, help='Agent ID to analyze for (default: 0)')
+@click.option('--database', '-d', help='Path to SQLite database for caching')
+def hint(fen_string, budget, rollouts, agent, database):
     """Generate fast hints for a game position.
     
     FEN_STRING: The game position in FEN-like notation
     """
     click.echo(f"💡 Generating hint for: {fen_string}")
-    click.echo(f"   Budget: {budget}s, Rollouts: {rollouts}")
+    click.echo(f"   Budget: {budget}s, Rollouts: {rollouts}, Agent: {agent}")
     
-    # TODO: Implement fast hint generation
-    click.echo("⚠️  Fast hint generation not yet implemented - this is planned for Milestone M3")
-    click.echo("   Expected completion: 4 weeks after M1 (Rules Engine)")
+    if database:
+        click.echo(f"   Database: {database}")
+    
+    try:
+        # Import MCTS components
+        from core.azul_mcts import AzulMCTS
+        from core.azul_model import AzulState
+        
+        # Initialize database if provided
+        db = None
+        if database:
+            from core.azul_database import AzulDatabase
+            db = AzulDatabase(database)
+            click.echo("   ✅ Database connected for caching")
+        
+        # Parse FEN string to create game state
+        state = parse_fen_string(fen_string)
+        
+        # Create MCTS engine
+        mcts_engine = AzulMCTS(
+            max_time=budget,
+            max_rollouts=rollouts,
+            database=db
+        )
+        
+        # Perform search
+        click.echo("   Searching...")
+        result = mcts_engine.search(state, agent)
+        
+        # Display results
+        click.echo(f"Search completed in {result.search_time:.3f}s")
+        click.echo(f"   Rollouts performed: {result.rollouts_performed}")
+        click.echo(f"   Expected value: {result.expected_value:.2f}")
+        click.echo(f"   Confidence: {result.confidence:.2f}")
+        
+        if result.best_move:
+            click.echo(f"   Best move: {format_move(result.best_move)}")
+            click.echo(f"   Top moves:")
+            for i, (move, score, visits) in enumerate(result.top_moves[:3]):
+                click.echo(f"     {i+1}. {format_move(move)} (score: {score:.2f}, visits: {visits})")
+        else:
+            click.echo("   No best move found (terminal position)")
+            
+        # Show cache statistics if database is used
+        if db:
+            stats = db.get_cache_stats()
+            click.echo(f"   Cache hit rate: {stats.get('cache_hit_rate', 0):.1f}%")
+        
+    except Exception as e:
+        click.echo(f"Error during hint generation: {e}")
+        sys.exit(1)
 
 
 @cli.command()
 @click.option('--host', '-h', default='127.0.0.1', help='Host to bind to')
 @click.option('--port', '-p', default=8000, help='Port to listen on')
 @click.option('--debug', is_flag=True, help='Enable debug mode')
-def serve(host, port, debug):
-    """Start the web server for the analysis UI."""
-    click.echo(f"🚀 Starting Azul Solver web server...")
+@click.option('--database', '-d', help='Path to SQLite database file')
+def serve(host, port, debug, database):
+    """Start the REST API server for analysis requests."""
+    click.echo(f"🚀 Starting Azul Solver REST API server...")
     click.echo(f"   Host: {host}, Port: {port}, Debug: {debug}")
     
-    # TODO: Implement web server
-    click.echo("⚠️  Web server not yet implemented - this is planned for Milestone M4")
-    click.echo("   Expected completion: 7 weeks after M1 (Rules Engine)")
+    if database:
+        click.echo(f"   Database: {database}")
+    
+    try:
+        from api.app import create_app
+        
+        # Create Flask app with configuration
+        config = {
+            'DEBUG': debug,
+            'DATABASE_PATH': database,
+            'RATE_LIMIT_ENABLED': True
+        }
+        
+        app = create_app(config)
+        
+        click.echo("✅ REST API server ready!")
+        click.echo("📋 Available endpoints:")
+        click.echo("   POST /api/v1/auth/session - Create session")
+        click.echo("   POST /api/v1/analyze - Exact analysis")
+        click.echo("   POST /api/v1/hint - Fast hints")
+        click.echo("   GET  /api/v1/health - Health check")
+        click.echo("   GET  /api/v1/stats - Usage statistics")
+        click.echo(f"\n🌐 Server will be available at: http://{host}:{port}")
+        
+        # Start the server
+        app.run(host=host, port=port, debug=debug)
+        
+    except Exception as e:
+        click.echo(f"❌ Failed to start server: {e}")
+        sys.exit(1)
 
 
 @cli.command()

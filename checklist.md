@@ -89,5 +89,6 @@
 - **✅ M2 Complete**: Exact search (A4-A5) - All tests passing, CLI integration complete
 - **✅ M3 Complete**: Fast hint engine (A6) - All tests passing, < 200ms target achieved
 - **✅ M4 Complete**: Database integration (B1) - All tests passing, SQLite caching operational
-- **📋 M5-M9 Planned**: REST API, Web UI, neural modules, endgame solver
+- **✅ M5 Complete**: REST API integration (C1, C2, C3) - All tests passing, authentication and rate limiting operational
+- **📋 M6-M9 Planned**: Web UI, neural modules, endgame solver
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives

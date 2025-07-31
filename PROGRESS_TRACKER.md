@@ -18,7 +18,12 @@
 #### **M4 - Database Integration (B1) - COMPLETE**
 - **B1: Database Schema** ✅ - SQLite with position caching, analysis results, performance stats (16 tests)
 
-**Total M4 Progress: 100% Complete**
+#### **M5 - REST API Integration (C1, C2, C3) - COMPLETE**
+- **C1: REST API Endpoints** ✅ - Flask blueprint for analysis requests (20 tests)
+- **C2: Authentication** ✅ - Session-based auth with rate limiting
+- **C3: CLI Integration** ✅ - Database-aware CLI commands
+
+**Total M5 Progress: 100% Complete**
 
 ### 🚧 **Current Status**
 - **✅ Bootstrap Complete**: Repository, CI, toolchain setup
@@ -30,9 +35,10 @@
 - **✅ M2 Complete**: Exact search and CLI integration (133 tests passing)
 - **✅ M3 Complete**: Fast hint engine with MCTS (159 total tests passing)
 - **✅ M4 Complete**: Database integration with SQLite caching (175 total tests passing)
-- **📋 M5-M9 Planned**: REST API, Web UI, neural modules, endgame solver
+- **✅ M5 Complete**: REST API integration with authentication and rate limiting (195 total tests passing)
+- **📋 M6-M9 Planned**: Web UI, neural modules, endgame solver
 
-### 🎯 **Next Priority: M5 REST API Integration**
+### 🎯 **Next Priority: M6 Web UI Development**
 
 ## 🧪 **How to Test Progress**
 
@@ -297,7 +303,8 @@ python -m mypy core/ --ignore-missing-imports
 - **Search Tests**: 24 passing ✅
 - **MCTS Tests**: 26 passing ✅
 - **Database Tests**: 16 passing ✅
-- **Total Tests**: 175 passing ✅
+- **API Tests**: 20 passing ✅
+- **Total Tests**: 195 passing ✅
 - **No Regressions**: All existing functionality preserved ✅
 
 ### **Performance Targets**
