@@ -66,9 +66,16 @@
   - **✅ EndgameDatabase**: Retrograde analysis and solution caching
   - **✅ Search Integration**: Alpha-beta search with endgame database integration
   - **✅ Comprehensive Tests**: 25 endgame tests covering all functionality
-- **📋 M9 Planned**: Performance optimization, deployment
+- **✅ M9 Complete**: Performance & Deployment (A9) - Comprehensive profiling harness
+  - **✅ Profiling Harness**: AzulProfiler with performance budgets and monitoring
+  - **✅ CLI Integration**: Profile command integrated into main CLI
+  - **✅ Comprehensive Tests**: 26 profiling tests covering all functionality
+  - **✅ Performance Budgets**: Configurable budgets for all engine components
+  - **✅ Memory/CPU Tracking**: Real-time resource monitoring
+  - **✅ Report Generation**: JSON, CSV, and Markdown report formats
+- **📋 M10 Planned**: Final deployment and documentation
 
-### 🎯 **Current Priority: M9 Performance & Deployment - NEXT**
+### 🎯 **Current Priority: M10 Final Deployment & Documentation - NEXT**
 
 #### **M7 - Neural Integration (A7) - COMPLETE**
 - **A7: Neural Bridge** ✅ - PyTorch integration with tensor encoding, small MLP, MCTS integration
@@ -97,7 +104,7 @@
 # Run all tests to verify everything works
 python -m pytest tests/ -v
 
-# Expected output: 226 tests passing, 0 failing
+# Expected output: 252 tests passing, 0 failing
 # - 34 core tests (A1 functionality)
 # - 28 validator tests (A2 functionality)
 # - 24 move generator tests (A3 functionality)
@@ -108,6 +115,7 @@ python -m pytest tests/ -v
 # - 20 API tests (C1-C3 functionality)
 # - 6 web UI tests (D1-D3 functionality)
 # - 25 endgame tests (A8 functionality)
+# - 26 profiling tests (A9 functionality)
 ```
 
 ### **2. Test Specific Components**

@@ -420,6 +420,64 @@ def evaluate(model, positions, games, device):
     return 0
 
 
+@cli.command()
+@click.option('--state', type=click.Choice(['initial', 'mid', 'late']), 
+              default='initial', help='Test state to use')
+@click.option('--output', type=str, default='profiling_results.json',
+              help='Output file for results')
+@click.option('--budget', type=float, default=4.0,
+              help='Search depth-3 time budget (seconds)')
+@click.option('--hint-budget', type=float, default=0.2,
+              help='Hint generation time budget (seconds)')
+@click.option('--move-budget', type=float, default=0.001,
+              help='Move generation time budget (seconds)')
+def profile(state: str, output: str, budget: float, hint_budget: float, move_budget: float):
+    """Run comprehensive profiling on all engine components."""
+    click.echo("🔍 Azul Engine Profiling Harness - A9")
+    click.echo("=" * 50)
+    
+    try:
+        from core.azul_profiler import AzulProfiler, PerformanceBudget, create_test_states
+        
+        # Create custom budget
+        custom_budget = PerformanceBudget(
+            search_depth_3_max_time=budget,
+            hint_generation_max_time=hint_budget,
+            move_generation_max_time=move_budget
+        )
+        
+        # Create profiler
+        profiler = AzulProfiler(custom_budget)
+        
+        # Create test state
+        states = create_test_states()
+        state_map = {"initial": states[0], "mid": states[1], "late": states[2]}
+        test_state = state_map[state]
+        
+        click.echo(f"📊 Profiling {state} state...")
+        
+        # Run comprehensive profiling
+        results = profiler.run_comprehensive_profile(test_state)
+        
+        # Generate and display report
+        report = profiler.generate_report(results)
+        click.echo(report)
+        
+        # Save results
+        profiler.save_results(results, output)
+        click.echo(f"💾 Results saved to {output}")
+        
+        return 0
+        
+    except ImportError as e:
+        click.echo(f"❌ Profiling failed - missing dependency: {e}")
+        click.echo("Install with: pip install psutil")
+        return 1
+    except Exception as e:
+        click.echo(f"❌ Profiling failed: {e}")
+        return 1
+
+
 def parse_fen_string(fen_string):
     """Parse a FEN-like string to create an AzulState.
     

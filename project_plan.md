@@ -19,15 +19,15 @@
 ### EPIC A — Engine (core/`azul_core`)
 | Story | Details | Done? |
 | ----- | ------- | ----- |
-| **A1 State Model** | Immutable dataclass + NumPy arrays; 64‑bit Zobrist key; `clone()`, `undo()` diff stack. | ☐ |
-| **A2 Rule Validator** | Enforce draft → placement → floor penalties → scoring & bonuses; 100 golden tests. | ☐ |
-| **A3 Move Generator** | Enumerate legal *compound* moves (`DraftOption × PlacementTarget`), return vector mask. | ☐ |
-| **A4 Heuristic Eval v1** | Immediate score + pattern‑potential + penalty est.; O(1). | ☐ |
-| **A5 Alpha–Beta Module** | Iterative deepening, move ordering, killer/hist heuristics, TT replacement table. | ☐ |
-| **A6 MCTS Module** | UCT + virtual loss; pluggable rollout policy (`random`, `heavy`, `nn`). | ☐ |
-| **A7 Neural Bridge** | Torch `AzulNet` (policy+value); GPU batcher; fall‑back to CPU eager. | ☐ |
-| **A8 Exact Endgame Solver** | Retrograde DB for ≤ N‑tile positions; symmetry hashing. | ☑ |
-| **A9 Profiling Harness** | `pytest‑bench` benches, `cProfile` + `py‑spy` scripts; perf budget alerts. | ☐ |
+| **A1 State Model** | Immutable dataclass + NumPy arrays; 64‑bit Zobrist key; `clone()`, `undo()` diff stack. | ☑ |
+| **A2 Rule Validator** | Enforce draft → placement → floor penalties → scoring & bonuses; 100 golden tests. | ☑ |
+| **A3 Move Generator** | Enumerate legal *compound* moves (`DraftOption × PlacementTarget`), return vector mask. | ☑ |
+| **A4 Heuristic Eval v1** | Immediate score + pattern‑potential + penalty est.; O(1). | ☑ |
+| **A5 Alpha–Beta Module** | Iterative deepening, move ordering, killer/hist heuristics, TT replacement table. | ☑ |
+| **A6 MCTS Module** | UCT + virtual loss; pluggable rollout policy (`random`, `heavy`, `nn`). | ☑ |
+| **A7 Neural Bridge** | Torch `AzulNet` (policy+value); GPU batcher; fall‑back to CPU eager. | ☑ |
+| **A8 Exact Endgame Solver** | Retrograde DB for ≤ N‑tile positions; symmetry hashing. | ☑ |
+| **A9 Profiling Harness** | `pytest‑bench` benches, `cProfile` + `py‑spy` scripts; perf budget alerts. | ☑ |
 
 ### EPIC B — Data & Storage (`azul_db`)
 | Story | Details | Done? |
@@ -127,3 +127,5 @@
 - [ ] ✓ Return both *Move* struct & bit‑index for policy mask.  
 - [ ] ✓ Benchmark: ≤ 15 µs / call (Numba JIT).  
 - [ ] ✓ Unit‑tests: random 1 000 states → generator moves ✓ legal & complete.
+
+```

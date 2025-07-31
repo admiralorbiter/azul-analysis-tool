@@ -112,5 +112,12 @@
   - **✅ EndgameDatabase**: Retrograde analysis and solution caching
   - **✅ Search Integration**: Alpha-beta search with endgame database integration
   - **✅ Comprehensive Tests**: 25 endgame tests covering all functionality
-- **📋 M9 Planned**: Performance optimization, deployment
+- **✅ M9 Complete**: Performance & Deployment (A9) - Comprehensive profiling harness
+  - **✅ Profiling Harness**: AzulProfiler with performance budgets and monitoring
+  - **✅ CLI Integration**: Profile command integrated into main CLI
+  - **✅ Comprehensive Tests**: 26 profiling tests covering all functionality
+  - **✅ Performance Budgets**: Configurable budgets for all engine components
+  - **✅ Memory/CPU Tracking**: Real-time resource monitoring
+  - **✅ Report Generation**: JSON, CSV, and Markdown report formats
+- **📋 M10 Planned**: Final deployment and documentation
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives
