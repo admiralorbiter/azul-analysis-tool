@@ -82,6 +82,46 @@ class FastMove:
     
     def __hash__(self):
         return self.bit_mask
+    
+    @classmethod
+    def from_string(cls, move_string: str) -> 'FastMove':
+        """Create FastMove from string representation."""
+        try:
+            # Parse string like "FastMove(action_type=0, source_id=0, tile_type=0, ...)"
+            if move_string.startswith('FastMove(') and move_string.endswith(')'):
+                # Extract parameters
+                params_str = move_string[9:-1]  # Remove "FastMove(" and ")"
+                params = {}
+                for param in params_str.split(', '):
+                    if '=' in param:
+                        key, value = param.split('=', 1)
+                        params[key.strip()] = int(value)
+                
+                return cls(
+                    action_type=params.get('action_type', 0),
+                    source_id=params.get('source_id', 0),
+                    tile_type=params.get('tile_type', 0),
+                    pattern_line_dest=params.get('pattern_line_dest', 0),
+                    num_to_pattern_line=params.get('num_to_pattern_line', 0),
+                    num_to_floor_line=params.get('num_to_floor_line', 0)
+                )
+            else:
+                # Try to parse as simple format
+                parts = move_string.split(',')
+                if len(parts) >= 6:
+                    return cls(
+                        action_type=int(parts[0]),
+                        source_id=int(parts[1]),
+                        tile_type=int(parts[2]),
+                        pattern_line_dest=int(parts[3]),
+                        num_to_pattern_line=int(parts[4]),
+                        num_to_floor_line=int(parts[5])
+                    )
+        except (ValueError, KeyError, IndexError):
+            pass
+        
+        # Return a default move if parsing fails
+        return cls(0, 0, 0, 0, 0, 0)
 
 
 @dataclass(frozen=True)

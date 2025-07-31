@@ -6,6 +6,7 @@ This module provides:
 - Pluggable rollout policies (random, heavy playout)
 - Fast hint generation with < 200ms target
 - Integration with existing evaluator and move generator
+- Database caching for position analysis
 """
 
 import math
@@ -18,6 +19,7 @@ from enum import Enum
 from .azul_model import AzulState, AzulGameRule
 from .azul_move_generator import FastMoveGenerator, FastMove
 from .azul_evaluator import AzulEvaluator
+from .azul_database import AzulDatabase, CachedAnalysis
 
 
 class RolloutPolicy(Enum):
@@ -258,7 +260,8 @@ class AzulMCTS:
                  max_time: float = 0.2,
                  max_rollouts: int = 300,
                  exploration_constant: float = 1.414,
-                 rollout_policy: RolloutPolicy = RolloutPolicy.RANDOM):
+                 rollout_policy: RolloutPolicy = RolloutPolicy.RANDOM,
+                 database: Optional[AzulDatabase] = None):
         """
         Initialize MCTS.
         
@@ -267,11 +270,13 @@ class AzulMCTS:
             max_rollouts: Maximum number of rollouts
             exploration_constant: UCT exploration constant
             rollout_policy: Rollout policy to use
+            database: Optional database for caching
         """
         self.max_time = max_time
         self.max_rollouts = max_rollouts
         self.exploration_constant = exploration_constant
         self.rollout_policy_enum = rollout_policy  # Keep the enum for tests
+        self.database = database
         
         # Initialize components
         self.evaluator = AzulEvaluator()
@@ -292,15 +297,17 @@ class AzulMCTS:
     
     def search(self, state: AzulState, agent_id: int, 
                max_time: Optional[float] = None,
-               max_rollouts: Optional[int] = None) -> MCTSResult:
+               max_rollouts: Optional[int] = None,
+               fen_string: Optional[str] = None) -> MCTSResult:
         """
-        Perform MCTS search.
+        Perform MCTS search with optional database caching.
         
         Args:
             state: Current game state
             agent_id: Agent to search for
             max_time: Maximum search time (overrides instance default)
             max_rollouts: Maximum rollouts (overrides instance default)
+            fen_string: Optional FEN string for caching
             
         Returns:
             MCTSResult with best move and statistics
@@ -309,6 +316,35 @@ class AzulMCTS:
             max_time = self.max_time
         if max_rollouts is None:
             max_rollouts = self.max_rollouts
+        
+        # Check cache first if database is available
+        if self.database and fen_string:
+            cached = self.database.get_cached_analysis(fen_string, agent_id, 'mcts')
+            if cached:
+                # Convert cached move string back to FastMove
+                best_move = None
+                if cached.best_move:
+                    try:
+                        best_move = FastMove.from_string(cached.best_move)
+                    except:
+                        pass  # If conversion fails, we'll do a fresh search
+                
+                if best_move is not None:
+                    # Update performance stats for cache hit
+                    self.database.update_performance_stats(
+                        'mcts', cached.search_time, cached.nodes_searched, 
+                        cached.rollout_count, cache_hit=True
+                    )
+                    
+                    return MCTSResult(
+                        best_move=best_move,
+                        best_score=cached.score,
+                        principal_variation=[],  # TODO: Convert cached PV
+                        nodes_searched=cached.nodes_searched,
+                        search_time=cached.search_time,
+                        rollout_count=cached.rollout_count,
+                        average_rollout_depth=0.0
+                    )
         
         # Reset statistics
         self.nodes_searched = 0
@@ -336,6 +372,24 @@ class AzulMCTS:
         best_move, best_score, pv = self._select_best_move(root)
         
         search_time = time.time() - self.search_start_time
+        
+        # Cache result if database is available
+        if self.database and fen_string:
+            position_id = self.database.cache_position(fen_string, len(state.agents))
+            self.database.cache_analysis(position_id, agent_id, 'mcts', {
+                'best_move': str(best_move) if best_move else '',
+                'best_score': best_score,
+                'search_time': search_time,
+                'nodes_searched': self.nodes_searched,
+                'rollout_count': self.rollout_count,
+                'principal_variation': [str(move) for move in pv]
+            })
+            
+            # Update performance stats for cache miss
+            self.database.update_performance_stats(
+                'mcts', search_time, self.nodes_searched, 
+                self.rollout_count, cache_hit=False
+            )
         
         return MCTSResult(
             best_move=best_move,

@@ -29,23 +29,23 @@
 - [x] Target ⩽ 200 ms / move on laptop (≤ 300 rollouts random, ≤ 100 heavy).
 - [x] Export single‑move JSON hint: {move, evDelta, pv}.
 
-## 4 · Neural Assist (optional GPU) 📋
+## 4 · Database Integration ✅
+- [x] Create SQLite schema (Position, Game, Analysis tables).
+- [x] Enable WAL mode + index on hash.
+- [x] Add Zstd compression helper; target ≤ 25 MB / 1 M states.
+- [x] Alembic migration scripts; test SQLite → Postgres switch.
+
+## 5 · Neural Assist (optional GPU) 📋
 - [ ] Define tensor encoding (⩽ 100 ints → one‑hot / embed).
 - [ ] Build tiny PyTorch MLP (≤ 100 k params) for value + policy.
 - [ ] Batch inference (≥ 32 states) on RTX 30xx; record ms/1000 evals.
 - [ ] Integrate into MCTS; compare win‑rate vs heuristic playouts.
 
-## 5 · Research Utilities 📋
+## 6 · Research Utilities 📋
 - [ ] Opening explorer: breadth‑first enumerate to ply 4 → store in DB.
 - [ ] Replay annotator: parse BGA log → annotate blunders (ΔEV ≥ 3).
 - [ ] Quiz generator: random mid‑game positions with ≥ 2 pt tactic.
 - [ ] Add CLI commands aztools openings / annotate / quiz.
-
-## 6 · Data & Storage 📋
-- [ ] Create SQLite schema (Position, Game, Analysis tables).
-- [ ] Enable WAL mode + index on hash.
-- [ ] Add Zstd compression helper; target ≤ 25 MB / 1 M states.
-- [ ] Alembic migration scripts; test SQLite → Postgres switch.
 
 ## 7 · Web API (Flask) 📋
 - [ ] Flask blueprint /api/v1/analyze (POST state → JSON response).
@@ -88,5 +88,6 @@
 - **✅ M1 Complete**: Rules engine (A1-A3) - All tests passing
 - **✅ M2 Complete**: Exact search (A4-A5) - All tests passing, CLI integration complete
 - **✅ M3 Complete**: Fast hint engine (A6) - All tests passing, < 200ms target achieved
-- **📋 M4-M9 Planned**: Database integration, REST API, neural modules
+- **✅ M4 Complete**: Database integration (B1) - All tests passing, SQLite caching operational
+- **📋 M5-M9 Planned**: REST API, Web UI, neural modules, endgame solver
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives
