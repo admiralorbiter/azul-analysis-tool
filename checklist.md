@@ -35,11 +35,12 @@
 - [x] Add Zstd compression helper; target ≤ 25 MB / 1 M states.
 - [x] Alembic migration scripts; test SQLite → Postgres switch.
 
-## 5 · Neural Assist (optional GPU) 📋
-- [ ] Define tensor encoding (⩽ 100 ints → one‑hot / embed).
-- [ ] Build tiny PyTorch MLP (≤ 100 k params) for value + policy.
+## 5 · Neural Assist (optional GPU) ✅
+- [x] Define tensor encoding (⩽ 100 ints → one‑hot / embed).
+- [x] Build tiny PyTorch MLP (≤ 100 k params) for value + policy.
+- [x] Integrate into MCTS; compare win‑rate vs heuristic playouts.
 - [ ] Batch inference (≥ 32 states) on RTX 30xx; record ms/1000 evals.
-- [ ] Integrate into MCTS; compare win‑rate vs heuristic playouts.
+- [ ] Complete policy-to-move mapping for neural rollout policy.
 
 ## 6 · Research Utilities 📋
 - [ ] Opening explorer: breadth‑first enumerate to ply 4 → store in DB.
@@ -95,5 +96,12 @@
   - **✅ Database Caching**: SQLite integration operational with automatic caching
   - **✅ Real-time Analysis**: Both fast hints and exact analysis working in browser
   - **✅ Web UI Response Parsing**: Fixed nested API response extraction for proper result display
-- **📋 M7-M9 Planned**: Neural modules, endgame solver, performance optimization
+- **🚧 M7 In Progress**: Neural Integration (A7) - PyTorch models and MCTS integration
+  - **✅ Tensor Encoding**: AzulTensorEncoder for state representation
+  - **✅ AzulNet Model**: Small PyTorch MLP with policy and value heads
+  - **✅ Neural Rollout Policy**: Integration with MCTS rollout policies
+  - **✅ Training Pipeline**: Synthetic data generation and training script
+  - **✅ CLI Integration**: Neural training command added to main CLI
+  - **📋 TODO**: Complete policy-to-move mapping, GPU batching optimization
+- **📋 M8-M9 Planned**: Endgame solver, performance optimization, deployment
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives

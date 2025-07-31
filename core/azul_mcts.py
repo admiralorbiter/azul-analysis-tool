@@ -21,11 +21,19 @@ from .azul_move_generator import FastMoveGenerator, FastMove
 from .azul_evaluator import AzulEvaluator
 from .azul_database import AzulDatabase, CachedAnalysis
 
+# Optional neural imports
+try:
+    from ..neural.azul_net import AzulNeuralRolloutPolicy, create_azul_net
+    NEURAL_AVAILABLE = True
+except ImportError:
+    NEURAL_AVAILABLE = False
+
 
 class RolloutPolicy(Enum):
     """Available rollout policies for MCTS."""
     RANDOM = "random"
     HEAVY = "heavy"
+    NEURAL = "neural"
 
 
 @dataclass
@@ -287,6 +295,14 @@ class AzulMCTS:
             self._rollout_policy_instance = RandomRolloutPolicy(self.evaluator, self.move_generator)
         elif rollout_policy == RolloutPolicy.HEAVY:
             self._rollout_policy_instance = HeavyRolloutPolicy(self.evaluator, self.move_generator)
+        elif rollout_policy == RolloutPolicy.NEURAL:
+            if not NEURAL_AVAILABLE:
+                raise ValueError("Neural rollout policy requires PyTorch. Install with: pip install azul-solver[neural]")
+            # Create neural model and policy
+            model, encoder = create_azul_net(device="cpu")
+            self._rollout_policy_instance = AzulNeuralRolloutPolicy(
+                model, encoder, self.evaluator, self.move_generator, device="cpu"
+            )
         else:
             raise ValueError(f"Unknown rollout policy: {rollout_policy}")
         

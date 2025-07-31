@@ -50,9 +50,26 @@
   - **✅ Database Caching**: SQLite integration operational with automatic position/analysis caching
   - **✅ Real-time Analysis**: Both fast hints (<200ms) and exact analysis (depth-3) working in browser
   - **✅ Web UI Response Parsing**: Fixed nested API response extraction for proper result display
-- **📋 M7-M9 Planned**: Neural modules, endgame solver, performance optimization
+- **🚧 M7 In Progress**: Neural Integration (A7) - PyTorch models and MCTS integration
+  - **✅ Tensor Encoding**: AzulTensorEncoder for state representation
+  - **✅ AzulNet Model**: Small PyTorch MLP with policy and value heads
+  - **✅ Neural Rollout Policy**: Integration with MCTS rollout policies
+  - **✅ Training Pipeline**: Synthetic data generation and training script
+  - **✅ CLI Integration**: Neural training command added to main CLI
+  - **📋 TODO**: Complete policy-to-move mapping, GPU batching optimization
+- **📋 M8-M9 Planned**: Endgame solver, performance optimization, deployment
 
-### 🎯 **Next Priority: M7 Neural Integration**
+### 🎯 **Current Priority: M7 Neural Integration - IN PROGRESS**
+
+#### **M7 - Neural Integration (A7) - IN PROGRESS**
+- **A7: Neural Bridge** 🚧 - PyTorch integration with tensor encoding, small MLP, MCTS integration
+  - **✅ Tensor Encoding**: AzulTensorEncoder for state representation
+  - **✅ AzulNet Model**: Small PyTorch MLP with policy and value heads
+  - **✅ Neural Rollout Policy**: Integration with MCTS rollout policies
+  - **✅ Training Pipeline**: Synthetic data generation and training script
+  - **✅ CLI Integration**: Neural training command added to main CLI
+  - **📋 TODO**: Complete policy-to-move mapping, GPU batching optimization
+  - **📋 TODO**: Model evaluation and performance comparison
 
 ## 🧪 **How to Test Progress**
 
