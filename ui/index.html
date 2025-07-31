@@ -179,6 +179,40 @@
             }
         }
 
+        async function analyzeNeural(fenString) {
+            if (!sessionId) {
+                console.error('No session ID available');
+                return null;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze_neural`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        fen_string: fenString,
+                        time_budget: 1.0,
+                        max_rollouts: 50,
+                        agent_id: 0
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.success ? data.analysis : null;
+                } else {
+                    console.error('Neural analysis failed:', response.status, response.statusText);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Neural analysis error:', error);
+                return null;
+            }
+        }
+
         // Tile colors mapping
         const TILE_COLORS = {
             'R': '#ef4444', // red
@@ -448,6 +482,32 @@
                 setLoading(false);
             };
 
+            // Handle neural analysis request
+            const handleNeuralAnalyze = async () => {
+                if (sessionStatus !== 'connected') {
+                    setStatusMessage('❌ Not connected to API');
+                    return;
+                }
+                
+                setLoading(true);
+                setStatusMessage('🧠 Performing neural analysis...');
+                const fen = stateToFen();
+                setFenString(fen);
+                
+                const result = await analyzeNeural(fen);
+                console.log('Raw neural analysis result:', result);
+                if (result) {
+                    setAnalysis(result);
+                    setHint(null); // Clear hint results
+                    setStatusMessage('✅ Neural analysis completed');
+                    console.log('Neural analysis result:', result);
+                } else {
+                    setStatusMessage('❌ Neural analysis failed');
+                }
+                
+                setLoading(false);
+            };
+
             // Handle tile click in factory
             const handleFactoryTileClick = (tile, factoryIndex, tileIndex) => {
                 console.log(`Clicked tile ${tile} from factory ${factoryIndex}, position ${tileIndex}`);
@@ -555,10 +615,18 @@
                                     >
                                         {loading ? 'Generating...' : 'Fast Hint (<200ms)'}
                                     </button>
+                                    <button 
+                                        onClick={handleNeuralAnalyze}
+                                        disabled={loading || sessionStatus !== 'connected'}
+                                        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 disabled:opacity-50"
+                                    >
+                                        {loading ? 'Analyzing...' : '🧠 Neural Analysis'}
+                                    </button>
                                 </div>
                                 <div className="mt-3 text-xs text-gray-500">
                                     <p>✅ Exact Analysis: Alpha-beta search with depth-3</p>
                                     <p>✅ Fast Hint: MCTS with UCT algorithm</p>
+                                    <p>🧠 Neural Analysis: MCTS with neural rollout policy</p>
                                     <p>✅ Database: SQLite caching enabled</p>
                                 </div>
                             </div>
@@ -581,13 +649,24 @@
                             {/* Analysis Results */}
                             {analysis && (
                                 <div className="bg-white p-4 rounded-lg shadow">
-                                    <h3 className="text-lg font-medium mb-3">Exact Analysis</h3>
+                                    <h3 className="text-lg font-medium mb-3">
+                                        {analysis.method === 'neural_mcts' ? '🧠 Neural Analysis' : 'Exact Analysis'}
+                                    </h3>
                                     <div className="space-y-2 text-sm">
                                         <div><strong>Best Move:</strong> {analysis.best_move || 'None'}</div>
                                         <div><strong>Score:</strong> {analysis.best_score?.toFixed(2) || 'N/A'}</div>
                                         <div><strong>Search Time:</strong> {analysis.search_time?.toFixed(3)}s</div>
-                                        <div><strong>Nodes:</strong> {analysis.nodes_searched?.toLocaleString() || 'N/A'}</div>
-                                        <div><strong>Depth:</strong> {analysis.depth_reached || 'N/A'}</div>
+                                        {analysis.method === 'neural_mcts' ? (
+                                            <>
+                                                <div><strong>Rollouts:</strong> {analysis.rollout_count || 'N/A'}</div>
+                                                <div><strong>Method:</strong> Neural MCTS</div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div><strong>Nodes:</strong> {analysis.nodes_searched?.toLocaleString() || 'N/A'}</div>
+                                                <div><strong>Depth:</strong> {analysis.depth_reached || 'N/A'}</div>
+                                            </>
+                                        )}
                                     </div>
                                     
                                     {analysis.principal_variation && analysis.principal_variation.length > 0 && (

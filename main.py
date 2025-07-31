@@ -361,6 +361,65 @@ def train(config: str, device: str, epochs: int, samples: int):
     return 0
 
 
+@cli.command()
+@click.option('--model', default='models/azul_net_small.pth', help='Path to trained model')
+@click.option('--positions', default=50, help='Number of test positions')
+@click.option('--games', default=20, help='Number of test games')
+@click.option('--device', default='cpu', help='Device to use (cpu, cuda)')
+def evaluate(model, positions, games, device):
+    """Evaluate a trained AzulNet model."""
+    click.echo("🧠 Evaluating AzulNet model")
+    click.echo(f"   Model: {model}, Device: {device}")
+    click.echo(f"   Test positions: {positions}, Test games: {games}")
+    
+    try:
+        from neural.evaluate import EvaluationConfig, AzulModelEvaluator
+        
+        # Create evaluation configuration
+        config = EvaluationConfig(
+            num_positions=positions,
+            num_games=games,
+            search_time=0.5,
+            max_rollouts=50,
+            model_path=model,
+            device=device,
+            compare_heuristic=True,
+            compare_random=True
+        )
+        
+        # Run evaluation
+        evaluator = AzulModelEvaluator(config)
+        result = evaluator.evaluate_model()
+        
+        click.echo("\n📊 EVALUATION RESULTS")
+        click.echo("=" * 50)
+        click.echo(f"Model Parameters: {result.model_parameters:,}")
+        click.echo(f"Inference Time: {result.inference_time_ms:.2f} ms")
+        click.echo(f"Position Accuracy: {result.position_accuracy:.2%}")
+        click.echo(f"Move Agreement: {result.move_agreement:.2%}")
+        click.echo(f"Self-play Win Rate: {result.win_rate:.2%}")
+        click.echo(f"Average Score: {result.avg_score:.2f}")
+        click.echo(f"Average Search Time: {result.avg_search_time:.3f}s")
+        click.echo(f"Average Rollouts: {result.avg_rollouts:.1f}")
+        
+        if result.vs_heuristic_win_rate is not None:
+            click.echo(f"vs Heuristic Win Rate: {result.vs_heuristic_win_rate:.2%}")
+        
+        if result.vs_random_win_rate is not None:
+            click.echo(f"vs Random Win Rate: {result.vs_random_win_rate:.2%}")
+        
+        click.echo("\n✅ Evaluation complete!")
+        
+    except ImportError:
+        click.echo("❌ Neural evaluation requires PyTorch. Install with: pip install azul-solver[neural]")
+        return 1
+    except Exception as e:
+        click.echo(f"❌ Evaluation failed: {e}")
+        return 1
+    
+    return 0
+
+
 def parse_fen_string(fen_string):
     """Parse a FEN-like string to create an AzulState.
     

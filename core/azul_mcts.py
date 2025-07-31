@@ -26,7 +26,15 @@ try:
     from ..neural.azul_net import AzulNeuralRolloutPolicy, create_azul_net
     NEURAL_AVAILABLE = True
 except ImportError:
-    NEURAL_AVAILABLE = False
+    try:
+        # Fallback for direct import
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+        from neural.azul_net import AzulNeuralRolloutPolicy, create_azul_net
+        NEURAL_AVAILABLE = True
+    except ImportError:
+        NEURAL_AVAILABLE = False
 
 
 class RolloutPolicy(Enum):

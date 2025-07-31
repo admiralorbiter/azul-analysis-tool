@@ -278,3 +278,59 @@ def get_api_stats():
         'rate_limits': current_app.rate_limiter.get_remaining_requests(session_id),
         'session_stats': current_app.session_manager.get_session_stats() if hasattr(current_app, 'session_manager') else {}
     }) 
+
+
+@api_bp.route('/analyze_neural', methods=['POST'])
+@require_session
+def analyze_neural():
+    """Analyze position using neural MCTS."""
+    try:
+        data = request.get_json()
+        
+        # Parse request
+        fen_string = data.get('fen', 'initial')
+        agent_id = data.get('agent_id', 0)
+        time_budget = data.get('time_budget', 2.0)
+        max_rollouts = data.get('max_rollouts', 100)
+        
+        # Parse FEN and create state
+        state = parse_fen_string(fen_string)
+        if state is None:
+            return jsonify({'error': 'Invalid FEN string'}), 400
+        
+        # Create neural MCTS
+        from core.azul_mcts import AzulMCTS, RolloutPolicy
+        mcts = AzulMCTS(
+            rollout_policy=RolloutPolicy.NEURAL,
+            max_time=time_budget,
+            max_rollouts=max_rollouts,
+            database=getattr(current_app, 'database', None)
+        )
+        
+        # Perform search
+        result = mcts.search(state, agent_id=agent_id, fen_string=fen_string)
+        
+        # Format response
+        analysis = {
+            'best_move': format_move(result.best_move),
+            'best_score': result.best_score,
+            'principal_variation': [format_move(move) for move in result.principal_variation],
+            'search_time': result.search_time,
+            'nodes_searched': result.nodes_searched,
+            'rollout_count': result.rollout_count,
+            'average_rollout_depth': result.average_rollout_depth,
+            'method': 'neural_mcts'
+        }
+        
+        # Cache result if database available
+        if hasattr(current_app, 'database'):
+            position_id = current_app.database.cache_position(fen_string, len(state.agents))
+            current_app.database.cache_analysis(position_id, agent_id, 'neural_mcts', analysis)
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500 
