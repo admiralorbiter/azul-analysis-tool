@@ -83,7 +83,19 @@ def create_app(config=None):
                 'analysis': '/api/v1/analyze',
                 'hint': '/api/v1/hint',
                 'health': '/api/v1/health',
-                'stats': '/api/v1/stats'
+                'stats': '/api/v1/stats',
+                'positions': {
+                    'get': '/api/v1/positions/{fen_string}',
+                    'put': '/api/v1/positions/{fen_string}',
+                    'delete': '/api/v1/positions/{fen_string}',
+                    'stats': '/api/v1/positions/stats',
+                    'search': '/api/v1/positions/search',
+                    'bulk': {
+                        'import': '/api/v1/positions/bulk (POST)',
+                        'export': '/api/v1/positions/bulk (GET)',
+                        'delete': '/api/v1/positions/bulk (DELETE)'
+                    }
+                }
             },
             'documentation': 'See project README for API documentation'
         })

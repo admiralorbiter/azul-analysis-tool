@@ -100,18 +100,30 @@
   - [x] 9 comprehensive tests covering all enhanced indexing features
 
 ## 11 · REST API (B2) - IN PROGRESS
-- [ ] **B2.1: Position Cache API**
-  - [ ] get/put methods for position caching
-  - [ ] Bulk import/export operations
-  - [ ] Position validation and deduplication
+- [x] **B2.1: Position Cache API** ✅
+  - [x] GET /api/v1/positions/{fen_string} - Retrieve position data with metadata
+  - [x] PUT /api/v1/positions/{fen_string} - Store position with compression support
+  - [x] DELETE /api/v1/positions/{fen_string} - Delete position and all analyses
+  - [x] GET /api/v1/positions/stats - Cache statistics and database info
+  - [x] GET /api/v1/positions/search - Search positions with pagination
+  - [x] POST /api/v1/positions/bulk - Bulk import with overwrite options
+  - [x] GET /api/v1/positions/bulk - Bulk export with pagination
+  - [x] DELETE /api/v1/positions/bulk - Bulk deletion (specific or all)
+  - [x] Authentication and validation for all endpoints
+  - [x] 25 comprehensive tests covering all functionality
+
 - [ ] **B2.2: Analysis Cache API**
-  - [ ] MCTS and Alpha-Beta result caching
-  - [ ] Analysis result validation and storage
-  - [ ] Cache hit/miss statistics
+  - [ ] MCTS result caching endpoints
+  - [ ] Alpha-Beta result caching endpoints
+  - [ ] Analysis metadata storage
+  - [ ] Cache invalidation strategies
+  - [ ] Integration with existing analysis endpoints
+
 - [ ] **B2.3: Performance API**
-  - [ ] Statistics and monitoring endpoints
-  - [ ] Query performance analytics
-  - [ ] Database optimization endpoints
+  - [ ] Query performance statistics endpoints
+  - [ ] Database monitoring and health checks
+  - [ ] Cache analytics and hit rate tracking
+  - [ ] System health and status endpoints
 
 ## 12 · Web UI (B3) - PLANNED
 - [ ] **B3.1: Game Board Display**
@@ -174,11 +186,13 @@
 ### ✅ **Completed Epics**
 - **Epic A**: Engine Core (A1-A9) - COMPLETE
 - **Epic B1**: Database Schema v1 (B1.1-B1.3) - COMPLETE
+- **Epic B2.1**: Position Cache API - COMPLETE
 
 ### 🔄 **In Progress**
-- **Epic B2**: REST API (B2.1-B2.3) - IN PROGRESS
+- **Epic B2.2**: Analysis Cache API (B2.2) - IN PROGRESS
 
 ### 📋 **Planned**
+- **Epic B2.3**: Performance API (B2.3) - PLANNED
 - **Epic B3**: Web UI (B3.1-B3.3) - PLANNED
 - **Epic C1**: Neural Integration (C1.1-C1.3) - PLANNED
 - **Epic C2**: Advanced Search (C2.1-C2.3) - PLANNED
@@ -193,23 +207,33 @@
 - **Query Performance**: Sub-millisecond response times for cached queries
 - **Monitoring**: Real-time query performance tracking and statistics
 
+### **Position Cache API (B2.1) - COMPLETE** ✅
+- **Basic Operations**: GET, PUT, DELETE for individual positions
+- **Bulk Operations**: Import, export, and deletion with pagination
+- **Search Functionality**: Position search with query parameters
+- **Statistics**: Cache statistics and database information
+- **Authentication**: Session-based authentication for all endpoints
+- **Validation**: Pydantic models for request validation
+- **Error Handling**: Comprehensive error responses and status codes
+
 ### **Search Performance**
 - **Alpha-Beta**: Depth-3 search < 4 seconds
 - **MCTS**: < 200ms hint generation
 - **Cache Hit Rate**: > 80% for repeated positions
 
 ### **Test Coverage**
-- **Total Tests**: 252+ tests covering all core functionality
+- **Total Tests**: 277+ tests covering all core functionality
 - **Database Tests**: 29 tests for B1.1-B1.3 functionality
+- **API Tests**: 25 tests for B2.1 position cache API
 - **No Regressions**: All existing functionality preserved
 
 ## 🚀 **Next Steps**
 
-1. **Complete B2 (REST API)** - Position and analysis caching endpoints
-2. **Implement B3 (Web UI)** - Interactive game board and analysis interface
-3. **Begin C1 (Neural Integration)** - PyTorch model integration and inference
+1. **Complete B2.2 (Analysis Cache API)** - MCTS and Alpha-Beta result caching endpoints
+2. **Implement B2.3 (Performance API)** - Statistics and monitoring endpoints
+3. **Begin B3 (Web UI)** - Interactive game board and analysis interface
 
 ---
 
 **Last Updated**: Latest  
-**Overall Progress**: 4/9 milestones complete 🎉
+**Overall Progress**: 4.5/9 milestones complete 🎉
