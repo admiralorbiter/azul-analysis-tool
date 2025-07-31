@@ -96,12 +96,21 @@
   - **✅ Database Caching**: SQLite integration operational with automatic caching
   - **✅ Real-time Analysis**: Both fast hints and exact analysis working in browser
   - **✅ Web UI Response Parsing**: Fixed nested API response extraction for proper result display
-- **🚧 M7 In Progress**: Neural Integration (A7) - PyTorch models and MCTS integration
+- **✅ M7 Complete**: Neural Integration (A7) - PyTorch models and MCTS integration
   - **✅ Tensor Encoding**: AzulTensorEncoder for state representation
   - **✅ AzulNet Model**: Small PyTorch MLP with policy and value heads
   - **✅ Neural Rollout Policy**: Integration with MCTS rollout policies
   - **✅ Training Pipeline**: Synthetic data generation and training script
   - **✅ CLI Integration**: Neural training command added to main CLI
-  - **📋 TODO**: Complete policy-to-move mapping, GPU batching optimization
-- **📋 M8-M9 Planned**: Endgame solver, performance optimization, deployment
+  - **✅ Policy-to-Move Mapping**: Basic policy-to-move mapping implemented
+  - **✅ Neural API Endpoint**: Production neural analysis endpoint
+  - **✅ Web UI Integration**: Neural analysis button and results display
+  - **✅ Model Evaluation**: Comprehensive evaluation system
+  - **✅ CLI Evaluation**: Model evaluation command added
+- **✅ M8 Complete**: Endgame Solver (A8) - Retrograde analysis and symmetry hashing
+  - **✅ EndgameDetector**: Position detection and symmetry hashing
+  - **✅ EndgameDatabase**: Retrograde analysis and solution caching
+  - **✅ Search Integration**: Alpha-beta search with endgame database integration
+  - **✅ Comprehensive Tests**: 25 endgame tests covering all functionality
+- **📋 M9 Planned**: Performance optimization, deployment
 - **🎯 Target**: 17-week delivery timeline with weekly retrospectives

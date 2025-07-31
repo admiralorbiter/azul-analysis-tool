@@ -26,7 +26,7 @@
 | **A5 Alpha–Beta Module** | Iterative deepening, move ordering, killer/hist heuristics, TT replacement table. | ☐ |
 | **A6 MCTS Module** | UCT + virtual loss; pluggable rollout policy (`random`, `heavy`, `nn`). | ☐ |
 | **A7 Neural Bridge** | Torch `AzulNet` (policy+value); GPU batcher; fall‑back to CPU eager. | ☐ |
-| **A8 Exact Endgame Solver** | Retrograde DB for ≤ N‑tile positions; symmetry hashing. | ☐ |
+| **A8 Exact Endgame Solver** | Retrograde DB for ≤ N‑tile positions; symmetry hashing. | ☑ |
 | **A9 Profiling Harness** | `pytest‑bench` benches, `cProfile` + `py‑spy` scripts; perf budget alerts. | ☐ |
 
 ### EPIC B — Data & Storage (`azul_db`)

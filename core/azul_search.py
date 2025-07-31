@@ -1,11 +1,12 @@
 """
-Azul Alpha-Beta Search - A5 Implementation
+Azul Alpha-Beta Search - A5 Implementation with A8 Endgame Integration
 
 This module provides alpha-beta search for Azul with:
 - Iterative deepening with transposition tables
 - Move ordering heuristics (wall-completion >> penalty-free >> others)
 - Performance target: depth-3 < 4s
 - Integration with existing evaluator and move generator
+- A8: Endgame solver integration for exact solutions
 """
 
 import time
@@ -16,6 +17,7 @@ from . import azul_utils as utils
 from .azul_model import AzulState, AzulGameRule
 from .azul_evaluator import AzulEvaluator
 from .azul_move_generator import FastMoveGenerator, FastMove
+from .azul_endgame import EndgameDatabase
 
 
 @dataclass
@@ -95,12 +97,14 @@ class AzulAlphaBetaSearch:
     - Performance monitoring
     """
     
-    def __init__(self, max_depth: int = 10, max_time: float = 4.0):
+    def __init__(self, max_depth: int = 10, max_time: float = 4.0, use_endgame: bool = True):
         self.max_depth = max_depth
         self.max_time = max_time
+        self.use_endgame = use_endgame
         self.evaluator = AzulEvaluator()
         self.move_generator = FastMoveGenerator()
         self.transposition_table = TranspositionTable()
+        self.endgame_database = EndgameDatabase(max_tiles=20) if use_endgame else None
         # Don't initialize game_rules here - we'll create it when needed
         
         # Search statistics
@@ -198,6 +202,17 @@ class AzulAlphaBetaSearch:
         # Check for game end (simplified)
         if self._is_game_end(state):
             return self._evaluate_terminal_state(state, agent_id)
+        
+        # A8: Check for endgame database solution
+        if self.use_endgame and self.endgame_database and self.endgame_database.has_solution(state):
+            endgame_solution = self.endgame_database.get_solution(state)
+            if endgame_solution and endgame_solution.get('exact', False):
+                return {
+                    'best_move': endgame_solution['best_move'],
+                    'score': endgame_solution['score'],
+                    'pv': [endgame_solution['best_move']] if endgame_solution['best_move'] else [],
+                    'exact': True
+                }
         
         # Check transposition table
         hash_key = state.get_zobrist_hash()
@@ -430,4 +445,29 @@ class AzulAlphaBetaSearch:
         self.search_start_time = 0
         self.killer_moves = [[] for _ in range(self.max_depth)]
         self.history_table.clear()
-        self.transposition_table.clear() 
+        self.transposition_table.clear()
+    
+    def analyze_endgame(self, state: AzulState, agent_id: int) -> Optional[Dict]:
+        """
+        Analyze an endgame position using the endgame database.
+        
+        Args:
+            state: Current game state
+            agent_id: Agent to analyze for
+            
+        Returns:
+            Endgame solution dict or None if not an endgame position
+        """
+        if not self.use_endgame or not self.endgame_database:
+            return None
+        
+        return self.endgame_database.analyze_endgame(state, max_depth=10)
+    
+    def get_endgame_stats(self) -> Dict:
+        """Get endgame database statistics."""
+        if not self.use_endgame or not self.endgame_database:
+            return {'enabled': False}
+        
+        stats = self.endgame_database.get_stats()
+        stats['enabled'] = True
+        return stats 

@@ -61,9 +61,14 @@
   - **✅ Web UI Integration**: Neural analysis button and results display
   - **✅ Model Evaluation**: Comprehensive evaluation system
   - **✅ CLI Evaluation**: Model evaluation command added
-- **📋 M8-M9 Planned**: Endgame solver, performance optimization, deployment
+- **✅ M8 Complete**: Endgame Solver (A8) - Retrograde analysis and symmetry hashing
+  - **✅ EndgameDetector**: Position detection and symmetry hashing
+  - **✅ EndgameDatabase**: Retrograde analysis and solution caching
+  - **✅ Search Integration**: Alpha-beta search with endgame database integration
+  - **✅ Comprehensive Tests**: 25 endgame tests covering all functionality
+- **📋 M9 Planned**: Performance optimization, deployment
 
-### 🎯 **Current Priority: M8 Endgame Solver - NEXT**
+### 🎯 **Current Priority: M9 Performance & Deployment - NEXT**
 
 #### **M7 - Neural Integration (A7) - COMPLETE**
 - **A7: Neural Bridge** ✅ - PyTorch integration with tensor encoding, small MLP, MCTS integration
@@ -92,7 +97,7 @@
 # Run all tests to verify everything works
 python -m pytest tests/ -v
 
-# Expected output: 201 tests passing, 0 failing
+# Expected output: 226 tests passing, 0 failing
 # - 34 core tests (A1 functionality)
 # - 28 validator tests (A2 functionality)
 # - 24 move generator tests (A3 functionality)
@@ -102,6 +107,7 @@ python -m pytest tests/ -v
 # - 16 database tests (B1 functionality)
 # - 20 API tests (C1-C3 functionality)
 # - 6 web UI tests (D1-D3 functionality)
+# - 25 endgame tests (A8 functionality)
 ```
 
 ### **2. Test Specific Components**
