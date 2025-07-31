@@ -189,9 +189,11 @@ def serve(host, port, debug, database):
         from api.app import create_app
         
         # Create Flask app with configuration
+        # Use default database path if none provided
+        db_path = database or "azul_cache.db"
         config = {
             'DEBUG': debug,
-            'DATABASE_PATH': database,
+            'DATABASE_PATH': db_path,
             'RATE_LIMIT_ENABLED': True
         }
         

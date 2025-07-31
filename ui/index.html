@@ -127,13 +127,14 @@
                     body: JSON.stringify({
                         fen_string: fenString,
                         depth: 3,
-                        timeout: 4.0,
-                        agent: 0
+                        time_budget: 4.0,
+                        agent_id: 0
                     })
                 });
                 
                 if (response.ok) {
-                    return await response.json();
+                    const data = await response.json();
+                    return data.success ? data.analysis : null;
                 } else {
                     console.error('Analysis failed:', response.status, response.statusText);
                     return null;
@@ -161,12 +162,13 @@
                         fen_string: fenString,
                         budget: 0.2,
                         rollouts: 100,
-                        agent: 0
+                        agent_id: 0
                     })
                 });
                 
                 if (response.ok) {
-                    return await response.json();
+                    const data = await response.json();
+                    return data.success ? data.hint : null;
                 } else {
                     console.error('Hint failed:', response.status, response.statusText);
                     return null;
@@ -189,10 +191,10 @@
         // Sample game state (simplified FEN-like format)
         const SAMPLE_STATE = {
             factories: [
-                ['R', 'B', 'Y', 'W', 'K'],
-                ['B', 'Y', 'W', 'K', 'R'],
-                ['Y', 'W', 'K', 'R', 'B'],
-                ['W', 'K', 'R', 'B', 'Y'],
+                ['K', 'R', 'B', 'Y', 'W', 'W'], // Factory 1: 1 black, 1 red, 1 blue, 1 yellow, 2 empty
+                ['R', 'B', 'Y', 'W', 'K', 'K'], // Factory 2: 1 red, 1 blue, 1 yellow, 1 white, 2 black
+                ['Y', 'B', 'W', 'K', 'R', 'W'], // Factory 3: 1 yellow, 1 blue, 1 empty, 1 black, 1 red, 1 empty
+                ['Y', 'W', 'R', 'B', 'W', 'W'], // Factory 4: 1 yellow, 1 empty, 1 red, 1 blue, 2 empty
             ],
             center: ['R', 'B', 'Y'],
             players: [
@@ -407,6 +409,7 @@
                 setFenString(fen);
                 
                 const result = await analyzePosition(fen);
+                console.log('Raw analysis result:', result);
                 if (result) {
                     setAnalysis(result);
                     setHint(null); // Clear hint results
@@ -432,6 +435,7 @@
                 setFenString(fen);
                 
                 const result = await getHint(fen);
+                console.log('Raw hint result:', result);
                 if (result) {
                     setHint(result);
                     setAnalysis(null); // Clear analysis results
@@ -616,11 +620,11 @@
                                                 {hint.top_moves.slice(0, 3).map((moveData, index) => (
                                                     <MoveOption 
                                                         key={index}
-                                                        move={moveData[0]}
-                                                        score={moveData[1]}
-                                                        visits={moveData[2]}
-                                                        onClick={() => setSelectedMove(moveData[0])}
-                                                        isSelected={selectedMove === moveData[0]}
+                                                        move={moveData.move}
+                                                        score={moveData.score}
+                                                        visits={moveData.visits}
+                                                        onClick={() => setSelectedMove(moveData.move)}
+                                                        isSelected={selectedMove === moveData.move}
                                                     />
                                                 ))}
                                             </div>

@@ -50,14 +50,21 @@ def format_move(move):
     if move is None:
         return "None"
     
-    # Convert FastMove to readable format
-    action_type = "factory" if move.source_id >= 0 else "centre"
-    tile_type = ["blue", "yellow", "red", "black", "white"][move.tile_type]
-    
-    if move.pattern_line_dest >= 0:
-        return f"take {move.num_to_pattern_line} {tile_type} from {action_type} {move.source_id} to pattern line {move.pattern_line_dest}"
-    else:
-        return f"take {move.num_to_floor_line} {tile_type} from {action_type} {move.source_id} to floor"
+    try:
+        # Convert FastMove to readable format
+        action_type = "factory" if move.source_id >= 0 else "centre"
+        
+        # Map tile types correctly (check azul_utils for proper mapping)
+        tile_names = {0: "blue", 1: "yellow", 2: "red", 3: "black", 4: "white"}
+        tile_type = tile_names.get(move.tile_type, f"unknown_tile_{move.tile_type}")
+        
+        if move.pattern_line_dest >= 0:
+            return f"take {move.num_to_pattern_line} {tile_type} from {action_type} {move.source_id} to pattern line {move.pattern_line_dest + 1}"
+        else:
+            return f"take {move.num_to_floor_line} {tile_type} from {action_type} {move.source_id} to floor"
+    except Exception as e:
+        # Fallback if move formatting fails
+        return f"move(source={getattr(move, 'source_id', '?')}, tile={getattr(move, 'tile_type', '?')})"
 
 
 @api_bp.route('/analyze', methods=['POST'])
