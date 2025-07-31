@@ -647,11 +647,47 @@
             );
         }
 
-        // Player Board Component
-        function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onPatternLineDrop, onWallDrop, selectedTile = null, onDestinationClick = null }) {
+        // Enhanced Player Board Component with active player indication
+        function PlayerBoard({ 
+            player, 
+            playerIndex, 
+            onPatternLineClick, 
+            onWallClick, 
+            onPatternLineDrop, 
+            onWallDrop, 
+            selectedTile = null, 
+            onDestinationClick = null,
+            isActive = false,
+            onPlayerSwitch = null,
+            canInteract = true,
+            gameMode = 'sandbox'
+        }) {
+            const borderClass = isActive ? 'border-4 border-blue-500 bg-blue-50' : 'border-2 border-gray-300 bg-gray-50';
+            const headerClass = isActive ? 'text-blue-700 font-bold' : 'text-gray-700';
+            
             return (
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                    <h4 className="text-lg font-medium mb-3">Player {playerIndex + 1}</h4>
+                <div className={`${borderClass} p-4 rounded-lg mb-4 transition-all duration-200`}>
+                    <div className="flex justify-between items-center mb-3">
+                        <h4 className={`text-lg font-medium ${headerClass}`}>
+                            Player {playerIndex + 1}
+                            {isActive && <span className="ml-2 text-sm">👑 Active</span>}
+                            <span className="ml-2 text-sm text-gray-500">Score: {player.score || 0}</span>
+                        </h4>
+                        
+                        {onPlayerSwitch && canInteract && gameMode === 'sandbox' && (
+                            <button
+                                onClick={() => onPlayerSwitch(playerIndex)}
+                                disabled={isActive}
+                                className={`px-3 py-1 text-sm rounded transition-colors ${
+                                    isActive 
+                                        ? 'bg-blue-200 text-blue-800 cursor-not-allowed' 
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+                            >
+                                {isActive ? 'Playing' : 'Switch'}
+                            </button>
+                        )}
+                    </div>
                     
                     {/* Pattern Lines */}
                     <div className="mb-4">
@@ -743,6 +779,12 @@
             const [hint, setHint] = useState(null);
             const [selectedMove, setSelectedMove] = useState(null);
             const [fenString, setFenString] = useState('initial');
+            
+            // Enhanced game management state
+            const [currentPlayer, setCurrentPlayer] = useState(0);
+            const [playerCount, setPlayerCount] = useState(2);
+            const [gameMode, setGameMode] = useState('sandbox'); // 'sandbox', 'analysis', 'setup'
+            const [autoAdvanceTurn, setAutoAdvanceTurn] = useState(false);
             
             // Click selection state
             const [selectedTile, setSelectedTile] = useState(null);
@@ -838,24 +880,26 @@
                 setLoading(false);
             };
 
-            // Sandbox move execution
-            const executeMove = async (moveData) => {
+            // Enhanced move execution with player management
+            const executeMove = async (moveData, playerId = null) => {
                 if (sessionStatus !== 'connected') {
                     setStatusMessage('❌ Not connected to API');
                     return;
                 }
                 
+                const activePlayer = playerId !== null ? playerId : currentPlayer;
                 setLoading(true);
-                setStatusMessage('🎯 Executing move...');
+                setStatusMessage(`🎯 Player ${activePlayer + 1} executing move...`);
                 
                 const requestData = {
                     fen_string: stateToFen(),
                     move: moveData,
-                    agent_id: 0
+                    agent_id: activePlayer
                 };
                 
                 console.log('DEBUG: Move data received:', moveData);
                 console.log('DEBUG: Request data:', requestData);
+                console.log('DEBUG: Active player:', activePlayer);
                 
                 try {
                     const response = await fetch(`${API_BASE}/execute_move`, {
@@ -871,11 +915,13 @@
                     console.log('API response:', result);
                     
                     if (result.success) {
-                        // Add to move history
+                        // Add to move history with player info
                         moveHistory.push({
                             move: moveData,
                             state: stateToFen(),
-                            timestamp: Date.now()
+                            timestamp: Date.now(),
+                            player: activePlayer,
+                            description: formatMoveDescription(moveData)
                         });
                         
                         // Clear undo stack since we made a new move
@@ -884,10 +930,17 @@
                         // Update game state
                         updateGameState(result.new_fen);
                         
-                        setStatusMessage(`✅ Move executed: ${result.move_executed}`);
+                        setStatusMessage(`✅ Player ${activePlayer + 1} move executed: ${result.move_executed || formatMoveDescription(moveData)}`);
                         
-                        // Show engine response if available
-                        if (result.engine_response) {
+                        // Advance turn if auto-advance is enabled and game isn't over
+                        if (autoAdvanceTurn && !result.game_over && gameMode === 'sandbox') {
+                            setTimeout(() => {
+                                advanceTurn();
+                            }, 1000);
+                        }
+                        
+                        // Show engine response if available (only in analysis mode)
+                        if (result.engine_response && gameMode === 'analysis') {
                             setTimeout(() => {
                                 setStatusMessage(`🤖 Engine response: ${result.engine_response.move} (${result.engine_response.score.toFixed(2)})`);
                             }, 1000);
@@ -898,9 +951,14 @@
                             setTimeout(() => {
                                 setStatusMessage(`🏁 Game Over! Final scores: ${result.scores.join(' - ')}`);
                             }, 2000);
+                        } else if (!autoAdvanceTurn) {
+                            // Show whose turn it is next
+                            setTimeout(() => {
+                                setStatusMessage(`🎮 Player ${currentPlayer + 1}'s turn`);
+                            }, 2000);
                         }
                     } else {
-                        setStatusMessage(`❌ Move failed: ${result.error}`);
+                        setStatusMessage(`❌ Player ${activePlayer + 1} move failed: ${result.error}`);
                     }
                 } catch (error) {
                     setStatusMessage(`❌ Move execution error: ${error.message}`);
@@ -1100,6 +1158,102 @@
                 setSelectionMode('none');
             };
 
+            // Enhanced turn management functions
+            const advanceTurn = () => {
+                const nextPlayer = (currentPlayer + 1) % playerCount;
+                setCurrentPlayer(nextPlayer);
+                setStatusMessage(`🎮 Player ${nextPlayer + 1}'s turn`);
+                console.log('Advanced turn to player:', nextPlayer);
+            };
+
+            const switchToPlayer = (playerId) => {
+                if (playerId >= 0 && playerId < playerCount) {
+                    setCurrentPlayer(playerId);
+                    setStatusMessage(`🎮 Switched to Player ${playerId + 1}`);
+                    console.log('Switched to player:', playerId);
+                }
+            };
+
+            const resetGame = async () => {
+                if (loading) return;
+                
+                setLoading(true);
+                setStatusMessage('🔄 Resetting game...');
+                
+                try {
+                    // Reset to initial state
+                    setFenString('initial');
+                    setCurrentPlayer(0);
+                    moveHistory = [];
+                    undoStack = [];
+                    setSelectedTile(null);
+                    setSelectionMode('none');
+                    setAnalysis(null);
+                    setHint(null);
+                    
+                    // Get fresh initial state
+                    const state = await getGameState('initial');
+                    if (state) {
+                        setGameState(state);
+                        setStatusMessage('✅ Game reset - Player 1\'s turn');
+                    }
+                } catch (error) {
+                    setStatusMessage(`❌ Reset failed: ${error.message}`);
+                }
+                
+                setLoading(false);
+            };
+
+            const createNewGame = async (newPlayerCount = 2) => {
+                if (loading) return;
+                
+                setLoading(true);
+                setStatusMessage(`🆕 Creating ${newPlayerCount}-player game...`);
+                
+                try {
+                    // Call API to create new game state
+                    const response = await fetch(`${API_BASE}/create_game`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            player_count: newPlayerCount
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setPlayerCount(newPlayerCount);
+                        setCurrentPlayer(0);
+                        setFenString(result.fen_string || 'initial');
+                        moveHistory = [];
+                        undoStack = [];
+                        setSelectedTile(null);
+                        setSelectionMode('none');
+                        setAnalysis(null);
+                        setHint(null);
+                        
+                        const state = await getGameState(result.fen_string || 'initial');
+                        if (state) {
+                            setGameState(state);
+                            setStatusMessage(`✅ New ${newPlayerCount}-player game created - Player 1's turn`);
+                        }
+                    } else {
+                        setStatusMessage(`❌ Failed to create game: ${result.error}`);
+                    }
+                } catch (error) {
+                    // Fallback to simple reset
+                    console.log('Create game API not available, falling back to reset');
+                    setPlayerCount(newPlayerCount);
+                    await resetGame();
+                }
+                
+                setLoading(false);
+            };
+
             // Check if a destination is valid for the selected tile
             const isValidDestination = (destinationType, destinationData) => {
                 if (!selectedTile) return false;
@@ -1223,6 +1377,10 @@
                                                     onWallDrop={handleWallDrop}
                                                     selectedTile={selectedTile}
                                                     onDestinationClick={handleDestinationClick}
+                                                    isActive={index === currentPlayer}
+                                                    onPlayerSwitch={switchToPlayer}
+                                                    canInteract={!loading}
+                                                    gameMode={gameMode}
                                                 />
                                             ))}
                                         </div>
@@ -1233,9 +1391,118 @@
 
                         {/* Analysis Panel */}
                         <div className="space-y-6">
-                            {/* Controls */}
+                            {/* Game Management Controls */}
                             <div className="bg-white p-4 rounded-lg shadow">
-                                <h3 className="text-lg font-medium mb-4">Analysis Controls</h3>
+                                <h3 className="text-lg font-medium mb-4">🎮 Game Management</h3>
+                                
+                                {/* Current Game Status */}
+                                <div className="mb-4 p-3 bg-gray-50 rounded">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="font-medium">Current Player:</span>
+                                        <span className={`px-2 py-1 rounded text-sm font-bold ${
+                                            loading ? 'bg-gray-200 text-gray-600' : 'bg-blue-200 text-blue-800'
+                                        }`}>
+                                            Player {currentPlayer + 1} {loading ? '(Moving...)' : '👑'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="font-medium">Mode:</span>
+                                        <select 
+                                            value={gameMode} 
+                                            onChange={(e) => setGameMode(e.target.value)}
+                                            disabled={loading}
+                                            className="px-2 py-1 rounded border text-sm"
+                                        >
+                                            <option value="sandbox">🎮 Sandbox</option>
+                                            <option value="analysis">🔍 Analysis</option>
+                                            <option value="setup">⚙️ Setup</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium">Players:</span>
+                                        <span className="text-sm">{playerCount} players</span>
+                                    </div>
+                                </div>
+                                
+                                {/* Player Controls */}
+                                <div className="mb-4">
+                                    <h4 className="text-md font-medium mb-2">Player Controls</h4>
+                                    <div className="grid grid-cols-2 gap-2 mb-3">
+                                        {Array.from({ length: playerCount }, (_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => switchToPlayer(i)}
+                                                disabled={loading || i === currentPlayer}
+                                                className={`px-3 py-2 text-sm rounded transition-colors ${
+                                                    i === currentPlayer
+                                                        ? 'bg-blue-500 text-white font-bold cursor-not-allowed'
+                                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                }`}
+                                            >
+                                                Player {i + 1} {i === currentPlayer ? '👑' : ''}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            id="auto-advance"
+                                            checked={autoAdvanceTurn}
+                                            onChange={(e) => setAutoAdvanceTurn(e.target.checked)}
+                                            disabled={loading}
+                                        />
+                                        <label htmlFor="auto-advance" className="text-gray-600">
+                                            Auto-advance turns
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                {/* Game Setup Controls */}
+                                <div className="mb-4">
+                                    <h4 className="text-md font-medium mb-2">Game Setup</h4>
+                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                        <button
+                                            onClick={resetGame}
+                                            disabled={loading}
+                                            className="bg-yellow-600 text-white py-2 px-3 rounded hover:bg-yellow-700 disabled:opacity-50 text-sm"
+                                        >
+                                            🔄 Reset Game
+                                        </button>
+                                        <button
+                                            onClick={() => createNewGame(2)}
+                                            disabled={loading}
+                                            className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
+                                        >
+                                            🆕 New 2P Game
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => createNewGame(3)}
+                                            disabled={loading}
+                                            className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
+                                        >
+                                            🆕 New 3P Game
+                                        </button>
+                                        <button
+                                            onClick={() => createNewGame(4)}
+                                            disabled={loading}
+                                            className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
+                                        >
+                                            🆕 New 4P Game
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div className="text-xs text-gray-500">
+                                    <p>💡 Click player buttons to switch active player</p>
+                                    <p>🎮 Sandbox: Manual play | 🔍 Analysis: Engine assistance | ⚙️ Setup: Board configuration</p>
+                                </div>
+                            </div>
+                            
+                            {/* Analysis Controls */}
+                            <div className="bg-white p-4 rounded-lg shadow">
+                                <h3 className="text-lg font-medium mb-4">🔍 Analysis Controls</h3>
                                 <div className="space-y-3">
                                     <button 
                                         onClick={handleAnalyze}
@@ -1392,13 +1659,20 @@
                                         {moveHistory.map((moveData, index) => (
                                             <div key={index} className="text-sm p-2 bg-gray-50 rounded">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-medium">Move {index + 1}</span>
+                                                    <span className="font-medium">
+                                                        Move {index + 1}
+                                                        {moveData.player !== undefined && (
+                                                            <span className="ml-2 px-2 py-0.5 bg-blue-200 text-blue-800 text-xs rounded">
+                                                                P{moveData.player + 1}
+                                                            </span>
+                                                        )}
+                                                    </span>
                                                     <span className="text-xs text-gray-500">
                                                         {new Date(moveData.timestamp).toLocaleTimeString()}
                                                     </span>
                                                 </div>
                                                 <div className="text-xs text-gray-600 mt-1">
-                                                    {formatMoveDescription(moveData.move)}
+                                                    {moveData.description || formatMoveDescription(moveData.move)}
                                                 </div>
                                             </div>
                                         ))}

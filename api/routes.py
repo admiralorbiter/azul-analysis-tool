@@ -96,6 +96,12 @@ class MoveExecutionRequest(BaseModel):
     agent_id: int = 0
 
 
+class GameCreationRequest(BaseModel):
+    """Request model for game creation."""
+    player_count: int = 2
+    seed: Optional[int] = None
+
+
 # Create Flask blueprint for API endpoints
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
@@ -2088,6 +2094,63 @@ def state_to_fen(state) -> str:
     
     # For other states, return "initial" for backward compatibility
     return "initial" 
+
+
+@api_bp.route('/create_game', methods=['POST'])
+def create_game():
+    """Create a new game with specified player count."""
+    try:
+        try:
+            data = request.get_json(force=True)
+        except Exception:
+            data = {}
+        
+        request_model = GameCreationRequest(**(data or {}))
+        
+        print(f"DEBUG: Creating new game with {request_model.player_count} players")
+        
+        # Validate player count
+        if request_model.player_count < 2 or request_model.player_count > 4:
+            return jsonify({'error': 'Player count must be between 2 and 4'}), 400
+        
+        # Create new game state
+        from core.azul_model import AzulState
+        import random
+        import time
+        
+        # Use seed if provided, otherwise use time-based seed
+        if request_model.seed is not None:
+            random.seed(request_model.seed)
+        else:
+            # Use a time-based seed for true randomness
+            random.seed(int(time.time() * 1000) % 2**32)
+        
+        # Create new game state
+        new_state = AzulState(request_model.player_count)
+        
+        # Reset the random seed
+        random.seed()
+        
+        # Update global game state
+        global _current_game_state, _initial_game_state
+        _current_game_state = new_state
+        _initial_game_state = copy.deepcopy(new_state)
+        
+        # Generate a unique identifier for this state
+        state_id = f"state_{int(time.time() * 1000) % 1000000}"
+        
+        return jsonify({
+            'success': True,
+            'fen_string': state_id,
+            'player_count': request_model.player_count,
+            'message': f'New {request_model.player_count}-player game created'
+        })
+        
+    except Exception as e:
+        print(f"ERROR in create_game: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Game creation failed: {str(e)}'}), 500
 
 
 @api_bp.route('/game_state', methods=['GET'])
