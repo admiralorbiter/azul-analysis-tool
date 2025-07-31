@@ -404,12 +404,16 @@
                                 className={heatmap ? `heatmap-${heatmap}` : ""}
                                 draggable={tile !== 'W'} // Only non-empty tiles are draggable
                                 onDragStart={(e, tileElement) => {
+                                    console.log('Factory tile drag start:', tile, factoryIndex, index);
+                                    
                                     const tileData = {
                                         tile: tile,
                                         factoryIndex: factoryIndex,
                                         tileIndex: index,
                                         sourceId: factoryIndex
                                     };
+                                    console.log('Setting drag data:', tileData);
+                                    
                                     e.dataTransfer.setData('application/json', JSON.stringify(tileData));
                                     e.dataTransfer.effectAllowed = 'move';
                                     tileElement.classList.add('dragging');
@@ -457,12 +461,22 @@
                     e.preventDefault();
                     e.currentTarget.classList.remove('drag-over');
                     
+                    console.log('PatternLine drop event triggered');
+                    
                     const tileData = e.dataTransfer.getData('application/json');
+                    console.log('Tile data from drop:', tileData);
+                    
                     if (tileData) {
                         const data = JSON.parse(tileData);
+                        console.log('Parsed data:', data);
                         if (onDrop) {
+                            console.log('Calling onDrop with:', data, rowIndex);
                             onDrop(data, rowIndex);
+                        } else {
+                            console.log('onDrop is not defined');
                         }
+                    } else {
+                        console.log('No tile data found in drop event');
                     }
                 };
                 
@@ -475,7 +489,7 @@
                     patternLine.removeEventListener('dragleave', handleDragLeave);
                     patternLine.removeEventListener('drop', handleDrop);
                 };
-            }, [onDrop, rowIndex]);
+            }, [onDrop, rowIndex, patternLineRef]);
             
             const emptySlots = Math.max(0, maxTiles - tiles.length);
             return (
@@ -768,7 +782,8 @@
                     const response = await fetch(`${API_BASE}/execute_move`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
                         },
                         body: JSON.stringify(requestData)
                     });
@@ -889,6 +904,8 @@
 
             // Handle pattern line drop
             const handlePatternLineDrop = (tileData, rowIndex) => {
+                console.log('handlePatternLineDrop called with:', tileData, rowIndex);
+                
                 const move = {
                     source_id: tileData.sourceId,
                     tile_type: getTileTypeFromColor(tileData.tile),

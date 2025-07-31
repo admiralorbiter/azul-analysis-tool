@@ -1966,16 +1966,28 @@ def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]
 def find_matching_move(engine_move: Dict[str, Any], legal_moves: List) -> Optional[object]:
     """Find matching move in legal moves list."""
     print(f"DEBUG: Looking for match with engine move: {engine_move}")
+    print(f"DEBUG: Engine move type: {type(engine_move)}")
+    print(f"DEBUG: Engine move keys: {engine_move.keys()}")
+    
     for i, move in enumerate(legal_moves):
         print(f"DEBUG: Checking legal move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type}, pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
-        if (move.action_type == engine_move['action_type'] and
-            move.source_id == engine_move['source_id'] and
-            move.tile_type == engine_move['tile_type'] and
-            move.pattern_line_dest == engine_move['pattern_line_dest'] and
-            move.num_to_pattern_line == engine_move['num_to_pattern_line'] and
-            move.num_to_floor_line == engine_move['num_to_floor_line']):
+        print(f"DEBUG: Move type: {type(move)}")
+        
+        # Check each field individually
+        action_match = move.action_type == engine_move['action_type']
+        source_match = move.source_id == engine_move['source_id']
+        tile_match = move.tile_type == engine_move['tile_type']
+        pattern_match = move.pattern_line_dest == engine_move['pattern_line_dest']
+        num_pattern_match = move.num_to_pattern_line == engine_move['num_to_pattern_line']
+        num_floor_match = move.num_to_floor_line == engine_move['num_to_floor_line']
+        
+        print(f"DEBUG: Matches - action: {action_match}, source: {source_match}, tile: {tile_match}, pattern: {pattern_match}, num_pattern: {num_pattern_match}, num_floor: {num_floor_match}")
+        
+        if (action_match and source_match and tile_match and 
+            pattern_match and num_pattern_match and num_floor_match):
             print(f"DEBUG: Found matching move at index {i}")
             return move
+    
     print(f"DEBUG: No matching move found")
     return None
 
