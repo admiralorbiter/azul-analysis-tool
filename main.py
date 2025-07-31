@@ -197,17 +197,17 @@ def serve(host, port, debug, database):
         
         app = create_app(config)
         
-                    click.echo("✅ REST API server ready!")
-            click.echo("📋 Available endpoints:")
-            click.echo("   POST /api/v1/auth/session - Create session")
-            click.echo("   POST /api/v1/analyze - Exact analysis")
-            click.echo("   POST /api/v1/hint - Fast hints")
-            click.echo("   GET  /api/v1/health - Health check")
-            click.echo("   GET  /api/v1/stats - Usage statistics")
-            click.echo(f"\n🌐 Web UI will be available at: http://{host}:{port}")
-            click.echo("   📊 Interactive game analysis with live hints")
-            click.echo("   🎮 Drag-and-drop tile placement")
-            click.echo("   📈 Real-time analysis results")
+        click.echo("✅ REST API server ready!")
+        click.echo("📋 Available endpoints:")
+        click.echo("   POST /api/v1/auth/session - Create session")
+        click.echo("   POST /api/v1/analyze - Exact analysis")
+        click.echo("   POST /api/v1/hint - Fast hints")
+        click.echo("   GET  /api/v1/health - Health check")
+        click.echo("   GET  /api/v1/stats - Usage statistics")
+        click.echo(f"\n🌐 Web UI will be available at: http://{host}:{port}")
+        click.echo("   📊 Interactive game analysis with live hints")
+        click.echo("   🎮 Drag-and-drop tile placement")
+        click.echo("   📈 Real-time analysis results")
         
         # Start the server
         app.run(host=host, port=port, debug=debug)

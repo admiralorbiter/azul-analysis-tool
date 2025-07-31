@@ -15,6 +15,7 @@
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
+            border: 2px solid #374151;
         }
         .tile:hover {
             transform: scale(1.1);
@@ -65,6 +66,9 @@
             background-color: #3b82f6;
             color: white;
         }
+        .status-success { color: #059669; }
+        .status-error { color: #dc2626; }
+        .status-warning { color: #d97706; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -73,8 +77,8 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback } = React;
 
-        // API Configuration
-        const API_BASE = 'http://localhost:8000/api/v1';
+        // API Configuration - Use relative URLs to avoid CORS issues
+        const API_BASE = '/api/v1';
         let sessionId = null;
 
         // Initialize session
@@ -90,17 +94,28 @@
                         ip_address: '127.0.0.1'
                     })
                 });
-                const data = await response.json();
-                sessionId = data.session_id;
-                console.log('Session initialized:', sessionId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionId = data.session_id;
+                    console.log('Session initialized:', sessionId);
+                    return true;
+                } else {
+                    console.error('Session creation failed:', response.status);
+                    return false;
+                }
             } catch (error) {
                 console.error('Failed to initialize session:', error);
+                return false;
             }
         }
 
         // API helper functions
         async function analyzePosition(fenString) {
-            if (!sessionId) return null;
+            if (!sessionId) {
+                console.error('No session ID available');
+                return null;
+            }
             
             try {
                 const response = await fetch(`${API_BASE}/analyze`, {
@@ -116,15 +131,24 @@
                         agent: 0
                     })
                 });
-                return await response.json();
+                
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    console.error('Analysis failed:', response.status, response.statusText);
+                    return null;
+                }
             } catch (error) {
-                console.error('Analysis failed:', error);
+                console.error('Analysis error:', error);
                 return null;
             }
         }
 
         async function getHint(fenString) {
-            if (!sessionId) return null;
+            if (!sessionId) {
+                console.error('No session ID available');
+                return null;
+            }
             
             try {
                 const response = await fetch(`${API_BASE}/hint`, {
@@ -140,9 +164,15 @@
                         agent: 0
                     })
                 });
-                return await response.json();
+                
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    console.error('Hint failed:', response.status, response.statusText);
+                    return null;
+                }
             } catch (error) {
-                console.error('Hint failed:', error);
+                console.error('Hint error:', error);
                 return null;
             }
         }
@@ -193,6 +223,7 @@
                     className={`tile ${className}`}
                     style={{ backgroundColor: TILE_COLORS[color] || '#6b7280' }}
                     onClick={onClick}
+                    title={color}
                 />
             );
         }
@@ -218,7 +249,7 @@
 
         // Pattern Line Component
         function PatternLine({ tiles, rowIndex, maxTiles, onTileClick }) {
-            const emptySlots = maxTiles - tiles.length;
+            const emptySlots = Math.max(0, maxTiles - tiles.length);
             return (
                 <div className="pattern-line">
                     {tiles.map((tile, index) => (
@@ -308,8 +339,23 @@
                 >
                     <div className="font-medium">{move}</div>
                     <div className="text-sm text-gray-600">
-                        Score: {score.toFixed(2)}, Visits: {visits}
+                        Score: {score?.toFixed(2) || 'N/A'}, Visits: {visits || 'N/A'}
                     </div>
+                </div>
+            );
+        }
+
+        // Status Component
+        function StatusMessage({ type, message }) {
+            const statusClass = {
+                'success': 'status-success',
+                'error': 'status-error',
+                'warning': 'status-warning'
+            }[type] || '';
+            
+            return (
+                <div className={`text-sm font-medium ${statusClass}`}>
+                    {message}
                 </div>
             );
         }
@@ -322,10 +368,23 @@
             const [loading, setLoading] = useState(false);
             const [selectedMove, setSelectedMove] = useState(null);
             const [fenString, setFenString] = useState('');
+            const [sessionStatus, setSessionStatus] = useState('initializing');
+            const [statusMessage, setStatusMessage] = useState('');
 
             // Initialize session on component mount
             useEffect(() => {
-                initializeSession();
+                async function init() {
+                    setSessionStatus('initializing');
+                    const success = await initializeSession();
+                    if (success) {
+                        setSessionStatus('connected');
+                        setStatusMessage('✅ Connected to Azul Solver API');
+                    } else {
+                        setSessionStatus('error');
+                        setStatusMessage('❌ Failed to connect to API');
+                    }
+                }
+                init();
             }, []);
 
             // Convert game state to FEN-like string
@@ -345,14 +404,24 @@
 
             // Handle analysis request
             const handleAnalyze = async () => {
+                if (sessionStatus !== 'connected') {
+                    setStatusMessage('❌ Not connected to API');
+                    return;
+                }
+                
                 setLoading(true);
+                setStatusMessage('🔍 Performing exact analysis...');
                 const fen = stateToFen();
                 setFenString(fen);
                 
                 const result = await analyzePosition(fen);
                 if (result) {
                     setAnalysis(result);
+                    setHint(null); // Clear hint results
+                    setStatusMessage('✅ Exact analysis completed');
                     console.log('Analysis result:', result);
+                } else {
+                    setStatusMessage('❌ Analysis failed');
                 }
                 
                 setLoading(false);
@@ -360,14 +429,24 @@
 
             // Handle hint request
             const handleHint = async () => {
+                if (sessionStatus !== 'connected') {
+                    setStatusMessage('❌ Not connected to API');
+                    return;
+                }
+                
                 setLoading(true);
+                setStatusMessage('💡 Generating fast hint...');
                 const fen = stateToFen();
                 setFenString(fen);
                 
                 const result = await getHint(fen);
                 if (result) {
                     setHint(result);
+                    setAnalysis(null); // Clear analysis results
+                    setStatusMessage('✅ Fast hint generated');
                     console.log('Hint result:', result);
+                } else {
+                    setStatusMessage('❌ Hint generation failed');
                 }
                 
                 setLoading(false);
@@ -376,18 +455,21 @@
             // Handle tile click in factory
             const handleFactoryTileClick = (tile, factoryIndex, tileIndex) => {
                 console.log(`Clicked tile ${tile} from factory ${factoryIndex}, position ${tileIndex}`);
+                setStatusMessage(`🎯 Selected: ${tile} tile from factory ${factoryIndex}`);
                 // TODO: Implement move logic
             };
 
             // Handle pattern line click
             const handlePatternLineClick = (rowIndex, tileIndex) => {
                 console.log(`Clicked pattern line ${rowIndex}, tile ${tileIndex}`);
+                setStatusMessage(`🎯 Selected: Pattern line ${rowIndex}, tile ${tileIndex}`);
                 // TODO: Implement move logic
             };
 
             // Handle wall click
             const handleWallClick = (rowIndex, colIndex) => {
                 console.log(`Clicked wall cell ${rowIndex}, ${colIndex}`);
+                setStatusMessage(`🎯 Selected: Wall cell ${rowIndex}, ${colIndex}`);
                 // TODO: Implement move logic
             };
 
@@ -397,9 +479,13 @@
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">
                             Azul Solver & Analysis Toolkit
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-gray-600 mb-4">
                             Interactive game analysis with live hints and exact evaluation
                         </p>
+                        <StatusMessage 
+                            type={sessionStatus === 'connected' ? 'success' : sessionStatus === 'error' ? 'error' : 'warning'}
+                            message={statusMessage || 'Initializing...'}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -461,18 +547,23 @@
                                 <div className="space-y-3">
                                     <button 
                                         onClick={handleAnalyze}
-                                        disabled={loading}
+                                        disabled={loading || sessionStatus !== 'connected'}
                                         className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
                                     >
-                                        {loading ? 'Analyzing...' : 'Exact Analysis'}
+                                        {loading ? 'Analyzing...' : 'Exact Analysis (Depth-3)'}
                                     </button>
                                     <button 
                                         onClick={handleHint}
-                                        disabled={loading}
+                                        disabled={loading || sessionStatus !== 'connected'}
                                         className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50"
                                     >
-                                        {loading ? 'Generating...' : 'Fast Hint'}
+                                        {loading ? 'Generating...' : 'Fast Hint (<200ms)'}
                                     </button>
+                                </div>
+                                <div className="mt-3 text-xs text-gray-500">
+                                    <p>✅ Exact Analysis: Alpha-beta search with depth-3</p>
+                                    <p>✅ Fast Hint: MCTS with UCT algorithm</p>
+                                    <p>✅ Database: SQLite caching enabled</p>
                                 </div>
                             </div>
 
@@ -548,8 +639,9 @@
             );
         }
 
-        // Render the app
-        ReactDOM.render(<App />, document.getElementById('root'));
+        // Render the app using React 18 createRoot
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html> 
