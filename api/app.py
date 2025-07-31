@@ -95,6 +95,21 @@ def create_app(config=None):
                         'export': '/api/v1/positions/bulk (GET)',
                         'delete': '/api/v1/positions/bulk (DELETE)'
                     }
+                },
+                'analyses': {
+                    'get': '/api/v1/analyses/{fen_string}',
+                    'post': '/api/v1/analyses/{fen_string}',
+                    'delete': '/api/v1/analyses/{fen_string}',
+                    'stats': '/api/v1/analyses/stats',
+                    'search': '/api/v1/analyses/search',
+                    'recent': '/api/v1/analyses/recent'
+                },
+                'performance': {
+                    'stats': '/api/v1/performance/stats',
+                    'health': '/api/v1/performance/health',
+                    'optimize': '/api/v1/performance/optimize (POST)',
+                    'analytics': '/api/v1/performance/analytics',
+                    'monitoring': '/api/v1/performance/monitoring'
                 }
             },
             'documentation': 'See project README for API documentation'

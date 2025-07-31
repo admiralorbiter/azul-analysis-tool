@@ -260,9 +260,42 @@ class AzulState(GameState):
     
     def get_zobrist_hash(self):
         """Get the Zobrist hash for this position."""
-        # Temporarily return a simple hash to avoid NumPy issues
-        # TODO: Fix Zobrist hash computation
-        return hash(str(self.agents[0].score) + str(self.agents[1].score))
+        # Create a more comprehensive hash that includes state differences
+        hash_parts = []
+        
+        # Include agent scores
+        for agent in self.agents:
+            hash_parts.append(str(agent.score))
+        
+        # Include grid states
+        for agent in self.agents:
+            for row in range(5):
+                for col in range(5):
+                    hash_parts.append(str(agent.grid_state[row][col]))
+        
+        # Include pattern lines
+        for agent in self.agents:
+            for line in range(5):
+                hash_parts.append(str(agent.lines_tile[line]))
+                hash_parts.append(str(agent.lines_number[line]))
+        
+        # Include floor tiles
+        for agent in self.agents:
+            hash_parts.append(str(len(agent.floor_tiles)))
+        
+        # Include factory states
+        for factory in self.factories:
+            for tile_type in utils.Tile:
+                hash_parts.append(str(factory.tiles[tile_type]))
+        
+        # Include center pool
+        for tile_type in utils.Tile:
+            hash_parts.append(str(self.centre_pool.tiles[tile_type]))
+        
+        # Include first agent
+        hash_parts.append(str(self.first_agent))
+        
+        return hash('|'.join(hash_parts))
     
     def update_zobrist_hash(self, old_hash, changes):
         """Efficiently update the Zobrist hash based on changes made to the state.
@@ -935,6 +968,15 @@ class AzulGameRule(GameRule):
                 state.centre_pool.tiles[tile] = 0
         else:
             plr_state = state.agents[agent_id]
+            
+            # Ensure agent trace is properly initialized
+            if not hasattr(plr_state, 'agent_trace') or plr_state.agent_trace is None:
+                plr_state.agent_trace = utils.AgentTrace(plr_state.id)
+            
+            # Ensure actions list is not empty
+            if len(plr_state.agent_trace.actions) == 0:
+                plr_state.agent_trace.StartRound()
+            
             plr_state.agent_trace.actions[-1].append(action)
 
             # The agent is taking tiles from the centre

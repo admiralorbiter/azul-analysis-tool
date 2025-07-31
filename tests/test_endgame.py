@@ -338,7 +338,6 @@ class TestEndgameIntegration:
     def test_integration_with_game_rules(self):
         """Test integration with AzulGameRule."""
         detector = EndgameDetector(max_tiles=5)
-        game_rule = AzulGameRule()
         move_generator = FastMoveGenerator()
         state = AzulState(2)
         
@@ -354,7 +353,10 @@ class TestEndgameIntegration:
         if moves:
             move = moves[0]
             game_rule = AzulGameRule(len(state.agents))
-            new_state = game_rule.apply_move(state, move, 0)
+            # Convert FastMove to action tuple and apply
+            action = move.to_tuple()
+            new_state = state.clone()
+            game_rule.generateSuccessor(new_state, action, 0)
             
             if new_state is not None:
                 # Should still be endgame or closer to terminal

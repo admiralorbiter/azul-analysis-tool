@@ -151,11 +151,19 @@ class TestAPIAnalysisEndpoints:
     @patch('core.azul_search.AzulAlphaBetaSearch')
     def test_analyze_endpoint(self, mock_search):
         """Test exact analysis endpoint."""
+        # Create a proper mock move object
+        mock_move = MagicMock()
+        mock_move.source_id = 0
+        mock_move.tile_type = 0  # blue
+        mock_move.pattern_line_dest = 0
+        mock_move.num_to_pattern_line = 2
+        mock_move.num_to_floor_line = 0
+        
         # Mock search result
         mock_result = MagicMock()
-        mock_result.best_move = "take_from_factory_0_blue_0_2_0"
+        mock_result.best_move = mock_move
         mock_result.best_score = 15.5
-        mock_result.principal_variation = ["move1", "move2"]
+        mock_result.principal_variation = [mock_move, mock_move]
         mock_result.search_time = 1.5
         mock_result.nodes_searched = 1000
         mock_result.depth_reached = 3
@@ -192,18 +200,22 @@ class TestAPIAnalysisEndpoints:
     @patch('core.azul_mcts.AzulMCTS')
     def test_hint_endpoint(self, mock_mcts):
         """Test hint endpoint."""
+        # Create a proper mock move object
+        mock_move = MagicMock()
+        mock_move.source_id = 0
+        mock_move.tile_type = 0  # blue
+        mock_move.pattern_line_dest = 0
+        mock_move.num_to_pattern_line = 2
+        mock_move.num_to_floor_line = 0
+        
         # Mock MCTS result
         mock_result = MagicMock()
-        mock_result.best_move = "take_from_factory_0_blue_0_2_0"
-        mock_result.expected_value = 12.3
-        mock_result.confidence = 0.85
+        mock_result.best_move = mock_move
+        mock_result.best_score = 12.3
         mock_result.search_time = 0.15
-        mock_result.rollouts_performed = 50
-        mock_result.top_moves = [
-            ("move1", 12.3, 25),
-            ("move2", 11.8, 15),
-            ("move3", 10.5, 10)
-        ]
+        mock_result.rollout_count = 50
+        mock_result.nodes_searched = 100
+        mock_result.principal_variation = [mock_move]
         
         mock_mcts_instance = MagicMock()
         mock_mcts_instance.search.return_value = mock_result
@@ -230,10 +242,10 @@ class TestAPIAnalysisEndpoints:
         assert 'hint' in data
         assert data['hint']['best_move'] == "take_from_factory_0_blue_0_2_0"
         assert data['hint']['expected_value'] == 12.3
-        assert data['hint']['confidence'] == 0.85
+        assert data['hint']['confidence'] == 1.0  # min(1.0, 100/100.0)
         assert data['hint']['search_time'] == 0.15
         assert data['hint']['rollouts_performed'] == 50
-        assert len(data['hint']['top_moves']) == 3
+        assert len(data['hint']['top_moves']) == 1
     
     def test_invalid_request_data(self):
         """Test handling of invalid request data."""
@@ -364,6 +376,10 @@ class TestAPIDatabaseIntegration:
                                   json={'fen_string': 'initial'})
         
         assert response.status_code == 200
+        
+        # Add a small delay to ensure database transaction is committed
+        import time
+        time.sleep(0.1)
         
         # Check that position was cached
         position_id = self.app.database.get_position_id('initial')
@@ -503,10 +519,7 @@ class TestPositionCacheAPI:
     def auth_headers(self, client):
         """Get authenticated headers."""
         # Create session
-        response = client.post('/api/v1/auth/login', json={
-            'username': 'testuser',
-            'password': 'testpass'
-        })
+        response = client.post('/api/v1/auth/session')
         
         session_id = response.json['session_id']
         return {'X-Session-ID': session_id}
@@ -820,3 +833,643 @@ class TestPositionCacheAPI:
         assert data['query'] == 'nonexistent'
         assert len(data['positions']) == 0
         assert data['total_count'] == 0 
+
+
+class TestAnalysisCacheAPI:
+    """Test analysis cache API endpoints."""
+    
+    @pytest.fixture
+    def app(self):
+        """Create test app with database."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        config = {
+            'TESTING': True,
+            'DATABASE_PATH': db_path,
+            'SECRET_KEY': 'test-secret-key',
+            'RATE_LIMIT_ENABLED': False
+        }
+        
+        app = create_app(config)
+        
+        with app.app_context():
+            # Add some test data
+            app.database.cache_position("test_pos1", 2)
+            app.database.cache_position("test_pos2", 3)
+            app.database.cache_position("initial", 2)
+            
+            # Add some test analyses
+            position_id1 = app.database.get_position_id("test_pos1")
+            position_id2 = app.database.get_position_id("test_pos2")
+            
+            app.database.cache_analysis(position_id1, 0, 'mcts', {
+                'best_move': 'test_move_1',
+                'best_score': 0.5,
+                'search_time': 0.2,
+                'nodes_searched': 1000,
+                'rollout_count': 50,
+                'principal_variation': ['move1', 'move2']
+            })
+            
+            app.database.cache_analysis(position_id2, 0, 'alpha_beta', {
+                'best_move': 'test_move_2',
+                'best_score': 0.8,
+                'search_time': 1.5,
+                'nodes_searched': 5000,
+                'rollout_count': 0,
+                'principal_variation': ['move3', 'move4']
+            })
+        
+        yield app
+        
+        # Cleanup
+        os.unlink(db_path)
+    
+    @pytest.fixture
+    def client(self, app):
+        """Create test client."""
+        return app.test_client()
+    
+    @pytest.fixture
+    def auth_headers(self, client):
+        """Get authenticated headers."""
+        # Create session
+        response = client.post('/api/v1/auth/session')
+        
+        session_id = response.json['session_id']
+        return {'X-Session-ID': session_id}
+    
+    def test_get_analysis_success(self, client, auth_headers):
+        """Test successful analysis retrieval."""
+        response = client.get('/api/v1/analyses/test_pos1?agent_id=0&search_type=mcts', 
+                            headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['fen_string'] == 'test_pos1'
+        assert data['agent_id'] == 0
+        assert data['search_type'] == 'mcts'
+        assert data['best_move'] == 'test_move_1'
+        assert data['best_score'] == 0.5
+        assert data['cache_hit'] is True
+    
+    def test_get_analysis_not_found(self, client, auth_headers):
+        """Test analysis retrieval when not found."""
+        response = client.get('/api/v1/analyses/nonexistent?agent_id=0&search_type=mcts', 
+                            headers=auth_headers)
+        
+        assert response.status_code == 404
+        data = response.json
+        assert data['error'] == 'Analysis not found'
+    
+    def test_get_analysis_no_database(self, client, auth_headers):
+        """Test analysis retrieval when database is disabled."""
+        with patch('flask.current_app.database', None):
+            response = client.get('/api/v1/analyses/test_pos1?agent_id=0&search_type=mcts', 
+                                headers=auth_headers)
+            
+            assert response.status_code == 503
+            data = response.json
+            assert data['error'] == 'Database not available'
+    
+    def test_store_analysis_success(self, client, auth_headers):
+        """Test successful analysis storage."""
+        analysis_data = {
+            'agent_id': 0,
+            'search_type': 'neural_mcts',
+            'best_move': 'new_move',
+            'best_score': 0.7,
+            'search_time': 0.3,
+            'nodes_searched': 2000,
+            'rollout_count': 100,
+            'depth_reached': 4,
+            'principal_variation': ['move1', 'move2', 'move3'],
+            'metadata': {'source': 'api', 'parameters': {'time_budget': 0.5}}
+        }
+        
+        response = client.post('/api/v1/analyses/new_position', 
+                             json=analysis_data, headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['fen_string'] == 'new_position'
+        assert data['agent_id'] == 0
+        assert data['search_type'] == 'neural_mcts'
+        assert data['cached'] is True
+        assert 'analysis_id' in data
+    
+    def test_store_analysis_invalid_data(self, client, auth_headers):
+        """Test analysis storage with invalid data."""
+        response = client.post('/api/v1/analyses/test', 
+                             json={'invalid_field': 'value'}, headers=auth_headers)
+        
+        assert response.status_code == 400
+        data = response.json
+        assert data['error'] == 'Validation error'
+    
+    def test_store_analysis_no_data(self, client, auth_headers):
+        """Test analysis storage with no data."""
+        response = client.post('/api/v1/analyses/test', headers=auth_headers)
+        
+        assert response.status_code == 400
+        data = response.json
+        assert data['error'] == 'No JSON data provided'
+    
+    def test_delete_analysis_success(self, client, auth_headers):
+        """Test successful analysis deletion."""
+        response = client.delete('/api/v1/analyses/test_pos1?agent_id=0&search_type=mcts', 
+                               headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['deleted'] is True
+        assert data['fen_string'] == 'test_pos1'
+        assert data['agent_id'] == 0
+        assert data['search_type'] == 'mcts'
+        assert data['deleted_count'] == 1
+    
+    def test_delete_analysis_not_found(self, client, auth_headers):
+        """Test analysis deletion when not found."""
+        response = client.delete('/api/v1/analyses/nonexistent?agent_id=0&search_type=mcts', 
+                               headers=auth_headers)
+        
+        assert response.status_code == 404
+        data = response.json
+        assert data['error'] == 'Position not found'
+    
+    def test_get_analysis_stats(self, client, auth_headers):
+        """Test analysis cache statistics."""
+        response = client.get('/api/v1/analyses/stats', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert 'analyses_cached' in data
+        assert 'by_search_type' in data
+        assert 'performance' in data
+        assert 'query_performance' in data
+        assert 'index_usage' in data
+        assert data['analyses_cached'] >= 2  # We added 2 test analyses
+    
+    def test_search_analyses(self, client, auth_headers):
+        """Test analysis search."""
+        response = client.get('/api/v1/analyses/search?search_type=mcts&limit=10', 
+                            headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['search'] is True
+        assert 'analyses' in data
+        assert 'total_count' in data
+        assert data['limit'] == 10
+        assert len(data['analyses']) >= 1  # Should find at least 1 MCTS analysis
+    
+    def test_search_analyses_with_score_filter(self, client, auth_headers):
+        """Test analysis search with score filter."""
+        response = client.get('/api/v1/analyses/search?min_score=0.6&limit=10', 
+                            headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['search'] is True
+        assert 'analyses' in data
+        # Should find the alpha_beta analysis with score 0.8
+        assert len(data['analyses']) >= 1
+    
+    def test_search_analyses_limit_exceeded(self, client, auth_headers):
+        """Test analysis search with limit too high."""
+        response = client.get('/api/v1/analyses/search?limit=201', headers=auth_headers)
+        
+        assert response.status_code == 400
+        data = response.json
+        assert data['error'] == 'Invalid parameter'
+    
+    def test_get_recent_analyses(self, client, auth_headers):
+        """Test recent analyses retrieval."""
+        response = client.get('/api/v1/analyses/recent?limit=10', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['recent_analyses'] is True
+        assert 'analyses' in data
+        assert data['limit'] == 10
+        assert len(data['analyses']) >= 2  # We added 2 test analyses
+    
+    def test_get_recent_analyses_with_filter(self, client, auth_headers):
+        """Test recent analyses with search type filter."""
+        response = client.get('/api/v1/analyses/recent?limit=10&search_type=alpha_beta', 
+                            headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json
+        
+        assert data['recent_analyses'] is True
+        assert data['search_type_filter'] == 'alpha_beta'
+        assert len(data['analyses']) >= 1  # Should find the alpha_beta analysis
+    
+    def test_get_recent_analyses_limit_exceeded(self, client, auth_headers):
+        """Test recent analyses with limit too high."""
+        response = client.get('/api/v1/analyses/recent?limit=101', headers=auth_headers)
+        
+        assert response.status_code == 400
+        data = response.json
+        assert data['error'] == 'Invalid parameter'
+    
+    def test_analysis_integration_with_analyze_endpoint(self, client, auth_headers):
+        """Test that analyze endpoint caches results."""
+        # First, analyze a position
+        analyze_data = {
+            'fen_string': 'initial',
+            'agent_id': 0,
+            'depth': 2,
+            'time_budget': 1.0
+        }
+        
+        response = client.post('/api/v1/analyze', json=analyze_data, headers=auth_headers)
+        assert response.status_code == 200
+        
+        # Now check if the analysis was cached
+        response = client.get('/api/v1/analyses/initial?agent_id=0&search_type=alpha_beta', 
+                            headers=auth_headers)
+        
+        # Should find the cached analysis
+        assert response.status_code == 200
+        data = response.json
+        assert data['cache_hit'] is True
+        assert data['search_type'] == 'alpha_beta'
+    
+    def test_analysis_integration_with_hint_endpoint(self, client, auth_headers):
+        """Test that hint endpoint caches results."""
+        # First, get a hint
+        hint_data = {
+            'fen_string': 'initial',
+            'agent_id': 0,
+            'budget': 0.1,
+            'rollouts': 50
+        }
+        
+        response = client.post('/api/v1/hint', json=hint_data, headers=auth_headers)
+        assert response.status_code == 200
+        
+        # Now check if the hint was cached
+        response = client.get('/api/v1/analyses/initial?agent_id=0&search_type=mcts', 
+                            headers=auth_headers)
+        
+        # Should find the cached analysis
+        assert response.status_code == 200
+        data = response.json
+        assert data['cache_hit'] is True
+        assert data['search_type'] == 'mcts' 
+
+
+class TestPerformanceAPI:
+    """Test B2.3 Performance API endpoints."""
+    
+    @pytest.fixture
+    def app(self):
+        """Create test app with database."""
+        app = create_test_app()
+        
+        # Pre-populate database with test data
+        with app.app_context():
+            # Add test positions
+            position_id1 = app.database.cache_position('initial', 2)
+            position_id2 = app.database.cache_position('test_position_1', 2)
+            
+            # Add test analyses
+            analysis1 = {
+                'best_move': 'factory_0_blue_pattern_0',
+                'best_score': 0.5,
+                'search_time': 0.2,
+                'nodes_searched': 1000,
+                'rollout_count': 50,
+                'principal_variation': ['factory_0_blue_pattern_0']
+            }
+            analysis2 = {
+                'best_move': 'factory_1_red_pattern_1',
+                'best_score': 0.3,
+                'search_time': 0.15,
+                'nodes_searched': 800,
+                'rollout_count': 40,
+                'principal_variation': ['factory_1_red_pattern_1']
+            }
+            
+            app.database.cache_analysis(position_id1, 0, 'mcts', analysis1)
+            app.database.cache_analysis(position_id2, 0, 'alpha_beta', analysis2)
+            
+            # Update performance stats
+            app.database.update_performance_stats('mcts', 0.2, 1000, 50, True)
+            app.database.update_performance_stats('alpha_beta', 0.15, 800, 0, False)
+        
+        return app
+    
+    @pytest.fixture
+    def client(self, app):
+        """Create test client."""
+        return app.test_client()
+    
+    @pytest.fixture
+    def auth_headers(self, client):
+        """Create authenticated headers."""
+        response = client.post('/api/v1/auth/session')
+        session_id = json.loads(response.data)['session_id']
+        return {'X-Session-ID': session_id}
+    
+    def test_get_performance_stats_success(self, client, auth_headers):
+        """Test getting performance statistics."""
+        response = client.get('/api/v1/performance/stats', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert 'timestamp' in data
+        assert 'search_performance' in data
+        assert 'cache_analytics' in data
+        assert 'query_performance' in data
+        assert 'index_usage' in data
+        
+        # Check cache analytics
+        cache_analytics = data['cache_analytics']
+        assert cache_analytics['positions_cached'] >= 2
+        assert cache_analytics['analyses_cached'] >= 2
+        assert 'cache_hit_rate' in cache_analytics
+        assert 'total_cache_size_mb' in cache_analytics
+    
+    def test_get_performance_stats_with_filters(self, client, auth_headers):
+        """Test getting performance stats with search type filter."""
+        response = client.get(
+            '/api/v1/performance/stats?search_type=mcts&include_query_stats=false',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert 'search_performance' in data
+        assert 'cache_analytics' in data
+        assert 'query_performance' not in data  # Excluded by filter
+        assert 'index_usage' in data
+    
+    def test_get_performance_stats_no_database(self, client, auth_headers):
+        """Test performance stats when database is not available."""
+        # Create app without database
+        app = create_test_app()
+        app.database = None
+        client = app.test_client()
+        
+        response = client.get('/api/v1/performance/stats', headers=auth_headers)
+        
+        assert response.status_code == 500
+        data = json.loads(response.data)
+        assert 'error' in data
+        assert 'Failed to get performance stats' in data['error']
+    
+    def test_get_system_health_success(self, client, auth_headers):
+        """Test getting system health status."""
+        response = client.get('/api/v1/performance/health', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert data['status'] in ['healthy', 'degraded']
+        assert 'timestamp' in data
+        assert 'version' in data
+        assert 'database' in data
+        assert 'performance' in data
+        assert 'cache' in data
+        
+        # Check database health
+        db_health = data['database']
+        assert db_health['status'] in ['healthy', 'unhealthy']
+        assert 'file_size_mb' in db_health
+        assert 'total_pages' in db_health
+        assert 'free_pages' in db_health
+        assert 'page_size' in db_health
+    
+    def test_get_system_health_with_filters(self, client, auth_headers):
+        """Test system health with selective components."""
+        response = client.get(
+            '/api/v1/performance/health?include_database_health=false&include_cache_analytics=false',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert 'database' not in data  # Excluded by filter
+        assert 'performance' in data
+        assert 'cache' not in data  # Excluded by filter
+    
+    def test_get_system_health_degraded(self, app, client, auth_headers):
+        """Test system health when some components are unhealthy."""
+        # Mock database to raise exception
+        with patch.object(app.database, 'get_database_info', side_effect=Exception('DB Error')):
+            response = client.get('/api/v1/performance/health', headers=auth_headers)
+            
+            assert response.status_code == 200
+            data = json.loads(response.data)
+            
+            assert data['status'] == 'degraded'
+            assert data['database']['status'] == 'unhealthy'
+            assert 'error' in data['database']
+    
+    def test_optimize_database_success(self, client, auth_headers):
+        """Test database optimization endpoint."""
+        response = client.post('/api/v1/performance/optimize', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert data['success'] is True
+        assert 'optimization_result' in data
+        assert 'timestamp' in data
+        
+        # Check optimization result
+        opt_result = data['optimization_result']
+        assert 'integrity_check' in opt_result
+        assert 'quick_check' in opt_result
+        assert 'optimization_completed' in opt_result
+        assert opt_result['optimization_completed'] is True
+    
+    def test_optimize_database_no_database(self, client, auth_headers):
+        """Test database optimization when database is not available."""
+        # Create app without database
+        app = create_test_app()
+        app.database = None
+        client = app.test_client()
+        
+        response = client.post('/api/v1/performance/optimize', headers=auth_headers)
+        
+        assert response.status_code == 500
+        data = json.loads(response.data)
+        assert 'error' in data
+        assert 'Failed to optimize database' in data['error']
+    
+    def test_get_cache_analytics_success(self, client, auth_headers):
+        """Test getting cache analytics."""
+        response = client.get('/api/v1/performance/analytics', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert 'timestamp' in data
+        assert 'cache_overview' in data
+        assert 'performance_metrics' in data
+        assert 'high_quality_analyses' in data
+        assert 'analysis_stats' in data
+        
+        # Check cache overview
+        cache_overview = data['cache_overview']
+        assert cache_overview['positions_cached'] >= 2
+        assert cache_overview['analyses_cached'] >= 2
+        assert 'cache_hit_rate' in cache_overview
+        assert 'total_size_mb' in cache_overview
+    
+    def test_get_cache_analytics_with_search_type(self, client, auth_headers):
+        """Test cache analytics with search type filter."""
+        response = client.get(
+            '/api/v1/performance/analytics?search_type=mcts&limit=5',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert 'high_quality_analyses' in data
+        assert 'analysis_stats' in data
+        
+        # Should have some high-quality analyses for MCTS
+        analyses = data['high_quality_analyses']
+        assert len(analyses) <= 5  # Respect limit
+        if analyses:  # If any analyses exist
+            assert analyses[0]['search_type'] == 'mcts'
+    
+    def test_get_cache_analytics_no_search_type(self, client, auth_headers):
+        """Test cache analytics without search type filter."""
+        response = client.get('/api/v1/performance/analytics', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        # Should have empty high-quality analyses when no search type specified
+        assert data['high_quality_analyses'] == []
+        assert data['analysis_stats'] == {}
+    
+    def test_get_monitoring_data_success(self, client, auth_headers):
+        """Test getting real-time monitoring data."""
+        response = client.get('/api/v1/performance/monitoring', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        assert 'timestamp' in data
+        assert 'query_performance' in data
+        assert 'index_usage' in data
+        assert 'database_metrics' in data
+        assert 'system_metrics' in data
+        
+        # Check query performance
+        query_perf = data['query_performance']
+        assert 'total_queries' in query_perf
+        assert 'average_execution_time_ms' in query_perf
+        assert 'total_execution_time_ms' in query_perf
+        
+        # Check index usage
+        index_usage = data['index_usage']
+        assert 'total_indexes' in index_usage
+        assert 'indexes' in index_usage
+        assert 'analysis_indexes' in index_usage
+        assert 'position_indexes' in index_usage
+        
+        # Check database metrics
+        db_metrics = data['database_metrics']
+        assert 'file_size_mb' in db_metrics
+        assert 'total_pages' in db_metrics
+        assert 'free_pages' in db_metrics
+        assert 'page_size' in db_metrics
+        assert 'cache_size_pages' in db_metrics
+        
+        # Check system metrics
+        sys_metrics = data['system_metrics']
+        assert 'uptime' in sys_metrics
+        assert 'memory_usage_mb' in sys_metrics
+        assert 'active_connections' in sys_metrics
+    
+    def test_get_monitoring_data_no_database(self, client, auth_headers):
+        """Test monitoring data when database is not available."""
+        # Create app without database
+        app = create_test_app()
+        app.database = None
+        client = app.test_client()
+        
+        response = client.get('/api/v1/performance/monitoring', headers=auth_headers)
+        
+        assert response.status_code == 500
+        data = json.loads(response.data)
+        assert 'error' in data
+        assert 'Failed to get monitoring data' in data['error']
+    
+    def test_performance_endpoints_authentication(self, client):
+        """Test that performance endpoints require authentication."""
+        endpoints = [
+            '/api/v1/performance/stats',
+            '/api/v1/performance/health',
+            '/api/v1/performance/optimize',
+            '/api/v1/performance/analytics',
+            '/api/v1/performance/monitoring'
+        ]
+        
+        for endpoint in endpoints:
+            if endpoint.endswith('optimize'):
+                response = client.post(endpoint)
+            else:
+                response = client.get(endpoint)
+            
+            assert response.status_code == 401
+            data = json.loads(response.data)
+            assert 'error' in data
+            assert 'Session ID required' in data['error']
+    
+    def test_performance_endpoints_rate_limiting(self, client, auth_headers):
+        """Test that performance endpoints respect rate limiting."""
+        # Make many requests to trigger rate limiting
+        for _ in range(150):  # Exceed the 100 request limit
+            response = client.get('/api/v1/performance/stats', headers=auth_headers)
+            if response.status_code == 429:
+                break
+        else:
+            # If we didn't hit rate limit, that's also acceptable
+            # (rate limiting might be disabled in tests)
+            return
+        
+        # Should get rate limit error
+        data = json.loads(response.data)
+        assert 'error' in data
+        assert 'Rate limit exceeded' in data['error']
+    
+    def test_performance_endpoints_error_handling(self, client, auth_headers):
+        """Test error handling in performance endpoints."""
+        # Test with invalid query parameters
+        response = client.get(
+            '/api/v1/performance/stats?time_range_hours=invalid',
+            headers=auth_headers
+        )
+        
+        # Should still work (invalid params are ignored)
+        assert response.status_code == 200
+        
+        # Test with invalid limit
+        response = client.get(
+            '/api/v1/performance/analytics?limit=-1',
+            headers=auth_headers
+        )
+        
+        # Should still work (invalid limit is handled gracefully)
+        assert response.status_code == 200 

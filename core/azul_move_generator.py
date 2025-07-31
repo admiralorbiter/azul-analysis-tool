@@ -80,6 +80,13 @@ class FastMove:
                 self.num_to_pattern_line == other.num_to_pattern_line and
                 self.num_to_floor_line == other.num_to_floor_line)
     
+    def __lt__(self, other):
+        """Enable sorting of FastMove objects."""
+        if not isinstance(other, (Move, FastMove)):
+            return False
+        # Compare by bit_mask for consistent ordering
+        return self.bit_mask < other.bit_mask
+    
     def __hash__(self):
         return self.bit_mask
     

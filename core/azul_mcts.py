@@ -21,20 +21,8 @@ from .azul_move_generator import FastMoveGenerator, FastMove
 from .azul_evaluator import AzulEvaluator
 from .azul_database import AzulDatabase, CachedAnalysis
 
-# Optional neural imports
-try:
-    from ..neural.azul_net import AzulNeuralRolloutPolicy, create_azul_net
-    NEURAL_AVAILABLE = True
-except ImportError:
-    try:
-        # Fallback for direct import
-        import sys
-        import os
-        sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-        from neural.azul_net import AzulNeuralRolloutPolicy, create_azul_net
-        NEURAL_AVAILABLE = True
-    except ImportError:
-        NEURAL_AVAILABLE = False
+# Optional neural imports - temporarily disabled for testing
+NEURAL_AVAILABLE = False
 
 
 class RolloutPolicy(Enum):

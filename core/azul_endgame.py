@@ -9,6 +9,7 @@ This module provides exact endgame solving for Azul with:
 """
 
 import numpy as np
+import time
 from typing import Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass
 from . import azul_utils as utils
@@ -34,7 +35,7 @@ class EndgameDetector:
     in factories and center pool combined.
     """
     
-    def __init__(self, max_tiles: int = 20):
+    def __init__(self, max_tiles: int = 10):
         self.max_tiles = max_tiles
         self._symmetry_cache: Dict[int, int] = {}
     
@@ -42,14 +43,45 @@ class EndgameDetector:
         """
         Check if the current position is an endgame position.
         
+        Based on Azul rules:
+        - Endgame is triggered when a player completes at least one horizontal wall row
+        - Game ends after the round where this happens
+        - Terminal state occurs when all tiles for the round have been placed
+        
         Args:
             state: Current game state
             
         Returns:
-            True if position has ≤ max_tiles tiles remaining
+            True if this is an endgame position
         """
+        # Check for wall row completion (primary endgame trigger)
+        for agent in state.agents:
+            if self._has_completed_wall_row(agent):
+                return True
+        
+        # Check for terminal state (all tiles placed, pattern lines applied)
+        if self._is_terminal_position(state):
+            return True
+        
+        # Check for forced endgame (wall fully filled - 25 tiles)
+        total_wall_tiles = sum(np.sum(agent.grid_state) for agent in state.agents)
+        if total_wall_tiles >= 25:
+            return True
+        
+        # Check for very few remaining tiles (≤ max_tiles) - this is the primary endgame criterion
         total_tiles = self._count_remaining_tiles(state)
-        return total_tiles <= self.max_tiles
+        if total_tiles <= self.max_tiles:
+            return True
+        
+        return False
+    
+    def _has_completed_wall_row(self, agent) -> bool:
+        """Check if agent has completed any horizontal wall row."""
+        wall = agent.grid_state
+        for row in range(5):
+            if np.sum(wall[row]) == 5:  # All 5 columns filled in this row
+                return True
+        return False
     
     def _count_remaining_tiles(self, state: AzulState) -> int:
         """Count total tiles remaining in factories and center pool."""
@@ -167,28 +199,40 @@ class EndgameDetector:
         Check if this is a terminal position (game over).
         
         A terminal position occurs when:
-        1. All factories are empty
-        2. Center pool is empty
-        3. All pattern lines are empty
+        1. All factories are empty AND center pool is empty (no tiles to place)
+        2. All pattern lines are empty (no tiles waiting to be placed)
+        3. OR a wall row has been completed (endgame trigger)
         """
-        # Check if all factories are empty
+        # Check for endgame trigger (wall row completion)
+        for agent in state.agents:
+            if self._has_completed_wall_row(agent):
+                return True
+        
+        # Check if all tiles have been placed (factories + center empty)
+        all_tiles_placed = True
         for factory in state.factories:
             for tile_type in utils.Tile:
                 if factory.tiles[tile_type] > 0:
-                    return False
+                    all_tiles_placed = False
+                    break
+            if not all_tiles_placed:
+                break
         
-        # Check if center pool is empty
-        for tile_type in utils.Tile:
-            if state.centre_pool.tiles[tile_type] > 0:
-                return False
+        if all_tiles_placed:
+            for tile_type in utils.Tile:
+                if state.centre_pool.tiles[tile_type] > 0:
+                    all_tiles_placed = False
+                    break
         
-        # Check if all pattern lines are empty
-        for agent in state.agents:
-            for line in agent.lines_tile:
-                if line != -1:
-                    return False
+        # If all tiles placed, check if pattern lines are empty
+        if all_tiles_placed:
+            for agent in state.agents:
+                for line in agent.lines_tile:
+                    if line != -1:  # Has tiles waiting to be placed
+                        return False
+            return True
         
-        return True
+        return False
     
     def get_position_key(self, state: AzulState) -> str:
         """
@@ -214,7 +258,7 @@ class EndgameDatabase:
     Uses retrograde analysis to compute perfect play for small positions.
     """
     
-    def __init__(self, max_tiles: int = 20):
+    def __init__(self, max_tiles: int = 10):
         self.max_tiles = max_tiles
         self.detector = EndgameDetector(max_tiles)
         self.solutions: Dict[str, Dict] = {}
@@ -261,22 +305,23 @@ class EndgameDatabase:
         if not self.detector.is_endgame_position(state):
             return None
         
-        key = self.detector.get_position_key(state)
-        if key in self._analyzed_positions:
-            return self.get_solution(state)
+        # Progressive deepening with timeout
+        import time
+        start_time = time.time()
+        max_analysis_time = 2.0  # 2 second timeout
         
-        # Mark as analyzed to prevent infinite recursion
-        self._analyzed_positions.add(key)
+        # Start with shallow depth and increase
+        for depth in range(1, min(max_depth + 1, 6)):  # Cap at depth 6 for safety
+            if time.time() - start_time > max_analysis_time:
+                break
+                
+            result = self._analyze_at_depth(state, depth, start_time, max_analysis_time)
+            if result is not None:
+                # Store the solution for future use
+                self.store_solution(state, result)
+                return result
         
-        try:
-            # Perform retrograde analysis
-            solution = self._retrograde_analysis(state, max_depth)
-            if solution:
-                self.store_solution(state, solution)
-            return solution
-        finally:
-            # Remove from analyzed set to allow re-analysis if needed
-            self._analyzed_positions.discard(key)
+        return None
     
     def _retrograde_analysis(self, state: AzulState, max_depth: int) -> Optional[Dict]:
         """
@@ -287,8 +332,10 @@ class EndgameDatabase:
         2. For each move, recursively analyze the resulting position
         3. Choose the best move based on perfect play
         """
-        # For now, we'll use a simple approach
-        # In practice, this would be much more sophisticated
+        # Early termination conditions
+        if max_depth <= 0:
+            # Reached depth limit, return approximate evaluation
+            return self._evaluate_terminal_position(state)
         
         if self.detector._is_terminal_position(state):
             # Terminal position - compute final score
@@ -304,10 +351,23 @@ class EndgameDatabase:
         best_move = None
         best_score = float('-inf')
         
-        for move in moves:
+        # Limit the number of moves to analyze to prevent infinite loops
+        max_moves_to_analyze = 10
+        moves_to_analyze = moves[:max_moves_to_analyze]
+        
+        for move in moves_to_analyze:
             # Apply move
             game_rule = AzulGameRule(len(state.agents))
-            new_state = game_rule.apply_move(state, move, 0)
+            # Convert FastMove to action tuple and apply
+            action = move.to_tuple()
+            new_state = state.clone()
+            
+            # Initialize agent traces if needed
+            for agent in new_state.agents:
+                if len(agent.agent_trace.actions) == 0:
+                    agent.agent_trace.StartRound()
+            
+            game_rule.generateSuccessor(new_state, action, 0)
             
             if new_state is None:
                 continue
@@ -326,8 +386,226 @@ class EndgameDatabase:
             'best_move': best_move,
             'score': best_score,
             'depth': max_depth,
-            'exact': True
+            'exact': max_depth > 0  # Only exact if we didn't hit depth limit
         }
+    
+    def _retrograde_analysis_with_timeout(self, state: AzulState, max_depth: int, 
+                                        start_time: float, max_analysis_time: float) -> Optional[Dict]:
+        """
+        Perform retrograde analysis with timeout check.
+        
+        Args:
+            state: Current game state
+            max_depth: Maximum search depth
+            start_time: Analysis start time
+            max_analysis_time: Maximum time allowed for analysis
+            
+        Returns:
+            Solution dict or None if analysis times out
+        """
+        # Check timeout
+        if time.time() - start_time > max_analysis_time:
+            return None
+        
+        # Early termination conditions
+        if max_depth <= 0:
+            # Reached depth limit, return approximate evaluation
+            return self._evaluate_terminal_position(state)
+        
+        if self.detector._is_terminal_position(state):
+            # Terminal position - compute final score
+            return self._evaluate_terminal_position(state)
+        
+        # Generate moves and analyze each
+        move_generator = FastMoveGenerator()
+        moves = move_generator.generate_moves_fast(state, 0)
+        
+        if not moves:
+            return None
+        
+        best_move = None
+        best_score = float('-inf')
+        
+        # Limit the number of moves to analyze to prevent infinite loops
+        max_moves_to_analyze = 5  # Reduced from 10 to be more conservative
+        moves_to_analyze = moves[:max_moves_to_analyze]
+        
+        for move in moves_to_analyze:
+            # Check timeout before each move analysis
+            if time.time() - start_time > max_analysis_time:
+                break
+            
+            # Apply move
+            game_rule = AzulGameRule(len(state.agents))
+            # Convert FastMove to action tuple and apply
+            action = move.to_tuple()
+            new_state = state.clone()
+            
+            # Initialize agent traces if needed
+            for agent in new_state.agents:
+                if len(agent.agent_trace.actions) == 0:
+                    agent.agent_trace.StartRound()
+            
+            game_rule.generateSuccessor(new_state, action, 0)
+            
+            if new_state is None:
+                continue
+            
+            # Recursively analyze resulting position
+            result = self._retrograde_analysis_with_timeout(new_state, max_depth - 1, 
+                                                          start_time, max_analysis_time)
+            
+            if result and result['score'] > best_score:
+                best_score = result['score']
+                best_move = move
+        
+        if best_move is None:
+            return None
+        
+        return {
+            'best_move': best_move,
+            'score': best_score,
+            'depth': max_depth,
+            'exact': max_depth > 0  # Only exact if we didn't hit depth limit
+        }
+    
+    def _analyze_at_depth(self, state: AzulState, depth: int, start_time: float, max_time: float) -> Optional[Dict]:
+        """
+        Analyze position at a specific depth with timeout.
+        
+        Args:
+            state: Current game state
+            depth: Search depth
+            start_time: Analysis start time
+            max_time: Maximum time allowed
+            
+        Returns:
+            Analysis result or None if timeout
+        """
+        # Check timeout
+        if time.time() - start_time > max_time:
+            return None
+        
+        # Terminal position check
+        if self.detector._is_terminal_position(state):
+            return self._evaluate_terminal_position(state)
+        
+        # Generate moves
+        move_generator = FastMoveGenerator()
+        moves = move_generator.generate_moves_fast(state, 0)
+        
+        if not moves:
+            return None
+        
+        # Sort moves by priority (like chess engines do)
+        moves = self._sort_moves_by_priority(state, moves)
+        
+        # Limit moves to analyze (prevent explosion)
+        max_moves = min(len(moves), 8)  # Analyze at most 8 moves
+        moves_to_analyze = moves[:max_moves]
+        
+        best_move = None
+        best_score = float('-inf')
+        
+        for move in moves_to_analyze:
+            # Check timeout before each move
+            if time.time() - start_time > max_time:
+                break
+            
+            # Apply move
+            new_state = self._apply_move_safely(state, move)
+            if new_state is None:
+                continue
+            
+            # Recursively analyze
+            if depth > 1:
+                result = self._analyze_at_depth(new_state, depth - 1, start_time, max_time)
+                if result is None:  # Timeout or failure
+                    continue
+                score = result['score']
+            else:
+                # Leaf node - evaluate position
+                score = self._evaluate_position(new_state)
+            
+            if score > best_score:
+                best_score = score
+                best_move = move
+        
+        if best_move is None:
+            return None
+        
+        return {
+            'best_move': best_move,
+            'score': best_score,
+            'depth': depth,
+            'exact': depth > 1  # Only exact if we went deeper than 1
+        }
+    
+    def _sort_moves_by_priority(self, state: AzulState, moves: List[FastMove]) -> List[FastMove]:
+        """Sort moves by priority (like chess engines do)."""
+        move_scores = []
+        
+        for move in moves:
+            score = 0
+            
+            # Prioritize wall-completion moves
+            if move.pattern_line_dest >= 0:
+                agent_state = state.agents[0]  # Assuming player 0
+                pattern_line = move.pattern_line_dest
+                tiles_in_line = agent_state.lines_number[pattern_line]
+                tiles_needed = pattern_line + 1
+                
+                if tiles_in_line + move.num_to_pattern_line >= tiles_needed:
+                    score += 1000  # High priority for completion
+            
+            # Prioritize penalty-free moves
+            if move.num_to_floor_line == 0:
+                score += 100
+            
+            # Prioritize moves that take more tiles
+            score += move.num_to_pattern_line * 10
+            
+            move_scores.append((score, move))
+        
+        # Sort by score (descending), then by move for tie-breaking
+        move_scores.sort(key=lambda x: (x[0], x[1].bit_mask), reverse=True)
+        return [move for score, move in move_scores]
+    
+    def _apply_move_safely(self, state: AzulState, move: FastMove) -> Optional[AzulState]:
+        """Apply move with error handling."""
+        try:
+            # Convert FastMove to action tuple
+            action = move.to_tuple()
+            
+            # Create new state
+            new_state = state.clone()
+            
+            # Initialize agent traces if needed
+            for agent in new_state.agents:
+                if not hasattr(agent, 'agent_trace') or agent.agent_trace is None:
+                    agent.agent_trace = utils.AgentTrace(agent.id)
+                if len(agent.agent_trace.actions) == 0:
+                    agent.agent_trace.StartRound()
+            
+            # Apply move
+            game_rule = AzulGameRule(len(state.agents))
+            game_rule.generateSuccessor(new_state, action, 0)
+            
+            return new_state
+        except Exception:
+            return None
+    
+    def _evaluate_position(self, state: AzulState) -> float:
+        """Evaluate a non-terminal position."""
+        # Simple evaluation based on scores and board state
+        scores = [agent.score for agent in state.agents]
+        
+        # For 2-player games, return score difference
+        if len(scores) == 2:
+            return scores[0] - scores[1]
+        
+        # For multi-player games, return current player's score
+        return scores[0]
     
     def _evaluate_terminal_position(self, state: AzulState) -> Dict:
         """Evaluate a terminal position (game over)."""

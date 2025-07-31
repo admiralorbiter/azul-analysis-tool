@@ -395,7 +395,7 @@ class TestEnhancedIndexingAndOptimization:
             db_path = tmp.name
         
         try:
-            db = AzulDatabase(db_path)
+            db = AzulDatabase(db_path, enable_query_monitoring=True)
             
             # Perform some operations to generate query logs
             position_id = db.cache_position("test_pos", 2)
@@ -403,6 +403,10 @@ class TestEnhancedIndexingAndOptimization:
                 'best_move': 'test_move', 'best_score': 10.0, 'search_time': 0.1,
                 'nodes_searched': 100, 'rollout_count': 20
             })
+            
+            # Perform a monitored query operation
+            cached_analysis = db.get_cached_analysis("test_pos", 0, "mcts")
+            assert cached_analysis is not None
             
             # Check that queries were logged
             stats = db.get_query_performance_stats()
@@ -446,13 +450,13 @@ class TestEnhancedIndexingAndOptimization:
             position_id1 = db.cache_position("pos1", 2)
             position_id2 = db.cache_position("pos2", 2)
             
-            # Add high-quality analysis
+            # Add high-quality analysis (score > 0)
             db.cache_analysis(position_id1, 0, "mcts", {
                 'best_move': 'move1', 'best_score': 15.0, 'search_time': 0.1,
                 'nodes_searched': 100, 'rollout_count': 20
             })
             
-            # Add low-quality analysis
+            # Add low-quality analysis (score <= 0)
             db.cache_analysis(position_id2, 0, "mcts", {
                 'best_move': 'move2', 'best_score': -5.0, 'search_time': 0.1,
                 'nodes_searched': 50, 'rollout_count': 10
@@ -487,10 +491,10 @@ class TestEnhancedIndexingAndOptimization:
             
             assert stats['search_type'] == "mcts"
             assert stats['total_count'] == 1
-            assert stats['avg_score'] == 10.0
-            assert stats['max_score'] == 10.0
-            assert stats['min_score'] == 10.0
-            assert stats['avg_time'] == 0.1
+            assert abs(stats['avg_score'] - 10.0) < 0.001
+            assert abs(stats['max_score'] - 10.0) < 0.001
+            assert abs(stats['min_score'] - 10.0) < 0.001
+            assert abs(stats['avg_time'] - 0.1) < 0.001
             assert stats['total_nodes'] == 100
             assert stats['total_rollouts'] == 20
         finally:

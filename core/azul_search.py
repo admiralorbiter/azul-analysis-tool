@@ -104,7 +104,7 @@ class AzulAlphaBetaSearch:
         self.evaluator = AzulEvaluator()
         self.move_generator = FastMoveGenerator()
         self.transposition_table = TranspositionTable()
-        self.endgame_database = EndgameDatabase(max_tiles=20) if use_endgame else None
+        self.endgame_database = EndgameDatabase(max_tiles=10) if use_endgame else None
         # Don't initialize game_rules here - we'll create it when needed
         
         # Search statistics

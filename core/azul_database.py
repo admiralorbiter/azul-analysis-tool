@@ -142,14 +142,10 @@ class AzulDatabase:
         # Get execution time
         execution_time_ms = (time.time() - start_time) * 1000
         
-        # Get row count
-        rows = cursor.fetchall()
-        rows_returned = len(rows)
+        # Log performance (don't fetch rows here to avoid consuming the cursor)
+        self._log_query_performance(query_type, execution_time_ms, 0)  # Will be updated after fetch
         
-        # Log performance
-        self._log_query_performance(query_type, execution_time_ms, rows_returned)
-        
-        # Return cursor with results
+        # Return cursor without consuming it
         return cursor
     
     @contextmanager
