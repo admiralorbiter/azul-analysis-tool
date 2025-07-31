@@ -936,6 +936,19 @@ class AzulState(GameState):
         
         return move_info
 
+    def is_game_over(self):
+        """Check if the game is over according to Azul rules.
+        
+        Returns:
+            bool: True if the game is over, False otherwise.
+        """
+        # Game ends when at least one player completes a horizontal line
+        for agent in self.agents:
+            for row in range(5):
+                if all(agent.grid_state[row][col] == 1 for col in range(5)):
+                    return True
+        return False
+
 
 class AzulGameRule(GameRule):
     def __init__(self,num_of_agent):

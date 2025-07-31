@@ -34,7 +34,6 @@
 | ----- | ------- | ----- |
 | **B1 Schema v1** | SQLite WAL; tables: `position`, `analysis`, `game`; Zstd BLOB compression. | ☐ |
 | **B2 Position Cache API** | `get(hash)`, `put(...)`, bulk import/export. | ☐ |
-| **B3 PostgreSQL Migration** | Alembic migrations; connection pooling; performance optimization. | ☐ |
 
 ### EPIC C — REST & CLI (`azul_api`, `azcli`) 📋 **PLANNED**
 | Story | Path | Done? |
@@ -47,13 +46,13 @@
 ### EPIC D — Web UI (`ui/` React + Tailwind + SVG) 📋 **PLANNED**
 | Story | Acceptance Criteria | Done? |
 | ----- | ------------------ | ----- |
-| **D1 Board Renderer** | Factories + center + player boards in responsive SVG; drag‑n‑drop tiles. | ☐ |
-| **D2 Heatmap Overlay** | Tiles/factories tinted according to EV delta (green→red); legend. | ☐ |
-| **D3 PV Panel** | Top‑3 moves list with score diff; click to load what‑if variation. | ☐ |
+| **D1 Board Renderer** | Factories + center + player boards in responsive SVG; drag‑n‑drop tiles. | ☑ |
+| **D2 Heatmap Overlay** | Tiles/factories tinted according to EV delta (green→red); legend. | ☑ |
+| **D3 PV Panel** | Top‑3 moves list with score diff; click to load what‑if variation. | ☑ |
 | **D4 What‑if Sandbox** | User can play hypothetical moves; engine auto‑responds. | ☐ |
 | **D5 Replay Annotator** | Upload log → timeline w/ blunder markers ≥ Δ3. | ☐ |
 | **D6 Opening Explorer** | Tree browser: position thumbnails, frequency counts. | ☐ |
-| **D7 Auth & Rate‑Limit** | Session cookie + user DB; 10 heavy analyses/min. | ☐ |
+| **D7 Auth & Rate‑Limit** | Session cookie + user DB; 10 heavy analyses/min. | ☑ |
 
 ### EPIC E — Infrastructure 📋 **PLANNED**
 | Story | Key Tasks | Done? |

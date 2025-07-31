@@ -6,7 +6,7 @@ This module provides Flask blueprints for game analysis, hints, and research too
 
 import json
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from flask import Blueprint, request, jsonify, current_app
 from pydantic import BaseModel, ValidationError, ConfigDict
 
@@ -87,18 +87,37 @@ class SystemHealthRequest(BaseModel):
     include_cache_analytics: bool = True
 
 
+class MoveExecutionRequest(BaseModel):
+    """Request model for move execution."""
+    fen_string: str
+    move: Dict[str, Any]  # Move data from frontend
+    agent_id: int = 0
+
+
 # Create Flask blueprint for API endpoints
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
 
+# Global variable to store the current game state
+_current_game_state = None
+
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
+    global _current_game_state
     from core.azul_model import AzulState
     
     if fen_string.lower() == "initial":
-        return AzulState(2)  # 2-player starting position
+        # If we don't have a current state, create a new one
+        if _current_game_state is None:
+            _current_game_state = AzulState(2)  # 2-player starting position
+        return _current_game_state
     else:
         raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial' for now.")
+
+def update_current_game_state(new_state):
+    """Update the current game state."""
+    global _current_game_state
+    _current_game_state = new_state
 
 
 def format_move(move):
@@ -1829,4 +1848,247 @@ def get_monitoring_data():
         
     except Exception as e:
         current_app.logger.error(f"Error getting monitoring data: {e}")
-        return jsonify({'error': 'Failed to get monitoring data', 'message': str(e)}), 500 
+        return jsonify({'error': 'Failed to get monitoring data', 'message': str(e)}), 500
+
+
+@api_bp.route('/execute_move', methods=['POST'])
+def execute_move():
+    """Execute a move and return new game state."""
+    try:
+        data = request.get_json()
+        request_model = MoveExecutionRequest(**data)
+        
+        print(f"DEBUG: Received move data: {data}")
+        
+        # Parse current state
+        state = parse_fen_string(request_model.fen_string)
+        print(f"DEBUG: Parsed state - agent count: {len(state.agents)}, factories: {len(state.factories)}")
+        
+        # Convert frontend move format to engine move format
+        move_data = request_model.move
+        engine_move = convert_frontend_move_to_engine(move_data)
+        print(f"DEBUG: Converted engine move: {engine_move}")
+        
+        # Validate and execute move
+        from core.azul_move_generator import FastMoveGenerator
+        generator = FastMoveGenerator()
+        legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
+        print(f"DEBUG: Generated {len(legal_moves)} legal moves")
+        
+        # Find matching move
+        matching_move = find_matching_move(engine_move, legal_moves)
+        print(f"DEBUG: Matching move found: {matching_move}")
+        if not matching_move:
+            print(f"DEBUG: No matching move found. Engine move: {engine_move}")
+            print(f"DEBUG: First few legal moves: {legal_moves[:3] if legal_moves else 'No legal moves'}")
+            return jsonify({'error': 'Illegal move'}), 400
+        
+        # Apply move using game rule
+        from core.azul_utils import Action, TileGrab
+        
+        # Convert FastMove to action format expected by generateSuccessor
+        tg = TileGrab()
+        tg.tile_type = matching_move.tile_type
+        tg.number = matching_move.num_to_pattern_line + matching_move.num_to_floor_line
+        tg.pattern_line_dest = matching_move.pattern_line_dest
+        tg.num_to_pattern_line = matching_move.num_to_pattern_line
+        tg.num_to_floor_line = matching_move.num_to_floor_line
+        
+        if matching_move.action_type == 1:  # Factory move
+            action = (Action.TAKE_FROM_FACTORY, matching_move.source_id, tg)
+        else:  # Center move
+            action = (Action.TAKE_FROM_CENTRE, -1, tg)
+        
+        # Apply the move using game rule
+        from core.azul_model import AzulGameRule
+        game_rule = AzulGameRule(len(state.agents))
+        new_state = game_rule.generateSuccessor(state, action, request_model.agent_id)
+        
+        # Update the current game state
+        update_current_game_state(new_state)
+        
+        # Convert back to FEN
+        new_fen = state_to_fen(new_state)
+        
+        # Get engine response if game continues
+        engine_response = None
+        if not new_state.is_game_over():
+            engine_response = get_engine_response(new_state, request_model.agent_id)
+        
+        return jsonify({
+            'success': True,
+            'new_fen': new_fen,
+            'move_executed': format_move(matching_move),
+            'game_over': new_state.is_game_over(),
+            'scores': [agent.score for agent in new_state.agents],
+            'engine_response': engine_response
+        })
+        
+    except ValidationError as e:
+        return jsonify({'error': f'Invalid request: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'error': f'Failed to execute move: {str(e)}'}), 500
+
+
+def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert frontend move format to engine move format."""
+    # Frontend format: {source_id, tile_type, pattern_line_dest, num_to_pattern_line, num_to_floor_line}
+    # Engine format: FastMove(action_type, source_id, tile_type, pattern_line_dest, num_to_pattern_line, num_to_floor_line)
+    
+    source_id = move_data.get('source_id', 0)
+    tile_type = move_data.get('tile_type', 0)
+    pattern_line_dest = move_data.get('pattern_line_dest', -1)
+    num_to_pattern_line = move_data.get('num_to_pattern_line', 0)
+    num_to_floor_line = move_data.get('num_to_floor_line', 0)
+    
+    # Determine action type based on source_id
+    action_type = 1 if source_id >= 0 else 0  # 1 = factory, 0 = centre
+    
+    return {
+        'action_type': action_type,
+        'source_id': source_id,
+        'tile_type': tile_type,
+        'pattern_line_dest': pattern_line_dest,
+        'num_to_pattern_line': num_to_pattern_line,
+        'num_to_floor_line': num_to_floor_line
+    }
+
+
+def find_matching_move(engine_move: Dict[str, Any], legal_moves: List) -> Optional[object]:
+    """Find matching move in legal moves list."""
+    print(f"DEBUG: Looking for match with engine move: {engine_move}")
+    for i, move in enumerate(legal_moves):
+        print(f"DEBUG: Checking legal move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type}, pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
+        if (move.action_type == engine_move['action_type'] and
+            move.source_id == engine_move['source_id'] and
+            move.tile_type == engine_move['tile_type'] and
+            move.pattern_line_dest == engine_move['pattern_line_dest'] and
+            move.num_to_pattern_line == engine_move['num_to_pattern_line'] and
+            move.num_to_floor_line == engine_move['num_to_floor_line']):
+            print(f"DEBUG: Found matching move at index {i}")
+            return move
+    print(f"DEBUG: No matching move found")
+    return None
+
+
+def get_engine_response(state, agent_id: int) -> Optional[Dict[str, Any]]:
+    """Get engine response move for the given state."""
+    try:
+        from core.azul_mcts import AzulMCTS
+        mcts = AzulMCTS()
+        result = mcts.search(state, agent_id, time_budget=0.1, rollouts=50)
+        
+        if result and result.get('best_move'):
+            return {
+                'move': format_move(result['best_move']),
+                'score': result.get('best_score', 0.0),
+                'search_time': result.get('search_time', 0.0)
+            }
+    except Exception as e:
+        print(f"Engine response error: {e}")
+    
+    return None
+
+
+def state_to_fen(state) -> str:
+    """Convert game state to FEN string."""
+    # For now, return "initial" as the API only supports this format
+    # TODO: Implement proper FEN encoding when backend supports it
+    return "initial" 
+
+
+@api_bp.route('/game_state', methods=['GET'])
+def get_game_state():
+    """Get the current game state for display."""
+    try:
+        # Parse current state from FEN
+        fen_string = request.args.get('fen_string', 'initial')
+        state = parse_fen_string(fen_string)
+        
+        # Convert state to frontend format
+        game_state = {
+            'factories': [],
+            'center': [],
+            'players': []
+        }
+        
+        # Convert factories
+        for factory in state.factories:
+            factory_tiles = []
+            for tile_type, count in factory.tiles.items():
+                for _ in range(count):
+                    # Convert tile type to color string
+                    tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                    factory_tiles.append(tile_colors.get(tile_type, 'W'))
+            game_state['factories'].append(factory_tiles)
+        
+        # Convert center pool
+        center_tiles = []
+        for tile_type, count in state.centre_pool.tiles.items():
+            for _ in range(count):
+                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                center_tiles.append(tile_colors.get(tile_type, 'W'))
+        game_state['center'] = center_tiles
+        
+        # Convert player states
+        for agent in state.agents:
+            player = {
+                'pattern_lines': [],
+                'wall': [],
+                'floor': []
+            }
+            
+            # Convert pattern lines
+            for i in range(5):
+                line = []
+                if agent.lines_tile[i] != -1:
+                    tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                    tile_color = tile_colors.get(agent.lines_tile[i], 'W')
+                    for _ in range(agent.lines_number[i]):
+                        line.append(tile_color)
+                player['pattern_lines'].append(line)
+            
+            # Convert wall
+            for row in range(5):
+                wall_row = []
+                for col in range(5):
+                    if agent.grid_state[row][col] != 0:
+                        tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                        tile_color = tile_colors.get(agent.grid_state[row][col], 'W')
+                        wall_row.append(tile_color)
+                    else:
+                        wall_row.append(False)
+                player['wall'].append(wall_row)
+            
+            # Convert floor
+            floor_tiles = []
+            for tile_type in agent.floor_tiles:
+                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                floor_tiles.append(tile_colors.get(tile_type, 'W'))
+            player['floor'] = floor_tiles
+            
+            game_state['players'].append(player)
+        
+        return jsonify({
+            'success': True,
+            'game_state': game_state
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'Failed to get game state: {str(e)}'
+        }), 500
+
+
+@api_bp.route('/reset_game', methods=['POST'])
+def reset_game():
+    """Reset the current game state to initial position."""
+    global _current_game_state
+    from core.azul_model import AzulState
+    
+    _current_game_state = AzulState(2)  # Create new 2-player game
+    
+    return jsonify({
+        'success': True,
+        'message': 'Game reset to initial position'
+    }) 

@@ -137,16 +137,21 @@
   - [x] Authentication and rate limiting for all endpoints
   - [x] 20 comprehensive tests covering all performance endpoints
 
-## 12 · Web UI (B3) - PLANNED
-- [ ] **B3.1: Game Board Display**
-  - [ ] Interactive Azul board visualization
-  - [ ] Drag-and-drop tile placement
-  - [ ] Real-time state updates
-- [ ] **B3.2: Analysis Interface**
-  - [ ] Real-time search results and hints
-  - [ ] Move suggestion and evaluation display
-  - [ ] Analysis progress indicators
-- [ ] **B3.3: Performance Dashboard**
+## 12 · Web UI (B3) - IN PROGRESS
+- [x] **B3.1: Game Board Display**
+  - [x] Interactive Azul board visualization
+  - [x] Drag-and-drop tile placement
+  - [x] Real-time state updates
+- [x] **B3.2: Analysis Interface**
+  - [x] Real-time search results and hints
+  - [x] Move suggestion and evaluation display
+  - [x] Analysis progress indicators
+- [x] **B3.3: Sandbox Interface** ✅ **COMPLETE**
+  - [x] Interactive move execution
+  - [x] Undo/redo functionality
+  - [x] Move history tracking
+  - [x] Engine auto-response
+- [ ] **B3.4: Performance Dashboard**
   - [ ] Database stats and query monitoring
   - [ ] Performance metrics visualization
   - [ ] System health monitoring
