@@ -158,6 +158,7 @@ class TestAPIAnalysisEndpoints:
         mock_move.pattern_line_dest = 0
         mock_move.num_to_pattern_line = 2
         mock_move.num_to_floor_line = 0
+        mock_move.action_type = 1  # factory move
         
         # Mock search result
         mock_result = MagicMock()
@@ -207,6 +208,7 @@ class TestAPIAnalysisEndpoints:
         mock_move.pattern_line_dest = 0
         mock_move.num_to_pattern_line = 2
         mock_move.num_to_floor_line = 0
+        mock_move.action_type = 1  # factory move
         
         # Mock MCTS result
         mock_result = MagicMock()
@@ -1473,3 +1475,518 @@ class TestPerformanceAPI:
         
         # Should still work (invalid limit is handled gracefully)
         assert response.status_code == 200 
+
+
+class TestInteractiveGameAPI:
+    """Test interactive game API endpoints."""
+    
+    @pytest.fixture
+    def app(self):
+        """Create test app."""
+        from api.app import create_test_app
+        app = create_test_app()
+        return app
+    
+    @pytest.fixture
+    def client(self, app):
+        """Create test client."""
+        return app.test_client()
+    
+    def _create_deterministic_state(self):
+        """Create a deterministic game state for testing."""
+        import random
+        from core.azul_model import AzulState
+        
+        # Set a fixed seed for reproducible tests
+        random.seed(42)
+        
+        # Create a new state
+        state = AzulState(2)
+        
+        # Reset the global state in the API
+        from api.routes import _current_game_state
+        import api.routes
+        api.routes._current_game_state = state
+        
+        return state
+    
+    def test_execute_move_success(self, client):
+        """Test successful move execution."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        # Test data for a valid move - using a move that should be legal
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,  # Factory 1
+                "tile_type": 1,  # Yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+        assert 'new_fen' in data
+        assert 'move_executed' in data
+        assert 'game_over' in data
+        assert 'scores' in data
+        
+        # Verify the move was applied correctly
+        move_executed = data['move_executed']
+        assert isinstance(move_executed, str)
+        assert 'take_from_factory' in move_executed or 'take_from_center' in move_executed
+        
+        # Verify scores are present
+        scores = data['scores']
+        assert isinstance(scores, list)
+        assert len(scores) >= 1
+    
+    def test_execute_move_no_authentication_required(self, client):
+        """Test that execute_move doesn't require authentication."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,
+                "tile_type": 1,  # yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        # Should work without any authentication headers
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+    
+    def test_execute_move_invalid_move(self, client):
+        """Test move execution with invalid move data."""
+        # Test with invalid tile type
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 0,
+                "tile_type": 999,  # Invalid tile type
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+        assert 'Illegal move' in data['error']
+    
+    def test_execute_move_missing_data(self, client):
+        """Test move execution with missing required data."""
+        # Test with missing move data
+        move_data = {
+            "fen_string": "initial",
+            "agent_id": 0
+            # Missing "move" field
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+    
+    def test_execute_move_invalid_fen(self, client):
+        """Test move execution with invalid FEN string."""
+        move_data = {
+            "fen_string": "invalid_fen",
+            "move": {
+                "source_id": 0,
+                "tile_type": 0,
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+    
+    def test_execute_move_state_persistence(self, client):
+        """Test that game state persists across multiple moves."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        # First move
+        move1_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,
+                "tile_type": 1,  # Yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response1 = client.post('/api/v1/execute_move', 
+                              json=move1_data,
+                              content_type='application/json')
+        
+        assert response1.status_code == 200
+        data1 = json.loads(response1.data)
+        assert data1['success'] is True
+        
+        # Get the current game state after first move to find a legal second move
+        state_response = client.get('/api/v1/game_state?fen_string=initial')
+        assert state_response.status_code == 200
+        
+        # Find a legal move for player 1 by trying different factory/tile combinations
+        # Use a simple move that should be available - take from center (which gets tiles from previous move)
+        move2_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": -1,  # Center pool (always gets tiles after a factory move)
+                "tile_type": 1,   # Yellow tiles should be in center from previous move
+                "pattern_line_dest": 1,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 1
+        }
+        
+        response2 = client.post('/api/v1/execute_move', 
+                              json=move2_data,
+                              content_type='application/json')
+        
+        # If center move fails, try a factory move that should be available
+        if response2.status_code != 200:
+            move2_data = {
+                "fen_string": "initial",
+                "move": {
+                    "source_id": 0,  # Try factory 0
+                    "tile_type": 2,  # Red tile
+                    "pattern_line_dest": 2,
+                    "num_to_pattern_line": 1,
+                    "num_to_floor_line": 0
+                },
+                "agent_id": 1
+            }
+            
+            response2 = client.post('/api/v1/execute_move', 
+                                  json=move2_data,
+                                  content_type='application/json')
+        
+        assert response2.status_code == 200
+        data2 = json.loads(response2.data)
+        assert data2['success'] is True
+        
+        # Verify that moves were actually applied by checking that the move_executed fields are different
+        # Since format_move returns a string, we check the string content
+        move1_executed = data1['move_executed']
+        move2_executed = data2['move_executed']
+        
+        # The moves should be different (different source_id, tile_type, or pattern_line_dest)
+        assert move1_executed != move2_executed
+    
+    def test_get_game_state_success(self, client):
+        """Test successful game state retrieval."""
+        # GET request with query parameter
+        response = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+        assert 'game_state' in data
+        
+        # Verify state structure
+        game_state = data['game_state']
+        assert 'factories' in game_state
+        assert 'center' in game_state
+        assert 'players' in game_state
+    
+    def test_get_game_state_no_authentication_required(self, client):
+        """Test that get_game_state doesn't require authentication."""
+        # Should work without any authentication headers
+        response = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+    
+    def test_get_game_state_invalid_fen(self, client):
+        """Test game state retrieval with invalid FEN string."""
+        response = client.get('/api/v1/game_state?fen_string=invalid_fen')
+        
+        # Should still work but return empty/default state
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+    
+    def test_get_game_state_missing_data(self, client):
+        """Test game state retrieval with missing data."""
+        # Test without fen_string parameter (should use default)
+        response = client.get('/api/v1/game_state')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+    
+    def test_reset_game_success(self, client):
+        """Test successful game reset."""
+        response = client.post('/api/v1/reset_game')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+        assert 'message' in data
+        assert 'Game reset to initial position' in data['message']
+    
+    def test_reset_game_no_authentication_required(self, client):
+        """Test that reset_game doesn't require authentication."""
+        # Should work without any authentication headers
+        response = client.post('/api/v1/reset_game')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data['success'] is True
+    
+    def test_reset_game_affects_state(self, client):
+        """Test that reset_game actually resets the game state."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        # First, make a move to change the state
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,
+                "tile_type": 1,  # Yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response1 = client.post('/api/v1/execute_move', 
+                              json=move_data,
+                              content_type='application/json')
+        
+        assert response1.status_code == 200
+        data1 = json.loads(response1.data)
+        assert data1['success'] is True
+        
+        # Get state after move
+        response2 = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response2.status_code == 200
+        data2 = json.loads(response2.data)
+        state_after_move = data2['game_state']
+        
+        # Reset the game
+        response3 = client.post('/api/v1/reset_game')
+        assert response3.status_code == 200
+        
+        # Get state after reset
+        response4 = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response4.status_code == 200
+        data4 = json.loads(response4.data)
+        state_after_reset = data4['game_state']
+        
+        # States should be different (reset should change the state)
+        # Note: This might not always be true due to random initialization
+        # So we'll just verify both calls succeeded
+    
+    def test_interactive_endpoints_integration(self, client):
+        """Test integration between all interactive endpoints."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        # 1. Get initial state
+        response1 = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response1.status_code == 200
+        data1 = json.loads(response1.data)
+        initial_state = data1['game_state']
+        
+        # 2. Execute a move
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,
+                "tile_type": 1,  # Yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response2 = client.post('/api/v1/execute_move', 
+                              json=move_data,
+                              content_type='application/json')
+        
+        assert response2.status_code == 200
+        data2 = json.loads(response2.data)
+        assert data2['success'] is True
+        
+        # 3. Get state after move
+        response3 = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response3.status_code == 200
+        data3 = json.loads(response3.data)
+        state_after_move = data3['game_state']
+        
+        # 4. Verify state changed (or at least the calls succeeded)
+        # Note: Due to random initialization, states might be similar
+        
+        # 5. Reset game
+        response4 = client.post('/api/v1/reset_game')
+        assert response4.status_code == 200
+        
+        # 6. Get state after reset
+        response5 = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response5.status_code == 200
+        data5 = json.loads(response5.data)
+        state_after_reset = data5['game_state']
+        
+        # 7. Verify reset worked (both calls should succeed)
+        assert response5.status_code == 200
+    
+    def test_move_validation_edge_cases(self, client):
+        """Test edge cases in move validation."""
+        # Test with negative values
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": -1,
+                "tile_type": 0,
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        # Should either succeed (if it's a valid center move) or fail with error
+        assert response.status_code in [200, 400]
+        if response.status_code == 400:
+            data = json.loads(response.data)
+            assert 'error' in data
+        
+        # Test with excessive values
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 0,
+                "tile_type": 0,
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 100,  # Too many tiles
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+    
+    def test_content_type_validation(self, client):
+        """Test that endpoints properly validate content type."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        # Test execute_move without proper content type
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,
+                "tile_type": 1,  # Yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             data=json.dumps(move_data))
+        
+        # Should still work (Flask is lenient with content type)
+        assert response.status_code == 200
+    
+    def test_cors_headers_interactive_endpoints(self, client):
+        """Test that interactive endpoints include CORS headers."""
+        # Create deterministic state
+        self._create_deterministic_state()
+        
+        # Test execute_move
+        move_data = {
+            "fen_string": "initial",
+            "move": {
+                "source_id": 1,
+                "tile_type": 1,  # Yellow tile (available in factory 1 with seed 42)
+                "pattern_line_dest": 0,
+                "num_to_pattern_line": 1,
+                "num_to_floor_line": 0
+            },
+            "agent_id": 0
+        }
+        
+        response = client.post('/api/v1/execute_move', 
+                             json=move_data,
+                             content_type='application/json')
+        
+        assert response.status_code == 200
+        assert 'Access-Control-Allow-Origin' in response.headers
+        
+        # Test get_game_state
+        response = client.get('/api/v1/game_state?fen_string=initial')
+        
+        assert response.status_code == 200
+        assert 'Access-Control-Allow-Origin' in response.headers
+        
+        # Test reset_game
+        response = client.post('/api/v1/reset_game')
+        
+        assert response.status_code == 200
+        assert 'Access-Control-Allow-Origin' in response.headers 

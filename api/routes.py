@@ -126,20 +126,18 @@ def format_move(move):
         return "None"
     
     try:
-        # Convert FastMove to expected test format
-        action_type = "factory" if move.source_id >= 0 else "centre"
+        # Convert tile type to color name
+        tile_colors = {0: 'blue', 1: 'yellow', 2: 'red', 3: 'black', 4: 'white'}
+        tile_color = tile_colors.get(move.tile_type, f'tile_{move.tile_type}')
         
-        # Map tile types correctly (check azul_utils for proper mapping)
-        tile_names = {0: "blue", 1: "yellow", 2: "red", 3: "black", 4: "white"}
-        tile_type = tile_names.get(move.tile_type, f"unknown_tile_{move.tile_type}")
-        
-        if move.pattern_line_dest >= 0:
-            return f"take_from_{action_type}_{move.source_id}_{tile_type}_{move.pattern_line_dest}_{move.num_to_pattern_line}_{move.num_to_floor_line}"
-        else:
-            return f"take_from_{action_type}_{move.source_id}_{tile_type}_{move.pattern_line_dest}_{move.num_to_pattern_line}_{move.num_to_floor_line}"
+        # Format as string for tests
+        if move.action_type == 1:  # Factory move
+            return f"take_from_factory_{move.source_id}_{tile_color}_{move.pattern_line_dest}_{move.num_to_pattern_line}_{move.num_to_floor_line}"
+        else:  # Center move
+            return f"take_from_center_{move.source_id}_{tile_color}_{move.pattern_line_dest}_{move.num_to_pattern_line}_{move.num_to_floor_line}"
     except Exception as e:
         # Fallback if move formatting fails
-        return f"move(source={getattr(move, 'source_id', '?')}, tile={getattr(move, 'tile_type', '?')})"
+        return f"move_{getattr(move, 'source_id', '?')}_{getattr(move, 'tile_type', '?')}"
 
 
 # Position Cache API Endpoints
@@ -1855,13 +1853,23 @@ def get_monitoring_data():
 def execute_move():
     """Execute a move and return new game state."""
     try:
-        data = request.get_json()
+        try:
+            data = request.get_json(force=True)
+        except Exception:
+            data = None
+        
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
         request_model = MoveExecutionRequest(**data)
         
         print(f"DEBUG: Received move data: {data}")
         
         # Parse current state
-        state = parse_fen_string(request_model.fen_string)
+        try:
+            state = parse_fen_string(request_model.fen_string)
+        except ValueError as e:
+            return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
+        
         print(f"DEBUG: Parsed state - agent count: {len(state.agents)}, factories: {len(state.factories)}")
         
         # Convert frontend move format to engine move format
@@ -1942,7 +1950,8 @@ def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]
     num_to_floor_line = move_data.get('num_to_floor_line', 0)
     
     # Determine action type based on source_id
-    action_type = 1 if source_id >= 0 else 0  # 1 = factory, 0 = centre
+    # Factory moves (source_id >= 0) are action_type 1, center moves (source_id < 0) are action_type 2
+    action_type = 1 if source_id >= 0 else 2
     
     return {
         'action_type': action_type,
@@ -1976,13 +1985,13 @@ def get_engine_response(state, agent_id: int) -> Optional[Dict[str, Any]]:
     try:
         from core.azul_mcts import AzulMCTS
         mcts = AzulMCTS()
-        result = mcts.search(state, agent_id, time_budget=0.1, rollouts=50)
+        result = mcts.search(state, agent_id, max_time=0.1, max_rollouts=50)
         
-        if result and result.get('best_move'):
+        if result and result.best_move:
             return {
-                'move': format_move(result['best_move']),
-                'score': result.get('best_score', 0.0),
-                'search_time': result.get('search_time', 0.0)
+                'move': format_move(result.best_move),
+                'score': result.best_score,
+                'search_time': result.search_time
             }
     except Exception as e:
         print(f"Engine response error: {e}")
@@ -2003,7 +2012,12 @@ def get_game_state():
     try:
         # Parse current state from FEN
         fen_string = request.args.get('fen_string', 'initial')
-        state = parse_fen_string(fen_string)
+        try:
+            state = parse_fen_string(fen_string)
+        except ValueError:
+            # For invalid FEN, return default initial state
+            from core.azul_model import AzulState
+            state = AzulState(2)
         
         # Convert state to frontend format
         game_state = {

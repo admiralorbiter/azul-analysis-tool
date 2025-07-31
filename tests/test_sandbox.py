@@ -27,7 +27,7 @@ class TestMoveConversion:
         
         engine_move = api.routes.convert_frontend_move_to_engine(frontend_move)
         
-        assert engine_move['action_type'] == 0  # factory
+        assert engine_move['action_type'] == 1  # factory
         assert engine_move['source_id'] == 2
         assert engine_move['tile_type'] == 1
         assert engine_move['pattern_line_dest'] == 3
@@ -46,7 +46,7 @@ class TestMoveConversion:
         
         engine_move = api.routes.convert_frontend_move_to_engine(frontend_move)
         
-        assert engine_move['action_type'] == 1  # center
+        assert engine_move['action_type'] == 2  # center
         assert engine_move['source_id'] == -1
         assert engine_move['tile_type'] == 2
         assert engine_move['pattern_line_dest'] == -1
@@ -61,7 +61,7 @@ class TestMoveConversion:
         
         engine_move = api.routes.convert_frontend_move_to_engine(frontend_move)
         
-        assert engine_move['action_type'] == 0
+        assert engine_move['action_type'] == 1
         assert engine_move['source_id'] == 0
         assert engine_move['tile_type'] == 0
         assert engine_move['pattern_line_dest'] == -1
@@ -163,7 +163,7 @@ class TestSandboxIntegration:
         # Convert to engine format
         engine_move = api.routes.convert_frontend_move_to_engine(frontend_move)
         
-        assert engine_move['action_type'] == 0
+        assert engine_move['action_type'] == 1  # Factory move (source_id >= 0)
         assert engine_move['source_id'] == 0
         assert engine_move['tile_type'] == 0
         assert engine_move['pattern_line_dest'] == 0
@@ -172,7 +172,7 @@ class TestSandboxIntegration:
         
         # Test with mock legal moves
         mock_legal_move = MagicMock()
-        mock_legal_move.action_type = 0
+        mock_legal_move.action_type = 1  # Factory move
         mock_legal_move.source_id = 0
         mock_legal_move.tile_type = 0
         mock_legal_move.pattern_line_dest = 0

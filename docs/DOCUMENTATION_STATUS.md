@@ -14,6 +14,10 @@
 - [x] **.github/workflows/ci.yml** - GitHub Actions CI workflow
 - [x] **DOCUMENTATION_STATUS.md** - This file tracking documentation status
 
+### Recently Updated Documentation
+- [x] **API_USAGE.md** - Updated to reflect authentication changes and new interactive endpoints
+- [x] **QUICK_START.md** - Updated with interactive play examples and authentication clarifications
+
 ## 🔧 Technical Updates
 
 ### License Alignment
@@ -43,12 +47,34 @@
   - Coverage reporting
   - Package building
 
+### Authentication Changes (Recent)
+- **Status**: ✅ Complete
+- **Changes**: Removed authentication requirements for interactive endpoints
+- **Files Updated**:
+  - `api/routes.py` - Removed `@require_session` from execute_move and get_game_state
+  - `ui/index.html` - Removed X-Session-ID headers from frontend calls
+  - `docs/API_USAGE.md` - Updated to clarify which endpoints require auth
+  - `docs/QUICK_START.md` - Added examples of non-authenticated endpoints
+
+### Interactive Endpoints (Recent)
+- **Status**: ✅ Complete
+- **New Endpoints**:
+  - `/api/v1/execute_move` - Execute moves for web UI drag-and-drop
+  - `/api/v1/get_game_state` - Get current game state
+  - `/api/v1/reset_game` - Reset global game state
+- **Features**:
+  - Global state persistence for seamless interactive play
+  - No authentication required for web UI integration
+  - Move validation and execution
+
 ## 📊 Current Documentation Quality
 
 ### ✅ Excellent
 - **README.md**: Professional, comprehensive, with badges and clear setup instructions
 - **checklist.md**: Well-formatted with proper checkmarks and status indicators
 - **SETUP_SUMMARY.md**: Detailed technical summary of repository setup
+- **API_USAGE.md**: Updated with interactive endpoints and authentication clarifications
+- **QUICK_START.md**: Updated with interactive play examples and troubleshooting
 
 ### ⚠️ Needs Attention
 - **project_plan.md**: Could benefit from milestone status updates (M0 completed, M1 in progress)
@@ -60,6 +86,7 @@
 - [ ] **Developer Guide**: Contributing guidelines and development setup
 - [ ] **Architecture Document**: Detailed technical design
 - [ ] **Benchmark Results**: Performance metrics and comparisons
+- [ ] **Test Documentation**: Documentation for new API tests
 
 ## 🎯 Documentation Standards Met
 
@@ -75,12 +102,14 @@
 - Package structure properly documented
 - Test results accurately reflected
 - Milestone progress clearly indicated
+- Authentication requirements accurately documented
 
 ### ✅ User-Friendly
 - Quick start instructions
 - Clear command examples
 - Visual status indicators
 - Logical information hierarchy
+- Interactive play examples
 
 ## 🚀 Ready for Development
 
@@ -89,5 +118,6 @@ The documentation is now:
 - **✅ Professional**: Consistent formatting and comprehensive coverage
 - **✅ Accurate**: Reflects actual project state and licensing
 - **✅ Actionable**: Clear next steps and milestone tracking
+- **✅ Interactive**: Documents new drag-and-drop functionality
 
-**Current Status**: Documentation setup complete → Ready for M1 development focus 
+**Current Status**: Documentation updated for interactive features → Ready for D4.2 advanced sandbox development 

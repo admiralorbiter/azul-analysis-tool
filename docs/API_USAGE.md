@@ -14,11 +14,12 @@ python main.py serve --host 0.0.0.0 --port 8080 --debug --database azul_cache.db
 ```
 
 ### Server Features
-- **Authentication**: Session-based authentication with rate limiting
+- **Authentication**: Session-based authentication with rate limiting (for analysis endpoints)
 - **Database Integration**: SQLite caching with compression and indexing
 - **CORS Support**: Web UI integration ready
 - **Health Monitoring**: Built-in health checks and statistics
 - **Error Handling**: Comprehensive error responses
+- **Interactive Play**: Drag-and-drop move execution for web UI
 
 ## 🔐 Authentication
 
@@ -49,6 +50,80 @@ curl -X POST http://localhost:8000/api/v1/auth/session \
 # Include session token in all requests
 curl -H "Authorization: Bearer abc123def456" \
   http://localhost:8000/api/v1/health
+```
+
+**Note**: Interactive endpoints (`/api/v1/execute_move`, `/api/v1/get_game_state`, `/api/v1/reset_game`) do not require authentication for web UI integration.
+
+## 🎮 Interactive Game Play
+
+### Execute Move
+```bash
+curl -X POST http://localhost:8000/api/v1/execute_move \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fen_string": "initial",
+    "move": {
+      "source_id": 0,
+      "tile_type": 0,
+      "pattern_line_dest": 0,
+      "num_to_pattern_line": 1,
+      "num_to_floor_line": 0
+    },
+    "agent_id": 0
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "new_state": {
+    "agents": [...],
+    "factories": [...],
+    "center_pool": [...]
+  },
+  "move_applied": {
+    "source_id": 0,
+    "tile_type": 0,
+    "pattern_line_dest": 0,
+    "num_to_pattern_line": 1,
+    "num_to_floor_line": 0
+  }
+}
+```
+
+### Get Game State
+```bash
+curl -X POST http://localhost:8000/api/v1/get_game_state \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fen_string": "initial"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "state": {
+    "agents": [...],
+    "factories": [...],
+    "center_pool": [...]
+  }
+}
+```
+
+### Reset Game
+```bash
+curl -X POST http://localhost:8000/api/v1/reset_game
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Game reset to initial position"
+}
 ```
 
 ## 🎯 Game Analysis
@@ -376,6 +451,15 @@ The API uses a custom FEN-like string format for game positions:
 - `"start"` - Initial game position
 - `"midgame"` - Mid-game position for testing
 - `"endgame"` - End-game position for testing
+- `"initial"` - **Persistent initial position** - Uses a global state that persists across requests for interactive play
+
+### State Persistence
+For interactive web UI functionality, the API maintains a global game state when using `"initial"` as the FEN string. This ensures that:
+- The game state persists across multiple move executions
+- The UI's perceived state matches the backend's actual state
+- Users can make multiple moves in sequence without state resets
+
+To reset the persistent state, use the `/api/v1/reset_game` endpoint.
 
 ## 🚀 Performance Tips
 
