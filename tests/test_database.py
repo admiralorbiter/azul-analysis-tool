@@ -7,6 +7,9 @@ This module tests:
 - Analysis result caching
 - Performance statistics
 - Cache management
+- WAL mode and performance optimizations
+- Zstd compression for state storage
+- Enhanced indexing and query optimization
 """
 
 import pytest
@@ -59,6 +62,522 @@ class TestDatabaseInitialization:
                 cursor = conn.execute("SELECT 1 as test")
                 result = cursor.fetchone()
                 assert result['test'] == 1
+        finally:
+            os.unlink(db_path)
+
+
+class TestWALModeAndPerformance:
+    """Test WAL mode and performance optimizations."""
+    
+    def test_wal_mode_enabled(self):
+        """Test that WAL mode is enabled by default."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            info = db.get_database_info()
+            
+            assert info['enable_wal'] is True
+            assert info['journal_mode'] == 'wal'
+        finally:
+            os.unlink(db_path)
+    
+    def test_wal_mode_disabled(self):
+        """Test that WAL mode can be disabled."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path, enable_wal=False)
+            info = db.get_database_info()
+            
+            assert info['enable_wal'] is False
+            # Note: journal_mode might still be 'wal' if it was previously enabled
+        finally:
+            os.unlink(db_path)
+    
+    def test_custom_memory_settings(self):
+        """Test custom memory limit and cache size settings."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path, memory_limit_mb=128, cache_size_pages=2000)
+            info = db.get_database_info()
+            
+            assert info['memory_limit_mb'] == 128
+            assert info['cache_size_pages'] == 2000
+        finally:
+            os.unlink(db_path)
+    
+    def test_database_info_structure(self):
+        """Test that database info contains all expected fields."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            info = db.get_database_info()
+            
+            expected_fields = [
+                'db_path', 'journal_mode', 'cache_size_pages', 'page_size_bytes',
+                'memory_limit_mb', 'enable_wal', 'db_size_bytes', 'wal_size_bytes',
+                'total_size_mb'
+            ]
+            
+            for field in expected_fields:
+                assert field in info, f"Missing field: {field}"
+            
+            # Check data types
+            assert isinstance(info['db_path'], str)
+            assert isinstance(info['journal_mode'], str)
+            assert isinstance(info['cache_size_pages'], int)
+            assert isinstance(info['page_size_bytes'], int)
+            assert isinstance(info['memory_limit_mb'], int)
+            assert isinstance(info['enable_wal'], bool)
+            assert isinstance(info['db_size_bytes'], int)
+            assert isinstance(info['wal_size_bytes'], int)
+            assert isinstance(info['total_size_mb'], float)
+        finally:
+            os.unlink(db_path)
+    
+    def test_concurrent_access_performance(self):
+        """Test that WAL mode allows concurrent access."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Simulate concurrent access by opening multiple connections
+            start_time = time.time()
+            
+            # Add some test data
+            position_id = db.cache_position("test_pos", 2)
+            db.cache_analysis(position_id, 0, "mcts", {
+                'best_move': 'test_move', 'best_score': 10.0, 'search_time': 0.1,
+                'nodes_searched': 100, 'rollout_count': 20
+            })
+            
+            # Open multiple connections simultaneously
+            with db.get_connection() as conn1:
+                with db.get_connection() as conn2:
+                    # Both connections should work
+                    cursor1 = conn1.execute("SELECT COUNT(*) FROM positions")
+                    cursor2 = conn2.execute("SELECT COUNT(*) FROM analysis_results")
+                    
+                    count1 = cursor1.fetchone()[0]
+                    count2 = cursor2.fetchone()[0]
+                    
+                    assert count1 == 1
+                    assert count2 == 1
+            
+            end_time = time.time()
+            # Should complete quickly (under 1 second)
+            assert end_time - start_time < 1.0
+            
+        finally:
+            os.unlink(db_path)
+    
+    def test_data_directory_creation(self):
+        """Test that data directory is created if it doesn't exist."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = os.path.join(temp_dir, "subdir", "test.db")
+            
+            # Should create the subdirectory automatically
+            db = AzulDatabase(db_path)
+            
+            assert os.path.exists(os.path.dirname(db_path))
+            assert os.path.exists(db_path)
+
+
+class TestZstdCompression:
+    """Test Zstd compression functionality."""
+    
+    def test_compression_enabled_by_default(self):
+        """Test that compression is enabled by default."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            assert db.enable_compression is True
+            assert hasattr(db, 'compressor')
+            assert hasattr(db, 'decompressor')
+        finally:
+            os.unlink(db_path)
+    
+    def test_compression_disabled(self):
+        """Test that compression can be disabled."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path, enable_compression=False)
+            assert db.enable_compression is False
+            assert not hasattr(db, 'compressor')
+            assert not hasattr(db, 'decompressor')
+        finally:
+            os.unlink(db_path)
+    
+    def test_compression_roundtrip(self):
+        """Test compression and decompression roundtrip."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Test data
+            original_data = "This is a test string with some repeated content. " * 100
+            
+            # Compress
+            compressed = db._compress_data(original_data)
+            assert isinstance(compressed, bytes)
+            assert len(compressed) < len(original_data.encode('utf-8'))
+            
+            # Decompress
+            decompressed = db._decompress_data(compressed)
+            assert decompressed == original_data
+        finally:
+            os.unlink(db_path)
+    
+    def test_compression_without_compression(self):
+        """Test compression methods when compression is disabled."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path, enable_compression=False)
+            
+            # Test data
+            original_data = "Test string"
+            
+            # Should return UTF-8 bytes when compression is disabled
+            compressed = db._compress_data(original_data)
+            assert compressed == original_data.encode('utf-8')
+            
+            # Should decode back to original
+            decompressed = db._decompress_data(compressed)
+            assert decompressed == original_data
+        finally:
+            os.unlink(db_path)
+    
+    def test_cache_position_with_state(self):
+        """Test caching position with compressed state data."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            fen_string = "test_position"
+            player_count = 2
+            state_data = "This is some state data that should be compressed"
+            
+            # Cache position with state
+            position_id = db.cache_position_with_state(fen_string, player_count, state_data)
+            assert position_id > 0
+            
+            # Retrieve compressed state
+            compressed_state = db.get_compressed_state(fen_string)
+            assert compressed_state is not None
+            assert isinstance(compressed_state, bytes)
+            
+            # Decompress and verify
+            decompressed_state = db.get_decompressed_state(fen_string)
+            assert decompressed_state == state_data
+        finally:
+            os.unlink(db_path)
+    
+    def test_compression_levels(self):
+        """Test different compression levels."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            # Test data
+            test_data = "Repeated content " * 1000
+            
+            # Test different compression levels
+            sizes = {}
+            for level in [1, 3, 6, 9]:
+                db = AzulDatabase(db_path, compression_level=level)
+                compressed = db._compress_data(test_data)
+                sizes[level] = len(compressed)
+                
+                # Verify decompression works
+                decompressed = db._decompress_data(compressed)
+                assert decompressed == test_data
+            
+            # Higher levels should generally produce smaller files
+            # (though this isn't always guaranteed for small data)
+            print(f"Compression sizes by level: {sizes}")
+            
+        finally:
+            os.unlink(db_path)
+    
+    def test_compression_performance(self):
+        """Test compression performance."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Large test data
+            test_data = "Large test data " * 10000
+            
+            # Time compression
+            start_time = time.time()
+            compressed = db._compress_data(test_data)
+            compression_time = time.time() - start_time
+            
+            # Time decompression
+            start_time = time.time()
+            decompressed = db._decompress_data(compressed)
+            decompression_time = time.time() - start_time
+            
+            # Verify data integrity
+            assert decompressed == test_data
+            
+            # Performance should be reasonable (under 1 second for this data size)
+            assert compression_time < 1.0
+            assert decompression_time < 1.0
+            
+            # Compression ratio should be significant
+            original_size = len(test_data.encode('utf-8'))
+            compressed_size = len(compressed)
+            compression_ratio = compressed_size / original_size
+            
+            print(f"Compression ratio: {compression_ratio:.2f}")
+            print(f"Compression time: {compression_time:.3f}s")
+            print(f"Decompression time: {decompression_time:.3f}s")
+            
+            # Should achieve some compression
+            assert compression_ratio < 1.0
+            
+        finally:
+            os.unlink(db_path)
+
+
+class TestEnhancedIndexingAndOptimization:
+    """Test enhanced indexing and query optimization features."""
+    
+    def test_query_monitoring_enabled_by_default(self):
+        """Test that query monitoring is enabled by default."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            assert db.enable_query_monitoring is True
+            assert hasattr(db, 'query_performance_log')
+            assert isinstance(db.query_performance_log, list)
+        finally:
+            os.unlink(db_path)
+    
+    def test_query_monitoring_disabled(self):
+        """Test that query monitoring can be disabled."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path, enable_query_monitoring=False)
+            assert db.enable_query_monitoring is False
+        finally:
+            os.unlink(db_path)
+    
+    def test_query_performance_logging(self):
+        """Test that query performance is logged correctly."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Perform some operations to generate query logs
+            position_id = db.cache_position("test_pos", 2)
+            db.cache_analysis(position_id, 0, "mcts", {
+                'best_move': 'test_move', 'best_score': 10.0, 'search_time': 0.1,
+                'nodes_searched': 100, 'rollout_count': 20
+            })
+            
+            # Check that queries were logged
+            stats = db.get_query_performance_stats()
+            assert stats['total_queries'] > 0
+            assert stats['average_execution_time_ms'] >= 0.0
+            assert stats['total_execution_time_ms'] >= 0.0
+        finally:
+            os.unlink(db_path)
+    
+    def test_index_usage_stats(self):
+        """Test index usage statistics."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Get index statistics
+            index_stats = db.get_index_usage_stats()
+            
+            # Check that we have indexes
+            assert index_stats['total_indexes'] > 0
+            assert 'indexes' in index_stats
+            assert isinstance(index_stats['indexes'], list)
+            
+            # Check that we have analysis and position indexes
+            assert len(index_stats['analysis_indexes']) > 0
+            assert len(index_stats['position_indexes']) > 0
+        finally:
+            os.unlink(db_path)
+    
+    def test_high_quality_analyses(self):
+        """Test getting high-quality analyses."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Add some test data with different scores
+            position_id1 = db.cache_position("pos1", 2)
+            position_id2 = db.cache_position("pos2", 2)
+            
+            # Add high-quality analysis
+            db.cache_analysis(position_id1, 0, "mcts", {
+                'best_move': 'move1', 'best_score': 15.0, 'search_time': 0.1,
+                'nodes_searched': 100, 'rollout_count': 20
+            })
+            
+            # Add low-quality analysis
+            db.cache_analysis(position_id2, 0, "mcts", {
+                'best_move': 'move2', 'best_score': -5.0, 'search_time': 0.1,
+                'nodes_searched': 50, 'rollout_count': 10
+            })
+            
+            # Get high-quality analyses
+            high_quality = db.get_high_quality_analyses("mcts", limit=10)
+            
+            # Should only return analyses with score > 0
+            assert len(high_quality) == 1
+            assert high_quality[0].score > 0
+        finally:
+            os.unlink(db_path)
+    
+    def test_analysis_stats_by_type(self):
+        """Test getting analysis statistics by type."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Add test data
+            position_id = db.cache_position("test_pos", 2)
+            db.cache_analysis(position_id, 0, "mcts", {
+                'best_move': 'test_move', 'best_score': 10.0, 'search_time': 0.1,
+                'nodes_searched': 100, 'rollout_count': 20
+            })
+            
+            # Get statistics
+            stats = db.get_analysis_stats_by_type("mcts")
+            
+            assert stats['search_type'] == "mcts"
+            assert stats['total_count'] == 1
+            assert stats['avg_score'] == 10.0
+            assert stats['max_score'] == 10.0
+            assert stats['min_score'] == 10.0
+            assert stats['avg_time'] == 0.1
+            assert stats['total_nodes'] == 100
+            assert stats['total_rollouts'] == 20
+        finally:
+            os.unlink(db_path)
+    
+    def test_database_optimization(self):
+        """Test database optimization functionality."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Add some test data
+            position_id = db.cache_position("test_pos", 2)
+            db.cache_analysis(position_id, 0, "mcts", {
+                'best_move': 'test_move', 'best_score': 10.0, 'search_time': 0.1,
+                'nodes_searched': 100, 'rollout_count': 20
+            })
+            
+            # Optimize database
+            result = db.optimize_database()
+            
+            assert result['optimization_completed'] is True
+            assert 'integrity_check' in result
+            assert 'quick_check' in result
+            assert 'timestamp' in result
+        finally:
+            os.unlink(db_path)
+    
+    def test_query_performance_stats_structure(self):
+        """Test that query performance stats have correct structure."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Get stats before any queries
+            stats = db.get_query_performance_stats()
+            
+            expected_fields = [
+                'total_queries', 'average_execution_time_ms', 'slowest_query_type',
+                'most_frequent_query_type', 'total_execution_time_ms'
+            ]
+            
+            for field in expected_fields:
+                assert field in stats, f"Missing field: {field}"
+            
+            # Check data types
+            assert isinstance(stats['total_queries'], int)
+            assert isinstance(stats['average_execution_time_ms'], float)
+            assert isinstance(stats['total_execution_time_ms'], float)
+        finally:
+            os.unlink(db_path)
+    
+    def test_enhanced_indexes_created(self):
+        """Test that enhanced indexes are created."""
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            db_path = tmp.name
+        
+        try:
+            db = AzulDatabase(db_path)
+            
+            # Check that enhanced indexes exist
+            with db.get_connection() as conn:
+                cursor = conn.execute("""
+                    SELECT name FROM sqlite_master 
+                    WHERE type='index' AND name LIKE 'idx_%'
+                    ORDER BY name
+                """)
+                
+                index_names = [row['name'] for row in cursor.fetchall()]
+                
+                # Check for enhanced indexes
+                expected_indexes = [
+                    'idx_analysis_active',
+                    'idx_analysis_covering', 
+                    'idx_analysis_lookup',
+                    'idx_analysis_quality',
+                    'idx_analysis_recent',
+                    'idx_positions_covering',
+                    'idx_stats_recent'
+                ]
+                
+                for expected_index in expected_indexes:
+                    assert expected_index in index_names, f"Missing index: {expected_index}"
         finally:
             os.unlink(db_path)
 
