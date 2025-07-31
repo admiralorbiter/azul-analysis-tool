@@ -15,8 +15,16 @@ import numpy as np
 from typing import Tuple, Optional, Dict, Any
 from dataclasses import dataclass
 
-from ..core.azul_model import AzulState
-from ..core.azul_utils import Tile, Action
+try:
+    from ..core.azul_model import AzulState
+    from ..core.azul_utils import Tile, Action
+except ImportError:
+    # Fallback for direct import
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from core.azul_model import AzulState
+    from core.azul_utils import Tile, Action
 
 
 @dataclass
@@ -63,21 +71,21 @@ class AzulTensorEncoder:
         features.append(factory_features)
         
         # Encode center tiles
-        center_features = self._encode_center(state.center)
+        center_features = self._encode_center(state.centre_pool)
         features.append(center_features)
         
-        # Encode player boards (wall, pattern lines, floor)
-        wall_features = self._encode_wall(state.agents[agent_id].wall)
-        pattern_features = self._encode_pattern_lines(state.agents[agent_id].pattern_lines)
-        floor_features = self._encode_floor(state.agents[agent_id].floor_line)
-        features.extend([wall_features, pattern_features, floor_features])
+        # Encode player boards (grid state, pattern lines, floor)
+        grid_features = self._encode_wall(state.agents[agent_id].grid_state)
+        pattern_features = self._encode_pattern_lines(state.agents[agent_id].lines_tile)
+        floor_features = self._encode_floor(state.agents[agent_id].floor_tiles)
+        features.extend([grid_features, pattern_features, floor_features])
         
         # Encode opponent board (simplified)
         opponent_id = 1 - agent_id
-        opponent_wall = self._encode_wall(state.agents[opponent_id].wall)
-        opponent_pattern = self._encode_pattern_lines(state.agents[opponent_id].pattern_lines)
-        opponent_floor = self._encode_floor(state.agents[opponent_id].floor_line)
-        features.extend([opponent_wall, opponent_pattern, opponent_floor])
+        opponent_grid = self._encode_wall(state.agents[opponent_id].grid_state)
+        opponent_pattern = self._encode_pattern_lines(state.agents[opponent_id].lines_tile)
+        opponent_floor = self._encode_floor(state.agents[opponent_id].floor_tiles)
+        features.extend([opponent_grid, opponent_pattern, opponent_floor])
         
         # Encode scores
         score_features = self._encode_scores(state.agents)
@@ -86,31 +94,35 @@ class AzulTensorEncoder:
         # Concatenate all features
         return torch.cat(features, dim=-1)
     
-    def _encode_factories(self, factories: np.ndarray) -> torch.Tensor:
+    def _encode_factories(self, factories) -> torch.Tensor:
         """Encode factory tiles as one-hot vectors."""
-        # factories shape: [num_factories, 6]
+        # factories is a list of TileDisplay objects
         batch_size = 1
         encoded = torch.zeros(batch_size, self.config.max_factories, 6, self.config.num_tile_types)
         
         for i, factory in enumerate(factories):
             if i >= self.config.max_factories:
                 break
-            for j, tile in enumerate(factory):
-                if j < 6 and tile != Tile.EMPTY:
-                    encoded[0, i, j, tile] = 1.0
+            # Access the tiles dict from TileDisplay
+            for tile_type, count in factory.tiles.items():
+                if count > 0 and tile_type in [Tile.BLUE, Tile.YELLOW, Tile.RED, Tile.BLACK, Tile.WHITE]:
+                    # Distribute tiles across the 6 positions
+                    for j in range(min(count, 6)):
+                        encoded[0, i, j, tile_type] = 1.0
         
         return encoded.flatten(1)  # [batch_size, max_factories * 6 * num_tile_types]
     
-    def _encode_center(self, center: np.ndarray) -> torch.Tensor:
+    def _encode_center(self, center) -> torch.Tensor:
         """Encode center tiles as one-hot vectors."""
+        # center is a TileDisplay object
         batch_size = 1
         encoded = torch.zeros(batch_size, self.config.max_center_tiles, self.config.num_tile_types)
         
-        for i, tile in enumerate(center):
-            if i >= self.config.max_center_tiles:
-                break
-            if tile != Tile.EMPTY:
-                encoded[0, i, tile] = 1.0
+        # Access the tiles dict from TileDisplay
+        for tile_type, count in center.tiles.items():
+            if count > 0 and tile_type in [Tile.BLUE, Tile.YELLOW, Tile.RED, Tile.BLACK, Tile.WHITE]:
+                for i in range(min(count, self.config.max_center_tiles)):
+                    encoded[0, i, tile_type] = 1.0
         
         return encoded.flatten(1)  # [batch_size, max_center_tiles * num_tile_types]
     
@@ -126,29 +138,30 @@ class AzulTensorEncoder:
         
         return encoded.flatten(1)  # [batch_size, max_wall_size * max_wall_size]
     
-    def _encode_pattern_lines(self, pattern_lines: np.ndarray) -> torch.Tensor:
+    def _encode_pattern_lines(self, lines_tile: list) -> torch.Tensor:
         """Encode pattern lines as one-hot vectors."""
+        # lines_tile is a list of 5 integers, where -1 means no tile
         batch_size = 1
-        encoded = torch.zeros(batch_size, self.config.max_pattern_lines, self.config.max_pattern_lines + 1, self.config.num_tile_types)
+        encoded = torch.zeros(batch_size, self.config.max_pattern_lines, self.config.num_tile_types)
         
-        for i, line in enumerate(pattern_lines):
+        for i, tile_type in enumerate(lines_tile):
             if i >= self.config.max_pattern_lines:
                 break
-            for j, tile in enumerate(line):
-                if j < len(line) and tile != Tile.EMPTY:
-                    encoded[0, i, j, tile] = 1.0
+            if tile_type != -1 and tile_type in [Tile.BLUE, Tile.YELLOW, Tile.RED, Tile.BLACK, Tile.WHITE]:
+                encoded[0, i, tile_type] = 1.0
         
-        return encoded.flatten(1)  # [batch_size, max_pattern_lines * (max_pattern_lines + 1) * num_tile_types]
+        return encoded.flatten(1)  # [batch_size, max_pattern_lines * num_tile_types]
     
-    def _encode_floor(self, floor_line: np.ndarray) -> torch.Tensor:
+    def _encode_floor(self, floor_tiles: list) -> torch.Tensor:
         """Encode floor line as one-hot vector."""
+        # floor_tiles is a list of tile types
         batch_size = 1
         encoded = torch.zeros(batch_size, self.config.max_floor_size, self.config.num_tile_types)
         
-        for i, tile in enumerate(floor_line):
+        for i, tile in enumerate(floor_tiles):
             if i >= self.config.max_floor_size:
                 break
-            if tile != Tile.EMPTY:
+            if tile in [Tile.BLUE, Tile.YELLOW, Tile.RED, Tile.BLACK, Tile.WHITE]:
                 encoded[0, i, tile] = 1.0
         
         return encoded.flatten(1)  # [batch_size, max_floor_size * num_tile_types]
@@ -198,16 +211,17 @@ class AzulNet(nn.Module):
     
     def _calculate_input_size(self):
         """Calculate the total input size from the encoder."""
-        # This is a rough estimate - should match the encoder output
-        factory_size = self.config.max_factories * 6 * self.config.num_tile_types
-        center_size = self.config.max_center_tiles * self.config.num_tile_types
-        wall_size = self.config.max_wall_size * self.config.max_wall_size
-        pattern_size = self.config.max_pattern_lines * (self.config.max_pattern_lines + 1) * self.config.num_tile_types
-        floor_size = self.config.max_floor_size * self.config.num_tile_types
+        # Calculate based on actual encoder output
+        factory_size = self.config.max_factories * 6 * self.config.num_tile_types  # 9 * 6 * 5 = 270
+        center_size = self.config.max_center_tiles * self.config.num_tile_types  # 20 * 5 = 100
+        wall_size = self.config.max_wall_size * self.config.max_wall_size  # 5 * 5 = 25
+        pattern_size = self.config.max_pattern_lines * self.config.num_tile_types  # 5 * 5 = 25
+        floor_size = self.config.max_floor_size * self.config.num_tile_types  # 7 * 5 = 35
         score_size = 2
         
-        # Multiply by 2 for both players
+        # Multiply by 2 for both players (wall, pattern, floor)
         self.input_size = (factory_size + center_size + wall_size * 2 + pattern_size * 2 + floor_size * 2 + score_size)
+        # = 270 + 100 + 25*2 + 25*2 + 35*2 + 2 = 270 + 100 + 50 + 50 + 70 + 2 = 542
     
     def _init_weights(self):
         """Initialize network weights."""

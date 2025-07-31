@@ -10,7 +10,7 @@ requests>=2.31.0
 # tkinter (usually comes with Python)
 
 # Optional neural dependencies (uncomment if needed)
-# torch>=2.0.0
-# torchvision>=0.15.0
+torch>=2.0.0
+torchvision>=0.15.0
 
 # Development dependencies (install with pip install -r requirements-dev.txt)
