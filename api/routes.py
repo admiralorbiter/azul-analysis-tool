@@ -1277,32 +1277,18 @@ def analyze_position():
         }
         
         # Cache result if database is available
-        if hasattr(current_app, 'database'):
+        if hasattr(current_app, 'database') and current_app.database:
             try:
-                position_id = current_app.database.cache_position(
-                    analysis_req.fen_string, 
-                    len(state.agents)
-                )
-                current_app.database.cache_analysis(
-                    position_id,
-                    analysis_req.agent_id,
-                    'alpha_beta',
-                    {
-                        'best_move': str(result.best_move) if result.best_move else None,
-                        'best_score': result.best_score,
-                        'search_time': search_time,
-                        'nodes_searched': result.nodes_searched,
-                        'depth_reached': result.depth_reached,
-                        'principal_variation': [str(move) for move in result.principal_variation]
-                    }
-                )
-                
-                # Update performance stats
-                current_app.database.update_performance_stats(
-                    'alpha_beta', search_time, result.nodes_searched, 0, False
-                )
+                position_id = current_app.database.cache_position(analysis_req.fen_string, len(state.agents))
+                current_app.database.cache_analysis(position_id, analysis_req.agent_id, 'alpha_beta', {
+                    'best_move': str(result.best_move) if result.best_move else None,
+                    'best_score': result.best_score,
+                    'search_time': result.search_time,
+                    'nodes_searched': result.nodes_searched,
+                    'depth_reached': result.depth_reached,
+                    'principal_variation': [str(move) for move in result.principal_variation]
+                })
             except Exception as e:
-                # Log but don't fail the request
                 current_app.logger.warning(f"Failed to cache analysis: {e}")
         
         return jsonify(response)
@@ -1386,7 +1372,7 @@ def get_hint():
         }
         
         # Cache result if database is available
-        if hasattr(current_app, 'database'):
+        if hasattr(current_app, 'database') and current_app.database:
             try:
                 position_id = current_app.database.cache_position(
                     hint_req.fen_string, 
@@ -1473,42 +1459,63 @@ def analyze_neural():
         if state is None:
             return jsonify({'error': 'Invalid FEN string'}), 400
         
-        # Create neural MCTS
-        from core.azul_mcts import AzulMCTS, RolloutPolicy
-        mcts = AzulMCTS(
-            rollout_policy=RolloutPolicy.NEURAL,
-            max_time=time_budget,
-            max_rollouts=max_rollouts,
-            database=getattr(current_app, 'database', None)
-        )
-        
-        # Perform search
-        result = mcts.search(state, agent_id=agent_id, fen_string=fen_string)
-        
-        # Format response
-        analysis = {
-            'best_move': format_move(result.best_move),
-            'best_score': result.best_score,
-            'principal_variation': [format_move(move) for move in result.principal_variation],
-            'search_time': result.search_time,
-            'nodes_searched': result.nodes_searched,
-            'rollout_count': result.rollout_count,
-            'average_rollout_depth': result.average_rollout_depth,
-            'method': 'neural_mcts'
-        }
-        
-        # Cache result if database available
-        if hasattr(current_app, 'database'):
-            position_id = current_app.database.cache_position(fen_string, len(state.agents))
-            current_app.database.cache_analysis(position_id, agent_id, 'neural_mcts', analysis)
-        
-        return jsonify({
-            'success': True,
-            'analysis': analysis
-        })
+        # Check if neural components are available
+        try:
+            from core.azul_mcts import AzulMCTS, RolloutPolicy
+            from neural.azul_net import create_azul_net, AzulNeuralRolloutPolicy
+            
+            # Create neural MCTS
+            mcts = AzulMCTS(
+                rollout_policy=RolloutPolicy.NEURAL,
+                max_time=time_budget,
+                max_rollouts=max_rollouts,
+                database=getattr(current_app, 'database', None)
+            )
+            
+            # Perform search
+            result = mcts.search(state, agent_id=agent_id, fen_string=fen_string)
+            
+            # Format response
+            analysis = {
+                'best_move': format_move(result.best_move),
+                'best_score': result.best_score,
+                'principal_variation': [format_move(move) for move in result.principal_variation],
+                'search_time': result.search_time,
+                'nodes_searched': result.nodes_searched,
+                'rollout_count': result.rollout_count,
+                'average_rollout_depth': result.average_rollout_depth,
+                'method': 'neural_mcts'
+            }
+            
+            # Cache result if database available
+            if hasattr(current_app, 'database') and current_app.database:
+                try:
+                    position_id = current_app.database.cache_position(fen_string, len(state.agents))
+                    current_app.database.cache_analysis(position_id, agent_id, 'neural_mcts', analysis)
+                except Exception as e:
+                    current_app.logger.warning(f"Failed to cache neural analysis: {e}")
+            
+            return jsonify({
+                'success': True,
+                'analysis': analysis
+            })
+            
+        except ImportError as e:
+            return jsonify({
+                'error': 'Neural analysis not available',
+                'message': 'PyTorch and neural components are not installed. Install with: pip install torch',
+                'details': str(e)
+            }), 503
+            
+        except Exception as e:
+            return jsonify({
+                'error': 'Neural analysis failed',
+                'message': 'Neural model not trained or available',
+                'details': str(e)
+            }), 500
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500
 
 
 # ============================================================================

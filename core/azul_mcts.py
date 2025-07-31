@@ -24,6 +24,13 @@ from .azul_database import AzulDatabase, CachedAnalysis
 # Optional neural imports - temporarily disabled for testing
 NEURAL_AVAILABLE = False
 
+try:
+    from neural.azul_net import create_azul_net, AzulNeuralRolloutPolicy
+    NEURAL_AVAILABLE = True
+except ImportError:
+    # Neural components not available
+    pass
+
 
 class RolloutPolicy(Enum):
     """Available rollout policies for MCTS."""
@@ -365,6 +372,7 @@ class AzulMCTS:
         
         # Create root node
         root = MCTSNode(state=state, agent_id=agent_id)
+        self.nodes_searched = 1  # Count root node
         
         # Perform MCTS iterations
         while (time.time() - self.search_start_time < max_time and 
@@ -454,6 +462,7 @@ class AzulMCTS:
                 )
                 
                 node.children.append(child)
+                self.nodes_searched += 1  # Track new node creation
                 return child
         
         # If all moves are explored, return the node itself
