@@ -786,6 +786,14 @@
             const [gameMode, setGameMode] = useState('sandbox'); // 'sandbox', 'analysis', 'setup'
             const [autoAdvanceTurn, setAutoAdvanceTurn] = useState(false);
             
+            // D4.2 Advanced Sandbox Features
+            const [variations, setVariations] = useState(new Map());
+            const [currentVariation, setCurrentVariation] = useState('main');
+            const [variationCounter, setVariationCounter] = useState(0);
+            const [moveAnnotations, setMoveAnnotations] = useState(new Map());
+            const [showVariationPanel, setShowVariationPanel] = useState(false);
+            const [showAnnotationPanel, setShowAnnotationPanel] = useState(false);
+            
             // Click selection state
             const [selectedTile, setSelectedTile] = useState(null);
             const [selectionMode, setSelectionMode] = useState('none'); // 'none', 'tile', 'destination'
@@ -1205,6 +1213,11 @@
             };
 
             const createNewGame = async (newPlayerCount = 2) => {
+                // Only 2-player games supported
+                if (newPlayerCount !== 2) {
+                    setStatusMessage('❌ Only 2-player games are supported');
+                    return;
+                }
                 if (loading) return;
                 
                 setLoading(true);
@@ -1236,6 +1249,12 @@
                         setAnalysis(null);
                         setHint(null);
                         
+                        // Reset variation state
+                        setVariations(new Map());
+                        setCurrentVariation('main');
+                        setVariationCounter(0);
+                        setMoveAnnotations(new Map());
+                        
                         const state = await getGameState(result.fen_string || 'initial');
                         if (state) {
                             setGameState(state);
@@ -1252,6 +1271,134 @@
                 }
                 
                 setLoading(false);
+            };
+
+            // D4.2 Advanced Sandbox Functions
+            const createVariation = (fromMoveIndex, name = null) => {
+                const variationId = name || `variation_${variationCounter + 1}`;
+                const baseHistory = moveHistory.slice(0, fromMoveIndex + 1);
+                
+                const newVariations = new Map(variations);
+                newVariations.set(variationId, {
+                    name: variationId,
+                    baseMoveIndex: fromMoveIndex,
+                    moves: [],
+                    state: fenString,
+                    timestamp: Date.now()
+                });
+                
+                setVariations(newVariations);
+                setVariationCounter(variationCounter + 1);
+                setStatusMessage(`✅ Created variation: ${variationId}`);
+                
+                return variationId;
+            };
+
+            const switchToVariation = (variationId) => {
+                if (variations.has(variationId)) {
+                    setCurrentVariation(variationId);
+                    const variation = variations.get(variationId);
+                    
+                    // Load the variation's state
+                    updateGameState(variation.state);
+                    
+                    // Restore move history to the base point
+                    const baseHistory = moveHistory.slice(0, variation.baseMoveIndex + 1);
+                    moveHistory = [...baseHistory, ...variation.moves];
+                    undoStack = [];
+                    
+                    setStatusMessage(`✅ Switched to variation: ${variationId}`);
+                }
+            };
+
+            const saveCurrentAsVariation = () => {
+                const variationId = createVariation(moveHistory.length - 1);
+                switchToVariation(variationId);
+            };
+
+            const exportPosition = () => {
+                const positionData = {
+                    fen: fenString,
+                    moveHistory: moveHistory,
+                    variations: Array.from(variations.entries()),
+                    annotations: Array.from(moveAnnotations.entries()),
+                    currentVariation: currentVariation,
+                    playerCount: playerCount,
+                    currentPlayer: currentPlayer,
+                    timestamp: Date.now(),
+                    description: `Azul position exported from ${new Date().toLocaleString()}`
+                };
+                
+                const blob = new Blob([JSON.stringify(positionData, null, 2)], {
+                    type: 'application/json'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `azul_position_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                setStatusMessage('✅ Position exported successfully');
+            };
+
+            const importPosition = (file) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Load position data
+                        if (data.fen) {
+                            updateGameState(data.fen);
+                        }
+                        
+                        if (data.moveHistory) {
+                            moveHistory = data.moveHistory;
+                        }
+                        
+                        if (data.variations) {
+                            setVariations(new Map(data.variations));
+                        }
+                        
+                        if (data.annotations) {
+                            setMoveAnnotations(new Map(data.annotations));
+                        }
+                        
+                        if (data.currentVariation) {
+                            setCurrentVariation(data.currentVariation);
+                        }
+                        
+                        if (data.playerCount) {
+                            setPlayerCount(data.playerCount);
+                        }
+                        
+                        if (data.currentPlayer !== undefined) {
+                            setCurrentPlayer(data.currentPlayer);
+                        }
+                        
+                        setStatusMessage('✅ Position imported successfully');
+                    } catch (error) {
+                        setStatusMessage(`❌ Invalid position file: ${error.message}`);
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const addMoveAnnotation = (moveIndex, annotation) => {
+                const newAnnotations = new Map(moveAnnotations);
+                newAnnotations.set(moveIndex, {
+                    annotation: annotation,
+                    timestamp: Date.now(),
+                    player: moveHistory[moveIndex]?.player || 0
+                });
+                setMoveAnnotations(newAnnotations);
+                setStatusMessage(`✅ Added annotation to move ${moveIndex + 1}`);
+            };
+
+            const getMoveAnnotation = (moveIndex) => {
+                return moveAnnotations.get(moveIndex);
             };
 
             // Check if a destination is valid for the selected tile
@@ -1476,21 +1623,8 @@
                                             🆕 New 2P Game
                                         </button>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            onClick={() => createNewGame(3)}
-                                            disabled={loading}
-                                            className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
-                                        >
-                                            🆕 New 3P Game
-                                        </button>
-                                        <button
-                                            onClick={() => createNewGame(4)}
-                                            disabled={loading}
-                                            className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
-                                        >
-                                            🆕 New 4P Game
-                                        </button>
+                                    <div className="text-sm text-gray-600 mb-2">
+                                        Only 2-player games supported
                                     </div>
                                 </div>
                                 
@@ -1499,6 +1633,131 @@
                                     <p>🎮 Sandbox: Manual play | 🔍 Analysis: Engine assistance | ⚙️ Setup: Board configuration</p>
                                 </div>
                             </div>
+                            
+                            {/* D4.2 Advanced Sandbox Features */}
+                            {gameMode === 'sandbox' && (
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                    <h3 className="text-lg font-medium mb-4">🌳 Advanced Sandbox</h3>
+                                    
+                                    {/* Variation Management */}
+                                    <div className="mb-4">
+                                        <h4 className="text-md font-medium mb-2">Variation Management</h4>
+                                        <div className="grid grid-cols-2 gap-2 mb-3">
+                                            <button
+                                                onClick={() => createVariation(moveHistory.length - 1)}
+                                                disabled={loading || moveHistory.length === 0}
+                                                className="bg-purple-600 text-white py-2 px-3 rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
+                                            >
+                                                🆕 Create Variation
+                                            </button>
+                                            <button
+                                                onClick={() => setShowVariationPanel(!showVariationPanel)}
+                                                disabled={loading || variations.size === 0}
+                                                className="bg-indigo-600 text-white py-2 px-3 rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
+                                            >
+                                                📋 Show Variations ({variations.size})
+                                            </button>
+                                        </div>
+                                        
+                                        {showVariationPanel && variations.size > 0 && (
+                                            <div className="bg-gray-50 p-3 rounded mb-3">
+                                                <h5 className="text-sm font-medium mb-2">Available Variations:</h5>
+                                                <div className="space-y-1">
+                                                    {Array.from(variations.keys()).map((variationId) => (
+                                                        <div key={variationId} className="flex justify-between items-center">
+                                                            <span className="text-sm">{variationId}</span>
+                                                            <button
+                                                                onClick={() => switchToVariation(variationId)}
+                                                                disabled={currentVariation === variationId}
+                                                                className={`px-2 py-1 text-xs rounded ${
+                                                                    currentVariation === variationId
+                                                                        ? 'bg-green-200 text-green-800 cursor-not-allowed'
+                                                                        : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
+                                                                }`}
+                                                            >
+                                                                {currentVariation === variationId ? 'Active' : 'Switch'}
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Position Export/Import */}
+                                    <div className="mb-4">
+                                        <h4 className="text-md font-medium mb-2">Position Management</h4>
+                                        <div className="grid grid-cols-2 gap-2 mb-3">
+                                            <button
+                                                onClick={exportPosition}
+                                                disabled={loading}
+                                                className="bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
+                                            >
+                                                📤 Export Position
+                                            </button>
+                                            <label className="bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 disabled:opacity-50 text-sm cursor-pointer text-center">
+                                                📥 Import Position
+                                                <input
+                                                    type="file"
+                                                    accept=".json"
+                                                    onChange={(e) => {
+                                                        if (e.target.files[0]) {
+                                                            importPosition(e.target.files[0]);
+                                                        }
+                                                    }}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Move Annotations */}
+                                    <div className="mb-4">
+                                        <h4 className="text-md font-medium mb-2">Move Annotations</h4>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => setShowAnnotationPanel(!showAnnotationPanel)}
+                                                disabled={loading || moveAnnotations.size === 0}
+                                                className="bg-yellow-600 text-white py-2 px-3 rounded hover:bg-yellow-700 disabled:opacity-50 text-sm"
+                                            >
+                                                📝 Show Annotations ({moveAnnotations.size})
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const annotation = prompt('Enter annotation for current position:');
+                                                    if (annotation) {
+                                                        addMoveAnnotation(moveHistory.length - 1, annotation);
+                                                    }
+                                                }}
+                                                disabled={loading}
+                                                className="bg-orange-600 text-white py-2 px-3 rounded hover:bg-orange-700 disabled:opacity-50 text-sm"
+                                            >
+                                                ✏️ Add Annotation
+                                            </button>
+                                        </div>
+                                        
+                                        {showAnnotationPanel && moveAnnotations.size > 0 && (
+                                            <div className="bg-gray-50 p-3 rounded mt-3">
+                                                <h5 className="text-sm font-medium mb-2">Move Annotations:</h5>
+                                                <div className="space-y-2 max-h-32 overflow-y-auto">
+                                                    {Array.from(moveAnnotations.entries()).map(([moveIndex, annotation]) => (
+                                                        <div key={moveIndex} className="text-xs p-2 bg-white rounded">
+                                                            <div className="font-medium">Move {moveIndex + 1}:</div>
+                                                            <div className="text-gray-600">{annotation.annotation}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="text-xs text-gray-500">
+                                        <p>🌳 Create variations to explore different move sequences</p>
+                                        <p>📤 Export/import positions to save and share games</p>
+                                        <p>📝 Add annotations to document your analysis</p>
+                                    </div>
+                                </div>
+                            )}
                             
                             {/* Analysis Controls */}
                             <div className="bg-white p-4 rounded-lg shadow">
@@ -1656,26 +1915,52 @@
                                 <div className="bg-white p-4 rounded-lg shadow">
                                     <h3 className="text-lg font-medium mb-3">📜 Move History</h3>
                                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                                        {moveHistory.map((moveData, index) => (
-                                            <div key={index} className="text-sm p-2 bg-gray-50 rounded">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="font-medium">
-                                                        Move {index + 1}
-                                                        {moveData.player !== undefined && (
-                                                            <span className="ml-2 px-2 py-0.5 bg-blue-200 text-blue-800 text-xs rounded">
-                                                                P{moveData.player + 1}
+                                        {moveHistory.map((moveData, index) => {
+                                            const annotation = getMoveAnnotation(index);
+                                            return (
+                                                <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-medium">
+                                                            Move {index + 1}
+                                                            {moveData.player !== undefined && (
+                                                                <span className="ml-2 px-2 py-0.5 bg-blue-200 text-blue-800 text-xs rounded">
+                                                                    P{moveData.player + 1}
+                                                                </span>
+                                                            )}
+                                                            {annotation && (
+                                                                <span className="ml-2 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded">
+                                                                    📝
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            {annotation && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        alert(`Annotation for Move ${index + 1}:\n\n${annotation.annotation}`);
+                                                                    }}
+                                                                    className="text-xs text-yellow-600 hover:text-yellow-800"
+                                                                    title="View annotation"
+                                                                >
+                                                                    📝
+                                                                </button>
+                                                            )}
+                                                            <span className="text-xs text-gray-500">
+                                                                {new Date(moveData.timestamp).toLocaleTimeString()}
                                                             </span>
-                                                        )}
-                                                    </span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {new Date(moveData.timestamp).toLocaleTimeString()}
-                                                    </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-xs text-gray-600 mt-1">
+                                                        {moveData.description || formatMoveDescription(moveData.move)}
+                                                    </div>
+                                                    {annotation && (
+                                                        <div className="text-xs text-yellow-700 mt-1 italic">
+                                                            "{annotation.annotation}"
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="text-xs text-gray-600 mt-1">
-                                                    {moveData.description || formatMoveDescription(moveData.move)}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                     <div className="mt-2 text-xs text-gray-500">
                                         Total moves: {moveHistory.length}

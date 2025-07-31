@@ -614,7 +614,7 @@ class TestPositionCaching:
     def test_get_position_id(self, db):
         """Test getting position ID."""
         fen_string = "test_position"
-        player_count = 3
+        player_count = 2
         
         # Should return None for non-existent position
         assert db.get_position_id(fen_string) is None

@@ -98,7 +98,7 @@ class MoveExecutionRequest(BaseModel):
 
 class GameCreationRequest(BaseModel):
     """Request model for game creation."""
-    player_count: int = 2
+    player_count: int = 2  # Only 2-player games supported
     seed: Optional[int] = None
 
 
@@ -2109,9 +2109,9 @@ def create_game():
         
         print(f"DEBUG: Creating new game with {request_model.player_count} players")
         
-        # Validate player count
-        if request_model.player_count < 2 or request_model.player_count > 4:
-            return jsonify({'error': 'Player count must be between 2 and 4'}), 400
+        # Validate player count - only 2 players supported
+        if request_model.player_count != 2:
+            return jsonify({'error': 'Only 2-player games are supported'}), 400
         
         # Create new game state
         from core.azul_model import AzulState

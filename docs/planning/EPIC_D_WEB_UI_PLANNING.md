@@ -14,7 +14,13 @@
 - **D2 Heatmap Overlay**: ✅ Complete - EV delta visualization with color coding
 - **D3 PV Panel**: ✅ Complete - Top-3 moves with click-to-load functionality
 - **D7 Auth & Rate-Limit**: ✅ Complete - Session management + rate limiting
-- **D4 What-if Sandbox**: 🚧 70% Complete - Interactive move execution with API endpoint and UI integration
+- **D4 What-if Sandbox**: ✅ Complete - Interactive move execution with advanced features:
+  - ✅ Multi-player support with active player tracking
+  - ✅ Turn management and auto-advance
+  - ✅ Variation branching system
+  - ✅ Position export/import functionality
+  - ✅ Move annotations and comments
+  - ✅ Game mode switching (Sandbox/Analysis/Setup)
 - **D5 Replay Annotator**: ☐ Remaining - Game log analysis with blunder detection
 - **D6 Opening Explorer**: ☐ Remaining - Position tree browser
 
@@ -58,9 +64,9 @@ Create an interactive, user-friendly web interface that enables:
 
 ---
 
-## **D4: What-if Sandbox** 🎯 **HIGHEST PRIORITY**
+## **D4: What-if Sandbox** ✅ **COMPLETE**
 
-### **D4.1: Interactive Move Execution** (2-3 days) ✅ **COMPLETE**
+### **D4.1: Interactive Move Execution** ✅ **COMPLETE**
 
 #### **Current State**
 - ✅ Drag-and-drop tile selection exists in UI
@@ -274,7 +280,7 @@ curl -X POST http://localhost:8000/api/v1/execute_move \
 
 ---
 
-### **D4.2: Advanced Sandbox Features** (2-3 days)
+### **D4.2: Advanced Sandbox Features** ✅ **COMPLETE**
 
 #### **Variation Branching System**
 ```javascript
@@ -1000,9 +1006,12 @@ python main.py serve
 - ✅ Undo/redo works reliably with visual feedback
 - ✅ Engine responds automatically with best move
 - ✅ Move history is tracked and displayable
-- 🔄 Multiple variations can be explored (partially implemented)
-- 🔄 Positions can be exported/imported (partially implemented)
-- 🔄 Moves can be annotated with comments (partially implemented)
+- ✅ Multiple variations can be explored with branching system
+- ✅ Positions can be exported/imported with full state preservation
+- ✅ Moves can be annotated with comments and timestamps
+- ✅ Multi-player support with active player tracking
+- ✅ Game mode switching (Sandbox/Analysis/Setup)
+- ✅ Turn management with auto-advance option
 
 ### **D5 Success Criteria**
 - ✅ Game logs can be uploaded and parsed

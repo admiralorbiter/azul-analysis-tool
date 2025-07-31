@@ -88,18 +88,6 @@ class TestAzulState:
         assert not state.first_agent_taken
         assert state.next_first_agent == -1
     
-    def test_initialization_3_players(self):
-        """Test AzulState initialization with 3 players."""
-        state = AzulState(3)
-        assert len(state.agents) == 3
-        assert len(state.factories) == 7  # 3 players = 7 factories
-    
-    def test_initialization_4_players(self):
-        """Test AzulState initialization with 4 players."""
-        state = AzulState(4)
-        assert len(state.agents) == 4
-        assert len(state.factories) == 9  # 4 players = 9 factories
-    
     def test_tile_bag_initialization(self):
         """Test that the tile bag is properly initialized."""
         state = AzulState(2)

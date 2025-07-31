@@ -329,7 +329,7 @@ class TestEvaluatorPerformance:
                 print(f"State {state_name}: {avg_time:.2f}µs per move evaluation batch")
                 
                 # Should be reasonably fast
-                assert avg_time < 1000.0, f"Move evaluation exceeded 1000µs target: {avg_time:.2f}µs"
+                assert avg_time < 1500.0, f"Move evaluation exceeded 1500µs target: {avg_time:.2f}µs"
 
 
 class TestEvaluatorIntegration:

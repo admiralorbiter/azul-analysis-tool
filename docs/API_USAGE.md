@@ -250,7 +250,7 @@ curl -X POST http://localhost:8000/api/v1/positions/bulk \
       },
       {
         "fen_string": "position2", 
-        "player_count": 3,
+        "player_count": 2,
         "compressed_state": "..."
       }
     ],

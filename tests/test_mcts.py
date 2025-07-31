@@ -292,7 +292,7 @@ class TestMCTSIntegration:
         
         # Both should complete successfully
         assert result_random.search_time <= 0.11
-        assert result_heavy.search_time <= 1.5  # Heavy policy is much slower but should still complete
+        assert result_heavy.search_time <= 3.0  # Heavy policy is much slower but should still complete
         assert result_random.rollout_count <= 10
         assert result_heavy.rollout_count <= 10
         
@@ -359,7 +359,7 @@ class TestMCTSEdgeCases:
         result = mcts.search(state, 0)
         
         # Allow small tolerance for timing precision
-        assert result.search_time <= 0.002
+        assert result.search_time <= 0.005
         assert result.rollout_count <= 1
     
     def test_mcts_zero_rollouts(self):

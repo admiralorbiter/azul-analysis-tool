@@ -636,7 +636,7 @@ class TestPositionCacheAPI:
                 },
                 {
                     'fen_string': 'bulk_pos2',
-                    'player_count': 3,
+                    'player_count': 2,
                     'compressed_state': None
                 }
             ],

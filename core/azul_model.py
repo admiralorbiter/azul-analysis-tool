@@ -165,7 +165,7 @@ class ImmutableAzulState:
 
 
 class AzulState(GameState):
-    NUM_FACTORIES = [5,7,9]
+    NUM_FACTORIES = [5]  # Only 2-player games supported
     NUM_TILE_TYPE = 20
     NUM_ON_FACTORY = 4
 
@@ -626,9 +626,9 @@ class AzulState(GameState):
         # "Used" bag is initial empty
         self.bag_used = []
 
-        # In a 2/3/4-agent game, 5/7/9 factory displays are used
+        # In a 2-player game, 5 factory displays are used
         self.factories = []
-        for i in range(self.NUM_FACTORIES[num_agents-2]):
+        for i in range(self.NUM_FACTORIES[0]):  # Always use 5 factories for 2-player games
             td = self.TileDisplay()
             
             # Initialise factory display: add NUM_ON_FACTORY randomly
