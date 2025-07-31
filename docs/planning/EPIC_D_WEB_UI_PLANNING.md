@@ -21,8 +21,17 @@
   - ✅ Position export/import functionality
   - ✅ Move annotations and comments
   - ✅ Game mode switching (Sandbox/Analysis/Setup)
-- **D5 Replay Annotator**: ☐ Remaining - Game log analysis with blunder detection
-- **D6 Opening Explorer**: ☐ Remaining - Position tree browser
+- **D5 Replay Annotator**: ✅ Complete - Game log analysis with blunder detection:
+  - ✅ Game log upload and parsing (JSON/Text formats)
+  - ✅ Complete game analysis with blunder detection
+  - ✅ Interactive timeline with move navigation
+  - ✅ Blunder severity calculation and highlighting
+  - ✅ Game statistics and summary
+- **D6 Opening Explorer**: ✅ Complete - Position tree browser:
+  - ✅ Position database with similarity search
+  - ✅ Popular continuations analysis
+  - ✅ Position addition and management
+  - ✅ Interactive position exploration
 
 ### **Key Files & Architecture**
 ```

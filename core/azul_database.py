@@ -231,6 +231,39 @@ class AzulDatabase:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 
+                -- Game analyses table for D5: Replay Annotator
+                CREATE TABLE IF NOT EXISTS game_analyses (
+                    id INTEGER PRIMARY KEY,
+                    game_id TEXT UNIQUE NOT NULL,
+                    players TEXT NOT NULL,  -- JSON array of player names
+                    total_moves INTEGER NOT NULL,
+                    blunder_count INTEGER DEFAULT 0,
+                    average_blunder_severity REAL DEFAULT 0.0,
+                    game_data TEXT NOT NULL,  -- JSON game log data
+                    analysis_data TEXT,  -- JSON analysis results
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
+                -- Position database table for D6: Opening Explorer
+                CREATE TABLE IF NOT EXISTS position_database (
+                    id INTEGER PRIMARY KEY,
+                    fen_string TEXT UNIQUE NOT NULL,
+                    frequency INTEGER DEFAULT 1,
+                    metadata TEXT,  -- JSON metadata
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
+                -- Position continuations table for D6: Opening Explorer
+                CREATE TABLE IF NOT EXISTS position_continuations (
+                    id INTEGER PRIMARY KEY,
+                    position_id INTEGER NOT NULL,
+                    move_data TEXT NOT NULL,  -- JSON move data
+                    frequency INTEGER DEFAULT 1,
+                    win_rate REAL DEFAULT 0.5,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (position_id) REFERENCES position_database(id) ON DELETE CASCADE
+                );
+                
                 -- Basic indexes for performance
                 CREATE INDEX IF NOT EXISTS idx_positions_fen ON positions(fen_string);
                 CREATE INDEX IF NOT EXISTS idx_analysis_position ON analysis_results(position_id);
@@ -269,6 +302,22 @@ class AzulDatabase:
                 -- Partial index for high-quality analyses (score > 0)
                 CREATE INDEX IF NOT EXISTS idx_analysis_quality ON analysis_results(search_type, score DESC)
                 WHERE score > 0;
+                
+                -- Indexes for game analyses table
+                CREATE INDEX IF NOT EXISTS idx_game_analyses_id ON game_analyses(game_id);
+                CREATE INDEX IF NOT EXISTS idx_game_analyses_created ON game_analyses(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_game_analyses_blunders ON game_analyses(blunder_count DESC);
+                CREATE INDEX IF NOT EXISTS idx_game_analyses_severity ON game_analyses(average_blunder_severity DESC);
+                
+                -- Indexes for position database table
+                CREATE INDEX IF NOT EXISTS idx_position_database_fen ON position_database(fen_string);
+                CREATE INDEX IF NOT EXISTS idx_position_database_frequency ON position_database(frequency DESC);
+                CREATE INDEX IF NOT EXISTS idx_position_database_created ON position_database(created_at DESC);
+                
+                -- Indexes for position continuations table
+                CREATE INDEX IF NOT EXISTS idx_position_continuations_position ON position_continuations(position_id);
+                CREATE INDEX IF NOT EXISTS idx_position_continuations_frequency ON position_continuations(frequency DESC);
+                CREATE INDEX IF NOT EXISTS idx_position_continuations_win_rate ON position_continuations(win_rate DESC);
                 
                 -- Enable foreign key constraints
                 PRAGMA foreign_keys = ON;

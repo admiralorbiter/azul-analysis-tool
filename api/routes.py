@@ -102,6 +102,53 @@ class GameCreationRequest(BaseModel):
     seed: Optional[int] = None
 
 
+# Add these new request models after the existing ones (around line 100)
+
+class GameAnalysisRequest(BaseModel):
+    """Request model for game analysis."""
+    game_data: Dict[str, Any]  # Game log data
+    include_blunder_analysis: bool = True
+    include_position_analysis: bool = True
+    analysis_depth: int = 3
+
+
+class GameLogUploadRequest(BaseModel):
+    """Request model for game log upload."""
+    game_format: str = 'json'  # 'json', 'text', 'pgn'
+    game_content: str
+    game_metadata: Optional[Dict[str, Any]] = None
+
+
+class GameAnalysisSearchRequest(BaseModel):
+    """Request model for searching game analyses."""
+    player_names: Optional[List[str]] = None
+    min_blunder_count: Optional[int] = None
+    max_blunder_count: Optional[int] = None
+    date_range: Optional[Dict[str, str]] = None
+    limit: int = 50
+    offset: int = 0
+
+
+class PositionDatabaseRequest(BaseModel):
+    """Request model for position database operations."""
+    fen_string: str
+    metadata: Optional[Dict[str, Any]] = None
+    frequency: int = 1
+
+
+class SimilarPositionRequest(BaseModel):
+    """Request model for finding similar positions."""
+    fen_string: str
+    similarity_threshold: float = 0.8
+    limit: int = 10
+
+
+class ContinuationRequest(BaseModel):
+    """Request model for getting popular continuations."""
+    fen_string: str
+    limit: int = 5
+
+
 # Create Flask blueprint for API endpoints
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
@@ -2259,3 +2306,642 @@ def reset_game():
         'success': True,
         'message': 'Game reset to initial position'
     }) 
+
+
+@api_bp.route('/analyze_game', methods=['POST'])
+@require_session
+def analyze_game():
+    """Analyze a complete game for blunders and insights."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No request data provided'}), 400
+        
+        # Validate required fields
+        if 'game_data' not in data:
+            return jsonify({'success': False, 'error': 'Missing game_data field'}), 400
+        
+        request_model = GameAnalysisRequest(**data)
+        
+        game_data = request_model.game_data
+        moves = game_data.get('moves', [])
+        analysis_results = []
+        
+        print(f"DEBUG: Analyzing game with {len(moves)} moves")
+        
+        for i, move_data in enumerate(moves):
+            # Get position before move
+            position = move_data.get('position_before', 'initial')
+            
+            # Analyze position
+            try:
+                analysis = analyze_position_internal(position, move_data['player'], request_model.analysis_depth)
+                
+                # Calculate blunder severity
+                actual_move_score = analysis.get('move_scores', {}).get(str(move_data['move']), 0)
+                best_move_score = analysis.get('best_score', 0)
+                blunder_severity = best_move_score - actual_move_score
+                
+                analysis_results.append({
+                    'move_index': i,
+                    'player': move_data['player'],
+                    'move': move_data['move'],
+                    'position': position,
+                    'analysis': analysis,
+                    'blunder_severity': blunder_severity,
+                    'is_blunder': blunder_severity >= 3.0
+                })
+                
+                print(f"DEBUG: Move {i+1} - Blunder severity: {blunder_severity:.2f}")
+                
+            except Exception as e:
+                print(f"DEBUG: Error analyzing move {i+1}: {e}")
+                analysis_results.append({
+                    'move_index': i,
+                    'player': move_data['player'],
+                    'move': move_data['move'],
+                    'position': position,
+                    'analysis': None,
+                    'blunder_severity': 0,
+                    'is_blunder': False,
+                    'error': str(e)
+                })
+        
+        # Calculate game summary
+        blunders = [r for r in analysis_results if r.get('is_blunder', False)]
+        total_blunder_severity = sum(r.get('blunder_severity', 0) for r in analysis_results)
+        avg_blunder_severity = total_blunder_severity / len(analysis_results) if analysis_results else 0
+        
+        summary = {
+            'total_moves': len(moves),
+            'blunder_count': len(blunders),
+            'blunder_percentage': (len(blunders) / len(moves)) * 100 if moves else 0,
+            'average_blunder_severity': avg_blunder_severity,
+            'worst_blunder': max((r.get('blunder_severity', 0) for r in analysis_results), default=0),
+            'players': game_data.get('players', ['Player 1', 'Player 2']),
+            'game_result': game_data.get('result', {})
+        }
+        
+        return jsonify({
+            'success': True,
+            'analysis_results': analysis_results,
+            'summary': summary
+        })
+        
+    except ValidationError as e:
+        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Failed to analyze game: {str(e)}'}), 500
+
+
+@api_bp.route('/upload_game_log', methods=['POST'])
+@require_session
+def upload_game_log():
+    """Upload and parse a game log file."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No request data provided'}), 400
+        
+        # Validate required fields
+        if 'game_format' not in data:
+            return jsonify({'success': False, 'error': 'Missing game_format field'}), 400
+        if 'game_content' not in data:
+            return jsonify({'success': False, 'error': 'Missing game_content field'}), 400
+        
+        request_model = GameLogUploadRequest(**data)
+        
+        # Parse game log based on format
+        try:
+            game_data = parse_game_log(request_model.game_content, request_model.game_format)
+        except ValueError as e:
+            return jsonify({'success': False, 'error': f'Invalid game format: {str(e)}'}), 400
+        
+        # Store in database for later analysis
+        game_id = f"game_{int(time.time())}_{random.randint(1000, 9999)}"
+        
+        # Store game data in database
+        if not current_app.database:
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
+        
+        try:
+            with current_app.database.get_connection() as conn:
+                conn.execute("""
+                    INSERT INTO game_analyses (game_id, players, total_moves, game_data, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    game_id,
+                    json.dumps(game_data.get('players', [])),
+                    len(game_data.get('moves', [])),
+                    json.dumps(game_data),
+                    time.time()
+                ))
+                conn.commit()
+        except Exception as e:
+            print(f"DEBUG: Error storing game data: {e}")
+            return jsonify({'success': False, 'error': f'Failed to store game data: {str(e)}'}), 500
+        
+        return jsonify({
+            'success': True,
+            'game_id': game_id,
+            'parsed_data': game_data
+        })
+        
+    except ValidationError as e:
+        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Failed to upload game log: {str(e)}'}), 500
+
+
+@api_bp.route('/game_analysis/<game_id>', methods=['GET'])
+@require_session
+def get_game_analysis(game_id: str):
+    """Get analysis results for a specific game."""
+    try:
+        if not current_app.database:
+            return jsonify({'error': 'Database not available'}), 503
+        
+        with current_app.database.get_connection() as conn:
+            result = conn.execute("""
+                SELECT game_data, analysis_data, created_at
+                FROM game_analyses 
+                WHERE game_id = ?
+            """, (game_id,)).fetchone()
+        
+        if not result:
+            return jsonify({'success': False, 'error': 'Game not found'}), 404
+        
+        game_data = json.loads(result[0])
+        analysis_data = json.loads(result[1]) if result[1] else None
+        created_at = result[2]
+        
+        return jsonify({
+            'success': True,
+            'game_id': game_id,
+            'game_data': game_data,
+            'game_analysis': analysis_data,
+            'created_at': created_at
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get game analysis: {str(e)}'}), 500
+
+
+@api_bp.route('/game_analyses', methods=['GET'])
+@require_session
+def search_game_analyses():
+    """Search for game analyses."""
+    try:
+        # Parse query parameters
+        player_names = request.args.getlist('player_names')
+        min_blunders = request.args.get('min_blunders', type=int)
+        max_blunders = request.args.get('max_blunders', type=int)
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        if not current_app.database:
+            return jsonify({'error': 'Database not available'}), 503
+        
+        with current_app.database.get_connection() as conn:
+            # Build query
+            query = "SELECT game_id, players, total_moves, blunder_count, created_at FROM game_analyses WHERE 1=1"
+            params = []
+            
+            if min_blunders is not None:
+                query += " AND blunder_count >= ?"
+                params.append(min_blunders)
+            
+            if max_blunders is not None:
+                query += " AND blunder_count <= ?"
+                params.append(max_blunders)
+            
+            query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+            
+            results = conn.execute(query, params).fetchall()
+        
+        games = []
+        for row in results:
+            games.append({
+                'game_id': row[0],
+                'players': json.loads(row[1]),
+                'total_moves': row[2],
+                'blunder_count': row[3],
+                'created_at': row[4]
+            })
+        
+        return jsonify({
+            'success': True,
+            'game_analyses': games,
+            'total': len(games)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to search game analyses: {str(e)}'}), 500
+
+
+# D6: Opening Explorer endpoints
+@api_bp.route('/similar_positions', methods=['POST'])
+@require_session
+def find_similar_positions():
+    """Find positions similar to the given position."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No request data provided'}), 400
+        
+        # Validate required fields
+        if 'fen_string' not in data:
+            return jsonify({'success': False, 'error': 'Missing fen_string field'}), 400
+        
+        request_model = SimilarPositionRequest(**data)
+        
+        if not current_app.database:
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
+        
+        # Get position hash
+        position_hash = hash_position(request_model.fen_string)
+        
+        # Find similar positions
+        similar_positions = find_similar_positions_internal(
+            position_hash, 
+            request_model.similarity_threshold, 
+            request_model.limit
+        )
+        
+        return jsonify({
+            'success': True,
+            'similar_positions': similar_positions
+        })
+        
+    except ValidationError as e:
+        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Failed to find similar positions: {str(e)}'}), 500
+
+
+@api_bp.route('/popular_continuations', methods=['POST'])
+@require_session
+def get_popular_continuations():
+    """Get popular continuations for a position."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No request data provided'}), 400
+        
+        # Validate required fields
+        if 'fen_string' not in data:
+            return jsonify({'success': False, 'error': 'Missing fen_string field'}), 400
+        
+        request_model = ContinuationRequest(**data)
+        
+        continuations = get_popular_continuations_internal(
+            request_model.fen_string, 
+            request_model.limit
+        )
+        
+        # Check if position exists in database
+        if not current_app.database:
+            return jsonify({'success': False, 'error': 'Database not available'}), 503
+        
+        with current_app.database.get_connection() as conn:
+            position_exists = conn.execute("""
+                SELECT id FROM position_database WHERE fen_string = ?
+            """, (request_model.fen_string,)).fetchone()
+        
+        if not position_exists:
+            return jsonify({'success': False, 'error': 'Position not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'continuations': continuations
+        })
+        
+    except ValidationError as e:
+        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Failed to get continuations: {str(e)}'}), 500
+
+
+@api_bp.route('/add_to_database', methods=['POST'])
+@require_session
+def add_position_to_database():
+    """Add a position to the opening database."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No request data provided'}), 400
+        
+        # Validate required fields
+        if 'fen_string' not in data:
+            return jsonify({'success': False, 'error': 'Missing fen_string field'}), 400
+        
+        request_model = PositionDatabaseRequest(**data)
+        
+        result = add_position_to_database_internal(
+            request_model.fen_string,
+            request_model.metadata,
+            request_model.frequency
+        )
+        
+        return jsonify({
+            'success': True,
+            'position_id': result['position_id'],
+            'action': result['action']
+        })
+        
+    except ValidationError as e:
+        return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Failed to add position: {str(e)}'}), 500
+
+
+def analyze_position_internal(fen_string: str, agent_id: int, depth: int = 3) -> Dict[str, Any]:
+    """Internal function to analyze a position."""
+    try:
+        # Parse position
+        state = parse_fen_string(fen_string)
+        
+        # Get legal moves
+        from core.azul_move_generator import FastMoveGenerator
+        generator = FastMoveGenerator()
+        legal_moves = generator.generate_moves_fast(state, agent_id)
+        
+        # Analyze with alpha-beta search
+        from core.azul_search import AzulAlphaBetaSearch
+        searcher = AzulAlphaBetaSearch()
+        
+        start_time = time.time()
+        result = searcher.search(state, depth, agent_id)
+        search_time = time.time() - start_time
+        
+        # Format move scores
+        move_scores = {}
+        for move in legal_moves:
+            move_key = f"{move.source_id}_{move.tile_type}_{move.pattern_line_dest}_{move.num_to_pattern_line}_{move.num_to_floor_line}"
+            move_scores[move_key] = 0  # Placeholder - would need to evaluate each move
+        
+        return {
+            'best_move': format_move(result.best_move) if result.best_move else None,
+            'best_score': result.best_score,
+            'search_time': search_time,
+            'nodes_searched': result.nodes_searched,
+            'depth_reached': result.depth_reached,
+            'move_scores': move_scores
+        }
+        
+    except Exception as e:
+        print(f"DEBUG: Error in analyze_position_internal: {e}")
+        return {
+            'best_move': None,
+            'best_score': 0,
+            'search_time': 0,
+            'nodes_searched': 0,
+            'depth_reached': 0,
+            'move_scores': {},
+            'error': str(e)
+        }
+
+
+def parse_game_log(content: str, format_type: str) -> Dict[str, Any]:
+    """Parse game log content based on format."""
+    if format_type == 'json':
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid JSON format: {content}")
+    elif format_type == 'text':
+        return parse_text_game_log(content)
+    else:
+        raise ValueError(f"Unsupported game format: {format_type}")
+
+
+def parse_text_game_log(content: str) -> Dict[str, Any]:
+    """Parse plain text game log format."""
+    lines = content.split('\n')
+    game_info = {}
+    moves = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+            
+        # Parse game info
+        if line.startswith('Game:'):
+            game_info['players'] = line.replace('Game:', '').strip().split(' vs ')
+        elif line.startswith('Date:'):
+            game_info['date'] = line.replace('Date:', '').strip()
+        elif line.startswith('Result:'):
+            game_info['result'] = line.replace('Result:', '').strip()
+        elif line.startswith('1.') or line.startswith('2.') or line.startswith('3.') or line.startswith('4.') or line.startswith('5.'):
+            # Parse move
+            parts = line.split(':', 1)
+            if len(parts) == 2:
+                move_num = int(parts[0].replace('.', ''))
+                move_desc = parts[1].strip()
+                
+                # Parse move description (simplified)
+                move_data = parse_move_description(move_desc)
+                if move_data:
+                    moves.append({
+                        'player': (move_num - 1) % 2,  # Alternate players
+                        'move': move_data,
+                        'description': move_desc,
+                        'position_before': 'initial',  # Would need to reconstruct
+                        'position_after': 'initial'    # Would need to reconstruct
+                    })
+    
+    return {
+        'players': game_info.get('players', ['Player 1', 'Player 2']),
+        'date': game_info.get('date', ''),
+        'result': game_info.get('result', ''),
+        'moves': moves
+    }
+
+
+def parse_move_description(desc: str) -> Optional[Dict[str, Any]]:
+    """Parse a move description into move data."""
+    desc = desc.lower()
+    
+    # Extract tile color
+    tile_colors = {'blue': 0, 'yellow': 1, 'red': 2, 'black': 3, 'white': 4}
+    tile_type = None
+    for color, tile_id in tile_colors.items():
+        if color in desc:
+            tile_type = tile_id
+            break
+    
+    if tile_type is None:
+        return None
+    
+    # Extract source (factory or center)
+    source_id = -1  # Default to center
+    if 'factory' in desc:
+        # Extract factory number
+        import re
+        factory_match = re.search(r'factory (\d+)', desc)
+        if factory_match:
+            source_id = int(factory_match.group(1))
+    
+    # Extract destination
+    pattern_line_dest = -1
+    if 'pattern line' in desc:
+        import re
+        line_match = re.search(r'pattern line (\d+)', desc)
+        if line_match:
+            pattern_line_dest = int(line_match.group(1))
+    
+    return {
+        'source_id': source_id,
+        'tile_type': tile_type,
+        'pattern_line_dest': pattern_line_dest,
+        'num_to_pattern_line': 1,
+        'num_to_floor_line': 0
+    }
+
+
+# D6: Opening Explorer helper functions
+def hash_position(fen_string: str) -> str:
+    """Create a hash for a position."""
+    # Simple hash based on FEN string
+    import hashlib
+    return hashlib.md5(fen_string.encode()).hexdigest()[:16]
+
+
+def find_similar_positions_internal(position_hash: str, threshold: float, limit: int) -> List[Dict[str, Any]]:
+    """Find positions similar to the given position hash."""
+    try:
+        from flask import current_app
+        if not current_app.database:
+            return []
+        
+        # Get all positions from database
+        with current_app.database.get_connection() as conn:
+            results = conn.execute("""
+                SELECT fen_string, frequency, metadata, created_at
+                FROM position_database
+                ORDER BY frequency DESC
+                LIMIT ?
+            """, (limit * 10,)).fetchall()  # Get more to filter by similarity
+        
+        similar_positions = []
+        for row in results:
+            fen_string = row[0]
+            frequency = row[1]
+            metadata = json.loads(row[2]) if row[2] else {}
+            created_at = row[3]
+            
+            # Calculate similarity
+            similarity = calculate_position_similarity(position_hash, hash_position(fen_string))
+            
+            if similarity >= threshold:
+                similar_positions.append({
+                    'fen_string': fen_string,
+                    'frequency': frequency,
+                    'similarity': similarity,
+                    'metadata': metadata,
+                    'created_at': created_at
+                })
+        
+        # Sort by similarity and limit
+        similar_positions.sort(key=lambda x: x['similarity'], reverse=True)
+        return similar_positions[:limit]
+        
+    except Exception as e:
+        print(f"DEBUG: Error finding similar positions: {e}")
+        return []
+
+
+def get_popular_continuations_internal(fen_string: str, limit: int) -> List[Dict[str, Any]]:
+    """Get popular continuations for a position."""
+    try:
+        from flask import current_app
+        if not current_app.database:
+            return []
+        
+        # Get continuations for this position
+        with current_app.database.get_connection() as conn:
+            results = conn.execute("""
+                SELECT pc.move_data, pc.frequency, pc.win_rate
+                FROM position_continuations pc
+                JOIN position_database pd ON pc.position_id = pd.id
+                WHERE pd.fen_string = ?
+                ORDER BY pc.frequency DESC
+                LIMIT ?
+            """, (fen_string, limit)).fetchall()
+        
+        continuations = []
+        for row in results:
+            move_data = json.loads(row[0])
+            frequency = row[1]
+            win_rate = row[2]
+            
+            continuations.append({
+                'move': move_data,
+                'frequency': frequency,
+                'win_rate': win_rate,
+                'description': format_move_description(move_data)
+            })
+        
+        return continuations
+        
+    except Exception as e:
+        print(f"DEBUG: Error getting continuations: {e}")
+        return []
+
+
+def add_position_to_database_internal(fen_string: str, metadata: Optional[Dict[str, Any]], frequency: int) -> Dict[str, Any]:
+    """Add a position to the opening database."""
+    try:
+        from flask import current_app
+        if not current_app.database:
+            raise Exception("Database not available")
+        
+        # Check if position already exists
+        with current_app.database.get_connection() as conn:
+            existing = conn.execute("""
+                SELECT id, frequency FROM position_database WHERE fen_string = ?
+            """, (fen_string,)).fetchone()
+            
+            if existing:
+                # Update frequency
+                new_frequency = existing[1] + frequency
+                conn.execute("""
+                    UPDATE position_database 
+                    SET frequency = ?, metadata = ?
+                    WHERE id = ?
+                """, (new_frequency, json.dumps(metadata or {}), existing[0]))
+                conn.commit()
+                return {
+                    'position_id': existing[0],
+                    'action': 'updated',
+                    'new_frequency': new_frequency
+                }
+            else:
+                # Insert new position
+                result = conn.execute("""
+                    INSERT INTO position_database (fen_string, frequency, metadata, created_at)
+                    VALUES (?, ?, ?, ?)
+                """, (fen_string, frequency, json.dumps(metadata or {}), time.time()))
+                position_id = result.lastrowid
+                conn.commit()
+                return {
+                    'position_id': position_id,
+                    'action': 'created'
+                }
+        
+    except Exception as e:
+        print(f"DEBUG: Error adding position to database: {e}")
+        raise e
+
+
+def calculate_position_similarity(hash1: str, hash2: str) -> float:
+    """Calculate similarity between two position hashes."""
+    # Simple similarity based on hash comparison
+    # In practice, this would be more sophisticated
+    matches = 0
+    for i in range(min(len(hash1), len(hash2))):
+        if hash1[i] == hash2[i]:
+            matches += 1
+    return matches / max(len(hash1), len(hash2))

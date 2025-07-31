@@ -59,16 +59,16 @@ API endpoints and command-line tools for analysis:
 - **Integration**: MCTS for fast hints
 - **Tests**: 10+ CLI tests
 
-### 📋 **Epic D - Web UI - PLANNED**
+### ✅ **Epic D - Web UI - COMPLETE**
 React-based interactive web interface:
 
-#### **D1-D3: Core UI Components**
+#### **D1-D3: Core UI Components** ✅
 - **D1**: Board renderer with drag-and-drop
 - **D2**: Heatmap overlay with EV visualization
 - **D3**: PV panel with move selection
 - **Tests**: 35+ component tests
 
-#### **D4-D7: Advanced Features**
+#### **D4-D7: Advanced Features** ✅
 - **D4**: What-if sandbox for exploration
 - **D5**: Replay annotator with blunder detection
 - **D6**: Opening explorer with tree browser
@@ -240,11 +240,11 @@ Production deployment and monitoring:
 5. **Week 4**: Complete Epic B and prepare for Epic C
 
 **Total Estimated Timeline**: 17 weeks for all epics
-**Current Progress**: Epic A complete (9/9 components)
+**Current Progress**: Epic A & D complete (A1-A9, D1-D7 components)
 **Next Milestone**: Epic B complete (3/3 components)
 
 ---
 
 **Last Updated**: Latest  
 **Next Review**: After Epic B completion  
-**Overall Progress**: 1/5 Epics Complete (20%) 🚀 
+**Overall Progress**: 2/5 Epics Complete (40%) 🚀 

@@ -794,6 +794,13 @@
             const [showVariationPanel, setShowVariationPanel] = useState(false);
             const [showAnnotationPanel, setShowAnnotationPanel] = useState(false);
             
+            // D5: Game analysis state
+            const [gameAnalysis, setGameAnalysis] = useState(null);
+            
+            // D6: Opening explorer state
+            const [similarPositions, setSimilarPositions] = useState(null);
+            const [popularContinuations, setPopularContinuations] = useState(null);
+            
             // Click selection state
             const [selectedTile, setSelectedTile] = useState(null);
             const [selectionMode, setSelectionMode] = useState('none'); // 'none', 'tile', 'destination'
@@ -1401,6 +1408,198 @@
                 return moveAnnotations.get(moveIndex);
             };
 
+            // D5: Game analysis functions
+            const uploadGameLog = async () => {
+                const format = document.getElementById('game-format').value;
+                const content = document.getElementById('game-log-content').value;
+                
+                if (!content.trim()) {
+                    setStatusMessage('❌ Please enter game log content');
+                    return;
+                }
+                
+                setLoading(true);
+                setStatusMessage('📤 Uploading and analyzing game log...');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/upload_game_log`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            game_format: format,
+                            game_content: content
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Now analyze the game
+                        const analysisResponse = await fetch(`${API_BASE}/analyze_game`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Session-ID': sessionId
+                            },
+                            body: JSON.stringify({
+                                game_data: result.parsed_data,
+                                include_blunder_analysis: true,
+                                include_position_analysis: true,
+                                analysis_depth: 3
+                            })
+                        });
+                        
+                        const analysisResult = await analysisResponse.json();
+                        
+                        if (analysisResult.success) {
+                            setGameAnalysis(analysisResult);
+                            setStatusMessage(`✅ Game analyzed: ${analysisResult.summary.blunder_count} blunders found`);
+                        } else {
+                            setStatusMessage(`❌ Analysis failed: ${analysisResult.error}`);
+                        }
+                    } else {
+                        setStatusMessage(`❌ Upload failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    setStatusMessage(`❌ Error: ${error.message}`);
+                }
+                
+                setLoading(false);
+            };
+
+            const jumpToMove = (moveAnalysis) => {
+                if (moveAnalysis.position) {
+                    updateGameState(moveAnalysis.position);
+                    setStatusMessage(`🎯 Jumped to move ${moveAnalysis.move_index + 1} (P${moveAnalysis.player + 1})`);
+                    
+                    // Show blunder details if it's a blunder
+                    if (moveAnalysis.is_blunder) {
+                        setTimeout(() => {
+                            alert(`Blunder Details:\n\nMove: ${formatMoveDescription(moveAnalysis.move)}\nSeverity: ${moveAnalysis.blunder_severity.toFixed(2)}\n\nBest move would have been: ${moveAnalysis.analysis?.best_move || 'Unknown'}`);
+                        }, 500);
+                    }
+                } else {
+                    setStatusMessage('❌ Position data not available for this move');
+                }
+            };
+
+            // D6: Opening explorer functions
+            const findSimilarPositions = async () => {
+                const threshold = parseFloat(document.getElementById('similarity-threshold').value) || 0.8;
+                
+                setLoading(true);
+                setStatusMessage('🔍 Finding similar positions...');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/similar_positions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            fen_string: stateToFen(),
+                            similarity_threshold: threshold,
+                            limit: 10
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setSimilarPositions(result.similar_positions);
+                        setStatusMessage(`✅ Found ${result.similar_positions.length} similar positions`);
+                    } else {
+                        setStatusMessage(`❌ Failed to find similar positions: ${result.error}`);
+                    }
+                } catch (error) {
+                    setStatusMessage(`❌ Error: ${error.message}`);
+                }
+                
+                setLoading(false);
+            };
+
+            const loadSimilarPosition = (position) => {
+                updateGameState(position.fen_string);
+                setStatusMessage(`🎯 Loaded similar position (${(position.similarity * 100).toFixed(1)}% similar)`);
+            };
+
+            const getPopularContinuations = async () => {
+                setLoading(true);
+                setStatusMessage('📊 Getting popular continuations...');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/popular_continuations`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            fen_string: stateToFen(),
+                            limit: 5
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setPopularContinuations(result.continuations);
+                        setStatusMessage(`✅ Found ${result.continuations.length} popular continuations`);
+                    } else {
+                        setStatusMessage(`❌ Failed to get continuations: ${result.error}`);
+                    }
+                } catch (error) {
+                    setStatusMessage(`❌ Error: ${error.message}`);
+                }
+                
+                setLoading(false);
+            };
+
+            const playContinuation = (continuation) => {
+                executeMove(continuation.move);
+                setStatusMessage(`🎯 Played continuation: ${continuation.description}`);
+            };
+
+            const addCurrentPosition = async () => {
+                setLoading(true);
+                setStatusMessage('➕ Adding current position to database...');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/add_to_database`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-ID': sessionId
+                        },
+                        body: JSON.stringify({
+                            fen_string: stateToFen(),
+                            metadata: {
+                                added_by: 'web_ui',
+                                timestamp: Date.now(),
+                                game_mode: gameMode
+                            },
+                            frequency: 1
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        setStatusMessage(`✅ Position added to database (ID: ${result.position_id})`);
+                    } else {
+                        setStatusMessage(`❌ Failed to add position: ${result.error}`);
+                    }
+                } catch (error) {
+                    setStatusMessage(`❌ Error: ${error.message}`);
+                }
+                
+                setLoading(false);
+            };
+
             // Check if a destination is valid for the selected tile
             const isValidDestination = (destinationType, destinationData) => {
                 if (!selectedTile) return false;
@@ -1758,6 +1957,210 @@
                                     </div>
                                 </div>
                             )}
+                            
+                            {/* D5: Replay Annotator */}
+                            <div className="bg-white p-4 rounded-lg shadow">
+                                <h3 className="text-lg font-medium mb-4">📊 Replay Annotator</h3>
+                                
+                                {/* Game Log Upload */}
+                                <div className="mb-4">
+                                    <h4 className="text-md font-medium mb-2">Upload Game Log</h4>
+                                    <div className="space-y-2">
+                                        <select 
+                                            id="game-format"
+                                            className="w-full px-3 py-2 border rounded text-sm"
+                                            defaultValue="json"
+                                        >
+                                            <option value="json">JSON Format</option>
+                                            <option value="text">Text Format</option>
+                                        </select>
+                                        <textarea 
+                                            id="game-log-content"
+                                            placeholder="Paste your game log here..."
+                                            className="w-full h-32 px-3 py-2 border rounded text-sm font-mono"
+                                        />
+                                        <button
+                                            onClick={uploadGameLog}
+                                            disabled={loading}
+                                            className="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                                        >
+                                            📤 Upload & Analyze
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {/* Game Analysis Results */}
+                                {gameAnalysis && (
+                                    <div className="mb-4">
+                                        <h4 className="text-md font-medium mb-2">Analysis Results</h4>
+                                        <div className="bg-gray-50 p-3 rounded mb-3">
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <strong>Total Moves:</strong> {gameAnalysis.summary.total_moves}
+                                                </div>
+                                                <div>
+                                                    <strong>Blunders:</strong> {gameAnalysis.summary.blunder_count}
+                                                </div>
+                                                <div>
+                                                    <strong>Blunder %:</strong> {gameAnalysis.summary.blunder_percentage.toFixed(1)}%
+                                                </div>
+                                                <div>
+                                                    <strong>Avg Severity:</strong> {gameAnalysis.summary.average_blunder_severity.toFixed(2)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Timeline */}
+                                        <div className="max-h-40 overflow-y-auto">
+                                            <h5 className="text-sm font-medium mb-2">Move Timeline:</h5>
+                                            <div className="space-y-1">
+                                                {gameAnalysis.analysis.map((moveAnalysis, index) => (
+                                                    <div 
+                                                        key={index}
+                                                        className={`text-xs p-2 rounded cursor-pointer transition-colors ${
+                                                            moveAnalysis.is_blunder 
+                                                                ? 'bg-red-100 border-l-4 border-red-500' 
+                                                                : 'bg-gray-50'
+                                                        }`}
+                                                        onClick={() => jumpToMove(moveAnalysis)}
+                                                        title={moveAnalysis.is_blunder ? 'Click to view blunder details' : 'Click to view move'}
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-medium">
+                                                                Move {index + 1} (P{moveAnalysis.player + 1})
+                                                            </span>
+                                                            <span className={`px-2 py-1 rounded text-xs ${
+                                                                moveAnalysis.is_blunder 
+                                                                    ? 'bg-red-200 text-red-800' 
+                                                                    : 'bg-green-200 text-green-800'
+                                                            }`}>
+                                                                {moveAnalysis.is_blunder ? '⚠️ Blunder' : '✅ Good'}
+                                                            </span>
+                                                        </div>
+                                                        {moveAnalysis.is_blunder && (
+                                                            <div className="text-red-700 text-xs mt-1">
+                                                                Severity: {moveAnalysis.blunder_severity.toFixed(2)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="text-xs text-gray-500">
+                                    <p>📊 Upload game logs to analyze for blunders</p>
+                                    <p>⚠️ Blunders are highlighted with severity ratings</p>
+                                    <p>🎯 Click moves to jump to positions</p>
+                                </div>
+                            </div>
+                            
+                            {/* D6: Opening Explorer */}
+                            <div className="bg-white p-4 rounded-lg shadow">
+                                <h3 className="text-lg font-medium mb-4">🌳 Opening Explorer</h3>
+                                
+                                {/* Position Search */}
+                                <div className="mb-4">
+                                    <h4 className="text-md font-medium mb-2">Find Similar Positions</h4>
+                                    <div className="space-y-2">
+                                        <input
+                                            type="text"
+                                            id="similarity-threshold"
+                                            placeholder="Similarity threshold (0.0-1.0)"
+                                            defaultValue="0.8"
+                                            className="w-full px-3 py-2 border rounded text-sm"
+                                        />
+                                        <button
+                                            onClick={findSimilarPositions}
+                                            disabled={loading}
+                                            className="w-full bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 disabled:opacity-50 text-sm"
+                                        >
+                                            🔍 Find Similar
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {/* Similar Positions Results */}
+                                {similarPositions && similarPositions.length > 0 && (
+                                    <div className="mb-4">
+                                        <h4 className="text-md font-medium mb-2">Similar Positions</h4>
+                                        <div className="max-h-32 overflow-y-auto space-y-1">
+                                            {similarPositions.map((position, index) => (
+                                                <div 
+                                                    key={index}
+                                                    className="text-xs p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => loadSimilarPosition(position)}
+                                                    title="Click to load position"
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-medium">Position {index + 1}</span>
+                                                        <span className="text-green-600">
+                                                            {(position.similarity * 100).toFixed(1)}% similar
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-gray-600">
+                                                        Frequency: {position.frequency} games
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Popular Continuations */}
+                                <div className="mb-4">
+                                    <h4 className="text-md font-medium mb-2">Popular Continuations</h4>
+                                    <button
+                                        onClick={getPopularContinuations}
+                                        disabled={loading}
+                                        className="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                                    >
+                                        📊 Get Continuations
+                                    </button>
+                                    
+                                    {popularContinuations && popularContinuations.length > 0 && (
+                                        <div className="mt-3 max-h-32 overflow-y-auto space-y-1">
+                                            {popularContinuations.map((continuation, index) => (
+                                                <div 
+                                                    key={index}
+                                                    className="text-xs p-2 bg-blue-50 rounded cursor-pointer hover:bg-blue-100"
+                                                    onClick={() => playContinuation(continuation)}
+                                                    title="Click to play this continuation"
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-medium">{continuation.description}</span>
+                                                        <span className="text-blue-600">
+                                                            {(continuation.win_rate * 100).toFixed(1)}% wins
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-gray-600">
+                                                        Played {continuation.frequency} times
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Add Current Position */}
+                                <div className="mb-4">
+                                    <h4 className="text-md font-medium mb-2">Add to Database</h4>
+                                    <button
+                                        onClick={addCurrentPosition}
+                                        disabled={loading}
+                                        className="w-full bg-purple-600 text-white py-2 px-3 rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
+                                    >
+                                        ➕ Add Current Position
+                                    </button>
+                                </div>
+                                
+                                <div className="text-xs text-gray-500">
+                                    <p>🌳 Find similar positions in the database</p>
+                                    <p>📊 Get popular continuations for positions</p>
+                                    <p>➕ Add positions to build the database</p>
+                                </div>
+                            </div>
                             
                             {/* Analysis Controls */}
                             <div className="bg-white p-4 rounded-lg shadow">
