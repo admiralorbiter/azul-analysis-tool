@@ -4,7 +4,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-15%20passed-brightgreen.svg)](https://github.com/your-username/azul-solver)
+[![Tests](https://img.shields.io/badge/tests-297%20passed-brightgreen.svg)](https://github.com/your-username/azul-solver)
 
 ## 🎯 Project Vision
 
@@ -36,73 +36,167 @@ pip install -r requirements-dev.txt
 ```
 
 ### Basic Usage
+
+#### 🎮 Start the REST API Server
 ```bash
-# Test the engine
-python main.py test
+# Start the Flask API server (default: http://127.0.0.1:8000)
+python main.py serve
+
+# With custom host/port
+python main.py serve --host 0.0.0.0 --port 8080
+
+# With debug mode
+python main.py serve --debug
+
+# With custom database
+python main.py serve --database my_azul_cache.db
+```
+
+#### 🔍 Command Line Analysis
+```bash
+# Exact analysis of a position
+python main.py exact "start" --depth 3 --timeout 4.0
+
+# Fast hints (MCTS)
+python main.py hint "start" --budget 0.2 --rollouts 100
 
 # Check project status
 python main.py status
 
-# See all available commands
-python main.py --help
+# Run tests
+python main.py test
 ```
 
 ## 📊 Current Status
 
-### ✅ Completed (M0 - Bootstrap)
-- [x] Repository setup and cleanup
-- [x] Import conflicts resolved
-- [x] Project structure organized (`core/`, `api/`, `ui/`, `neural/`, `tools/`, `tests/`)
-- [x] Python packaging setup (`pyproject.toml`, `requirements.txt`)
-- [x] CLI interface and basic testing (15 tests passing)
-- [x] Professional package structure with proper exports
+### ✅ Completed Milestones
 
-### 🚧 In Progress (M1 - Rules Engine)
-- [x] **A1 State Model**: Basic structure ✅
-  - [x] Immutable dataclass structure (AzulState)
-  - [x] NumPy arrays for grid state
-  - [ ] 64-bit Zobrist key implementation
-  - [ ] clone() and undo() methods
-  
-- [ ] **A2 Rule Validator**: Partial ⚠️
-  - [x] Basic rule structure exists
-  - [ ] 100 golden tests for rule compliance
-  - [ ] Full validation of drafting → placement → scoring
+#### **M1 - Rules Engine (COMPLETE)** ✅
+- **A1 State Model**: Immutable dataclass structure, Zobrist hashing, clone/undo methods
+- **A2 Rule Validator**: Comprehensive rule validation with 28 tests
+- **A3 Move Generator**: Fast move generation with performance optimization
 
-- [ ] **A3 Move Generator**: Not started 📋
-  - [ ] Enumerate legal compound moves
-  - [ ] Return vector mask for policy networks
-  - [ ] Performance optimization (≤15 µs/call target)
+#### **M2 - Exact Search (COMPLETE)** ✅
+- **A4 Heuristic Evaluation**: Comprehensive scoring with pattern potential
+- **A5 Alpha-Beta Search**: Iterative deepening with transposition table, depth-3 < 4s
 
-### 📋 Planned Milestones
-- **M2** (2 weeks): Exact Search α - Alpha-Beta, CLI exact analysis
-- **M3** (2 weeks): Fast Hint β - MCTS, 200ms budget
-- **M4** (3 weeks): Web UI α - React board, live hints
-- **M5** (2 weeks): Research Tools - Database, analysis tools
-- **M6** (3 weeks): Neural Add-on - PyTorch models, GPU support
-- **M7** (1 week): Endgame DB - Retrograde tables
-- **M8** (2 weeks): Performance & Harden - Profiling, deployment
-- **M9** (1 week): v1 Release - Documentation, demo
+#### **M3 - Fast Hint Engine (COMPLETE)** ✅
+- **A6 MCTS Module**: UCT algorithm with rollout policies, < 200ms hints
+
+#### **M4 - Database Integration (COMPLETE)** ✅
+- **B1.1 WAL Mode & Performance**: WAL mode, memory optimization, performance pragmas
+- **B1.2 Zstd Compression**: State compression with configurable levels
+- **B1.3 Enhanced Indexing**: Composite indexes, query monitoring, optimization
+
+#### **M5 - REST API (COMPLETE)** ✅
+- **B2.1 Position Cache API**: get/put/delete methods, bulk operations, search
+- **B2.2 Analysis Cache API**: MCTS/Alpha-Beta result caching, search, stats
+- **B2.3 Performance API**: Statistics and monitoring endpoints
+
+### 🚧 In Progress
+- **M6 - Web UI (PLANNED)**: Interactive board, analysis interface, performance dashboard
 
 ## 🏗️ Architecture
 
 ```
 AZUL-RESEARCH/
-├── core/                    # ✅ Game engine
-│   ├── __init__.py         # Package exports
-│   ├── template.py         # Base classes
+├── core/                    # ✅ Game engine (complete)
 │   ├── azul_model.py       # Game state & rules
-│   ├── azul_utils.py       # Constants & utilities
+│   ├── azul_validator.py   # Rule validation
+│   ├── azul_move_generator.py # Move generation
+│   ├── azul_search.py      # Alpha-Beta search
+│   ├── azul_mcts.py        # MCTS hint engine
+│   ├── azul_database.py    # Database integration
 │   └── azul_displayer.py   # Display interfaces
-├── api/                    # 📋 REST API (planned)
+├── api/                    # ✅ REST API (complete)
+│   ├── app.py             # Flask application
+│   ├── routes.py          # API endpoints
+│   ├── auth.py            # Authentication
+│   └── rate_limiter.py    # Rate limiting
 ├── ui/                     # 📋 Web interface (planned)
 ├── neural/                 # 📋 PyTorch models (planned)
 ├── tools/                  # ✅ CLI utilities
-├── tests/                  # ✅ Test suite (15 passing tests)
-├── legacy/                 # 📋 Original framework
-├── resources/              # 🎨 Assets
-├── main.py                 # ✅ CLI entry point
-└── pyproject.toml          # ✅ Package configuration
+├── tests/                  # ✅ Test suite (297 tests)
+├── docs/                   # 📚 Documentation
+│   ├── progress/          # Progress summaries
+│   ├── planning/          # Project plans
+│   └── research/          # Research findings
+├── scripts/                # 🔧 Debug & profiling scripts
+├── legacy/                 # 📜 Original reference code
+└── main.py                 # ✅ CLI entry point
+```
+
+## 🌐 REST API Usage
+
+### Starting the Server
+```bash
+# Basic server
+python main.py serve
+
+# With options
+python main.py serve --host 0.0.0.0 --port 8080 --debug --database azul_cache.db
+```
+
+### API Endpoints
+
+#### Authentication
+```bash
+# Create session
+curl -X POST http://localhost:8000/api/v1/auth/session \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test", "password": "test"}'
+```
+
+#### Analysis
+```bash
+# Exact analysis
+curl -X POST http://localhost:8000/api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -d '{
+    "fen_string": "start",
+    "depth": 3,
+    "timeout": 4.0,
+    "agent": 0
+  }'
+
+# Fast hints
+curl -X POST http://localhost:8000/api/v1/hint \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -d '{
+    "fen_string": "start",
+    "budget": 0.2,
+    "rollouts": 100,
+    "agent": 0
+  }'
+```
+
+#### Position Cache
+```bash
+# Store position
+curl -X PUT http://localhost:8000/api/v1/positions/start \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"player_count": 2, "compressed_state": "..."}'
+
+# Get position
+curl -X GET http://localhost:8000/api/v1/positions/start \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+
+# Search positions
+curl -X GET "http://localhost:8000/api/v1/positions/search?limit=10&offset=0" \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+```
+
+#### Health & Stats
+```bash
+# Health check
+curl http://localhost:8000/api/v1/health
+
+# Performance stats
+curl http://localhost:8000/api/v1/stats \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
 ```
 
 ## 🧪 Testing
@@ -116,32 +210,46 @@ python -m pytest tests/test_core.py -v
 
 # Run with coverage
 python -m pytest tests/ --cov=core --cov-report=html
+
+# Quick functionality test
+python main.py test
 ```
 
 ## 🎲 CLI Commands
 
 ```bash
-# Basic engine verification
-python main.py test
+# Start REST API server
+python main.py serve [--host HOST] [--port PORT] [--debug] [--database DB]
 
-# Project status and milestones
+# Exact analysis
+python main.py exact "fen_string" [--depth DEPTH] [--timeout SECONDS] [--agent ID]
+
+# Fast hints
+python main.py hint "fen_string" [--budget SECONDS] [--rollouts COUNT] [--agent ID]
+
+# Neural training
+python main.py train [--config CONFIG] [--device DEVICE] [--epochs COUNT] [--samples COUNT]
+
+# Model evaluation
+python main.py evaluate [--model PATH] [--positions COUNT] [--games COUNT] [--device DEVICE]
+
+# Performance profiling
+python main.py profile [--state STATE] [--output FILE] [--budget SECONDS]
+
+# Project status
 python main.py status
 
-# Exact analysis (planned for M2)
-python main.py exact "<fen>" --depth 3
-
-# Fast hints (planned for M3)
-python main.py hint "<fen>" --budget 0.2
-
-# Web server (planned for M4)
-python main.py serve --host 127.0.0.1 --port 8000
+# Basic tests
+python main.py test
 ```
 
 ## 📚 Documentation
 
-- [Project Plan](project_plan.md) - Detailed roadmap and milestones
-- [Checklist](checklist.md) - Build checklist with current status
-- [Setup Summary](SETUP_SUMMARY.md) - Repository setup and cleanup details
+- [Project Plan](docs/planning/project_plan.md) - Detailed roadmap and milestones
+- [Progress Tracker](PROGRESS_TRACKER.md) - Current status and achievements
+- [API Documentation](docs/progress/M5_PROGRESS_SUMMARY.md) - REST API details
+- [Database Integration](docs/progress/M4_PROGRESS_SUMMARY.md) - Database features
+- [Search Algorithms](docs/progress/A5_PROGRESS_SUMMARY.md) - Alpha-Beta and MCTS
 
 ## 🤝 Contributing
 
@@ -168,4 +276,4 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ---
 
-**Current Status**: ✅ Bootstrap Complete → Ready for M1 Implementation
+**Current Status**: ✅ M1-M5 Complete → Ready for M6 Web UI Development 🎉
