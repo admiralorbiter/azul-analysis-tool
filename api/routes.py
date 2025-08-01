@@ -156,6 +156,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 # Global variable to store the current game state
 _current_game_state = None
 _initial_game_state = None  # Store the original initial state
+_current_editable_game_state = None  # Store the current editable game state from frontend
 
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
@@ -2207,8 +2208,17 @@ def create_game():
 @api_bp.route('/game_state', methods=['GET'])
 def get_game_state():
     """Get the current game state for display."""
+    global _current_editable_game_state
+    
     try:
-        # Parse current state from FEN
+        # If we have a stored editable game state, return it
+        if _current_editable_game_state is not None:
+            return jsonify({
+                'success': True,
+                'game_state': _current_editable_game_state
+            })
+        
+        # Otherwise, parse current state from FEN
         fen_string = request.args.get('fen_string', 'initial')
         try:
             state = parse_fen_string(fen_string)
@@ -2295,6 +2305,8 @@ def get_game_state():
 @api_bp.route('/game_state', methods=['PUT'])
 def put_game_state():
     """Update the current game state from frontend."""
+    global _current_editable_game_state
+    
     try:
         data = request.get_json()
         if not data:
@@ -2306,11 +2318,8 @@ def put_game_state():
         if not game_state:
             return jsonify({'error': 'No game_state provided'}), 400
         
-        # For now, we'll just acknowledge the save
-        # In a full implementation, you might want to:
-        # 1. Validate the game state
-        # 2. Convert it back to FEN format
-        # 3. Store it in a database or cache
+        # Store the game state for future retrieval
+        _current_editable_game_state = game_state
         
         return jsonify({
             'success': True,
@@ -2327,7 +2336,7 @@ def put_game_state():
 @api_bp.route('/reset_game', methods=['POST'])
 def reset_game():
     """Reset the current game state to initial position."""
-    global _current_game_state, _initial_game_state
+    global _current_game_state, _initial_game_state, _current_editable_game_state
     from core.azul_model import AzulState
     
     # Reset to the consistent initial state
@@ -2337,6 +2346,9 @@ def reset_game():
         random.seed()
     
     _current_game_state = copy.deepcopy(_initial_game_state)
+    
+    # Clear the editable game state so it falls back to the initial state
+    _current_editable_game_state = None
     
     return jsonify({
         'success': True,
