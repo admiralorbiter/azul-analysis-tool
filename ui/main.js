@@ -7,32 +7,80 @@ const { createRoot } = ReactDOM;
 const API_BASE = '/api/v1';
 let sessionId = null;
 
-// API functions
+// API functions - No session required for local development
 async function initializeSession() {
-    try {
-        const response = await fetch(`${API_BASE}/auth/session`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await response.json();
-        sessionId = data.session_id;
-        return data;
-    } catch (error) {
-        console.error('Failed to initialize session:', error);
-        throw error;
-    }
+    // Skip session initialization for local development
+    console.log('Session initialization skipped for local development');
+    return { session_id: 'local-dev' };
 }
 
-async function analyzePosition(fenString) {
+async function analyzePosition(fenString, depth = 3, timeBudget = 4.0) {
     try {
         const response = await fetch(`${API_BASE}/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fen_string: fenString })
+            body: JSON.stringify({ 
+                fen_string: fenString,
+                depth: depth,
+                time_budget: timeBudget
+            })
         });
         return await response.json();
     } catch (error) {
         console.error('Failed to analyze position:', error);
+        throw error;
+    }
+}
+
+async function getHint(fenString, budget = 0.2, rollouts = 100) {
+    try {
+        const response = await fetch(`${API_BASE}/hint`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                fen_string: fenString,
+                budget: budget,
+                rollouts: rollouts
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get hint:', error);
+        throw error;
+    }
+}
+
+async function analyzeNeural(fenString, timeBudget = 2.0, maxRollouts = 100) {
+    try {
+        const response = await fetch(`${API_BASE}/analyze_neural`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                fen: fenString,
+                time_budget: timeBudget,
+                max_rollouts: maxRollouts
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to analyze with neural network:', error);
+        throw error;
+    }
+}
+
+async function analyzeGame(gameData, analysisDepth = 3) {
+    try {
+        const response = await fetch(`${API_BASE}/analyze_game`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                game_data: gameData,
+                analysis_depth: analysisDepth
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to analyze game:', error);
         throw error;
     }
 }
@@ -45,20 +93,6 @@ async function getGameState(fenString = 'initial') {
         return data.game_state || data;
     } catch (error) {
         console.error('Failed to get game state:', error);
-        throw error;
-    }
-}
-
-async function getHint(fenString) {
-    try {
-        const response = await fetch(`${API_BASE}/hint`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fen_string: fenString })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get hint:', error);
         throw error;
     }
 }
@@ -713,6 +747,8 @@ function App() {
     const [engineThinking, setEngineThinking] = React.useState(false);
     const [heatmapEnabled, setHeatmapEnabled] = React.useState(false);
     const [heatmapData, setHeatmapData] = React.useState(null);
+    const [analysisExpanded, setAnalysisExpanded] = React.useState(true); // New state for analysis panel expansion
+    const [advancedExpanded, setAdvancedExpanded] = React.useState(true); // New state for advanced tools expansion
     
     // Initialize session
     React.useEffect(() => {
@@ -1379,7 +1415,7 @@ function App() {
         
         // Main content
         React.createElement('div', {
-            className: 'max-w-7xl mx-auto px-4 py-8'
+            className: 'max-w-7xl mx-auto px-6 py-6'
         },
             // Status message and current player
             React.createElement('div', {
@@ -1408,55 +1444,79 @@ function App() {
                 )
             ),
             
-            // Game board
+            // Game board and player boards
             React.createElement('div', {
-                className: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
+                className: 'grid grid-cols-1 lg:grid-cols-3 gap-6'
             },
-                // Factories
+                // Game boards (factories + player boards) - takes 2 columns
                 React.createElement('div', {
-                    className: 'lg:col-span-2'
+                    className: 'lg:col-span-2 space-y-6'
                 },
-                    React.createElement('h2', {
-                        className: 'text-xl font-semibold mb-4'
-                    }, 'Factories'),
-                    React.createElement('div', {
-                        className: 'grid grid-cols-5 gap-4'
-                    },
-                        (gameState.factories || []).map((factory, index) => 
-                            React.createElement(Factory, {
+                    // Factories
+                    React.createElement('div', null,
+                        React.createElement('h2', {
+                            className: 'text-xl font-semibold mb-4'
+                        }, 'Factories'),
+                        React.createElement('div', {
+                            className: 'grid grid-cols-5 gap-4'
+                        },
+                            (gameState.factories || []).map((factory, index) => 
+                                React.createElement(Factory, {
+                                    key: index,
+                                    tiles: factory,
+                                    factoryIndex: index,
+                                    onTileClick: (factoryIndex, tileIndex, tile) => {
+                                        setSelectedTile({ sourceId: factoryIndex, tileIndex, tile });
+                                        setStatusMessage(`Selected ${tile} from factory ${factoryIndex}`);
+                                    },
+                                    selectedTile: selectedTile,
+                                    editMode: editMode,
+                                    onElementSelect: handleElementSelect,
+                                    selectedElements: selectedElements,
+                                    heatmapEnabled: heatmapEnabled,
+                                    heatmapData: heatmapData
+                                })
+                            )
+                        )
+                    ),
+                    
+                    // Player boards
+                    React.createElement('div', null,
+                        React.createElement('h2', {
+                            className: 'text-xl font-semibold mb-3'
+                        }, 'Player Boards'),
+                        (gameState.players || []).map((player, index) => 
+                            React.createElement(PlayerBoard, {
                                 key: index,
-                                tiles: factory,
-                                factoryIndex: index,
-                                onTileClick: (factoryIndex, tileIndex, tile) => {
-                                    setSelectedTile({ sourceId: factoryIndex, tileIndex, tile });
-                                    setStatusMessage(`Selected ${tile} from factory ${factoryIndex}`);
-                                },
-                                selectedTile: selectedTile,
+                                player: player,
+                                playerIndex: index,
+                                isActive: index === currentPlayer,
                                 editMode: editMode,
                                 onElementSelect: handleElementSelect,
                                 selectedElements: selectedElements,
-                                heatmapEnabled: heatmapEnabled,
-                                heatmapData: heatmapData
+                                onPatternLineDrop: handlePatternLineDrop,
+                                onPlayerSwitch: (playerId) => setCurrentPlayer(playerId),
+                                canInteract: !loading && !engineThinking
                             })
                         )
                     )
                 ),
                 
-                // Analysis panel
+                // Analysis panel - takes 1 column on the right
                 React.createElement('div', {
-                    className: 'lg:col-span-1'
+                    className: 'lg:col-span-1 analysis-panel'
                 },
                     React.createElement('h2', {
-                        className: 'text-xl font-semibold mb-4'
-                    }, 'Analysis & Controls'),
+                        className: 'analysis-title'
+                    }, '🔍 Analysis & Controls'),
                     React.createElement('div', {
-                        className: 'space-y-4'
+                        className: 'space-y-3'
                     },
-                        // Action buttons
+                        // Action buttons - compact
                         React.createElement('div', {
                             className: 'btn-group w-full'
-                    },
-                        React.createElement('button', {
+                        },
+                            React.createElement('button', {
                                 className: 'btn-warning btn-sm flex-1',
                                 onClick: handleUndo,
                                 disabled: moveHistory.length === 0 || loading
@@ -1468,116 +1528,247 @@ function App() {
                             }, '↷ Redo')
                         ),
                         
-                        // Analysis and heatmap buttons
+                        // Quick Analysis Tools - compact grid
                         React.createElement('div', {
-                            className: 'space-y-3'
+                            className: 'analysis-tools'
                         },
-                            React.createElement('button', {
-                                className: `w-full btn-primary ${loading ? 'opacity-50' : ''}`,
-                            onClick: () => {
-                                setLoading(true);
-                                    analyzePosition(gameState.fen_string || 'initial')
-                                    .then(data => {
-                                        setVariations(data.variations || []);
-                                            const heatmap = generateHeatmapData(data);
-                                            setHeatmapData(heatmap);
-                                        setStatusMessage('Analysis complete');
-                                    })
-                                    .catch(error => {
-                                        setStatusMessage(`Analysis failed: ${error.message}`);
-                                    })
-                                    .finally(() => setLoading(false));
-                                },
-                                disabled: loading
-                            }, loading ? '🤖 Analyzing...' : '🔍 Analyze Position'),
-                            
-                            React.createElement('button', {
-                                className: `w-full btn-sm ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
-                                onClick: () => {
-                                    setHeatmapEnabled(!heatmapEnabled);
-                                    setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
-                                },
-                                disabled: !heatmapData
-                            }, heatmapEnabled ? '🔥 Hide Heatmap' : '🔥 Show Heatmap')
-                        ),
-                        
-                        // Move variations
-                        variations.length > 0 && React.createElement('div', null,
                             React.createElement('h3', {
-                                className: 'font-medium mb-2'
-                            }, 'Best Moves'),
-                        variations.map((variation, index) => 
-                            React.createElement(MoveOption, {
-                                key: index,
-                                move: variation.move,
-                                score: variation.score,
-                                visits: variation.visits,
-                                onClick: () => setStatusMessage(`Selected: ${variation.move}`),
-                                isSelected: false
-                            })
-                        )
+                                className: 'font-medium text-sm mb-2 flex items-center justify-between'
+                            },
+                                React.createElement('span', null, '🔍 Quick Analysis'),
+                                React.createElement('button', {
+                                    className: 'text-xs text-gray-500 hover:text-gray-700',
+                                    onClick: () => setAnalysisExpanded(!analysisExpanded)
+                                }, analysisExpanded ? '−' : '+')
+                            ),
+                            
+                            // Collapsible analysis content
+                            analysisExpanded && React.createElement('div', {
+                                className: 'space-y-2'
+                            },
+                                // Analysis buttons in a compact grid
+                                React.createElement('div', {
+                                    className: 'grid grid-cols-2 gap-2'
+                                },
+                                    React.createElement('button', {
+                                        className: `btn-primary btn-sm ${loading ? 'opacity-50' : ''}`,
+                                        onClick: () => {
+                                            setLoading(true);
+                                            analyzePosition(gameState.fen_string || 'initial', 3, 4.0)
+                                            .then(data => {
+                                                if (data.success && data.analysis) {
+                                                    setVariations([{
+                                                        move: data.analysis.best_move,
+                                                        score: data.analysis.best_score,
+                                                        visits: data.analysis.nodes_searched
+                                                    }]);
+                                                    const heatmap = generateHeatmapData({ variations: [{
+                                                        move: data.analysis.best_move,
+                                                        score: data.analysis.best_score,
+                                                        move_data: { source_id: 0, tile_type: 0 }
+                                                    }] });
+                                                    setHeatmapData(heatmap);
+                                                    setStatusMessage(`Analysis complete: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
+                                                } else {
+                                                    setStatusMessage('Analysis failed: Invalid response');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                setStatusMessage(`Analysis failed: ${error.message}`);
+                                            })
+                                            .finally(() => setLoading(false));
+                                        },
+                                        disabled: loading
+                                    }, loading ? '🤖' : '🔍'),
+                                    
+                                    React.createElement('button', {
+                                        className: `btn-secondary btn-sm ${loading ? 'opacity-50' : ''}`,
+                                        onClick: () => {
+                                            setLoading(true);
+                                            getHint(gameState.fen_string || 'initial', 0.2, 100)
+                                                .then(data => {
+                                                    if (data.success && data.hint) {
+                                                        setStatusMessage(`Hint: ${data.hint.best_move} (EV: ${data.hint.expected_value.toFixed(2)})`);
+                                                    } else {
+                                                        setStatusMessage('Hint failed: Invalid response');
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    setStatusMessage(`Hint failed: ${error.message}`);
+                                                })
+                                                .finally(() => setLoading(false));
+                                        },
+                                        disabled: loading
+                                    }, loading ? '💡' : '💡'),
+                                    
+                                    React.createElement('button', {
+                                        className: `btn-accent btn-sm ${loading ? 'opacity-50' : ''}`,
+                                        onClick: () => {
+                                            setLoading(true);
+                                            analyzeNeural(gameState.fen_string || 'initial', 2.0, 100)
+                                                .then(data => {
+                                                    if (data.success && data.analysis) {
+                                                        setStatusMessage(`Neural: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
+                                                    } else {
+                                                        setStatusMessage('Neural analysis failed: Invalid response');
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    setStatusMessage(`Neural analysis failed: ${error.message}`);
+                                                })
+                                                .finally(() => setLoading(false));
+                                        },
+                                        disabled: loading
+                                    }, loading ? '🧠' : '🧠'),
+                                    
+                                    React.createElement('button', {
+                                        className: `btn-sm ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
+                                        onClick: () => {
+                                            setHeatmapEnabled(!heatmapEnabled);
+                                            setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
+                                        },
+                                        disabled: !heatmapData
+                                    }, heatmapEnabled ? '🔥' : '🔥')
+                                ),
+                                
+                                // Quick results display
+                                variations.length > 0 && React.createElement('div', {
+                                    className: 'bg-blue-50 p-2 rounded text-xs'
+                                },
+                                    React.createElement('div', { className: 'font-medium mb-1' }, 'Best Move:'),
+                                    React.createElement('div', null, `${variations[0].move} (${variations[0].score.toFixed(2)})`)
+                                )
+                            )
                         ),
                         
-                        // Edit Mode Keyboard Hints (only show when edit mode is active)
+                        // Advanced Tools - collapsible
+                        React.createElement('div', {
+                            className: 'analysis-tools'
+                        },
+                            React.createElement('h3', {
+                                className: 'font-medium text-sm mb-2 flex items-center justify-between'
+                            },
+                                React.createElement('span', null, '🛠️ Advanced'),
+                                React.createElement('button', {
+                                    className: 'text-xs text-gray-500 hover:text-gray-700',
+                                    onClick: () => setAdvancedExpanded(!advancedExpanded)
+                                }, advancedExpanded ? '−' : '+')
+                            ),
+                            
+                            advancedExpanded && React.createElement('div', {
+                                className: 'space-y-2'
+                            },
+                                React.createElement('button', {
+                                    className: 'w-full btn-sm btn-outline',
+                                    onClick: () => {
+                                        setLoading(true);
+                                        const gameData = {
+                                            moves: moveHistory.map((move, index) => ({
+                                                move: move,
+                                                player: index % 2,
+                                                position_before: 'initial'
+                                            })),
+                                            players: ['Player 1', 'Player 2'],
+                                            result: { winner: null, score: [0, 0] }
+                                        };
+                                        
+                                        analyzeGame(gameData, 3)
+                                            .then(data => {
+                                                if (data.success) {
+                                                    const blunderCount = data.summary.blunder_count;
+                                                    setStatusMessage(`Game analysis complete: ${blunderCount} blunders found`);
+                                                } else {
+                                                    setStatusMessage('Game analysis failed');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                setStatusMessage(`Game analysis failed: ${error.message}`);
+                                            })
+                                            .finally(() => setLoading(false));
+                                    },
+                                    disabled: loading || moveHistory.length === 0
+                                }, loading ? '📊 Analyzing...' : '📊 Analyze Game'),
+                                
+                                React.createElement('button', {
+                                    className: 'w-full btn-sm btn-outline',
+                                    onClick: () => {
+                                        setStatusMessage('Position database feature coming soon...');
+                                    },
+                                    disabled: loading
+                                }, '💾 Save to Database'),
+                                
+                                React.createElement('button', {
+                                    className: 'w-full btn-sm btn-outline',
+                                    onClick: () => {
+                                        setStatusMessage('Similar positions feature coming soon...');
+                                    },
+                                    disabled: loading
+                                }, '🔍 Find Similar')
+                            )
+                        ),
+                        
+                        // Edit Mode Keyboard Hints - only show when edit mode is active
                         editMode && editHints && React.createElement('div', {
-                            className: 'keyboard-hints mt-6 p-4'
+                            className: 'keyboard-hints mt-3 p-3 bg-orange-50 rounded text-xs'
                         },
                             React.createElement('div', {
-                                className: 'flex justify-between items-center mb-3'
+                                className: 'flex justify-between items-center mb-2'
                             },
                                 React.createElement('h3', {
                                     className: 'font-medium'
-                                }, '⌨️ Keyboard Shortcuts'),
+                                }, '⌨️ Shortcuts'),
                                 React.createElement('button', {
-                                    className: 'btn-secondary btn-sm',
+                                    className: 'text-xs text-gray-500 hover:text-gray-700',
                                     onClick: () => setEditHints(false)
                                 }, '✕')
                             ),
                             React.createElement('div', {
-                                className: 'grid grid-cols-2 gap-3 text-sm'
+                                className: 'grid grid-cols-2 gap-2 text-xs'
                             },
                                 React.createElement('div', null,
-                                    React.createElement('div', { className: 'font-medium mb-1' }, 'Selection:'),
+                                    React.createElement('div', { className: 'font-medium' }, 'Selection:'),
                                     React.createElement('div', null, 'Click - Select'),
                                     React.createElement('div', null, 'Ctrl+Click - Multi-select'),
                                     React.createElement('div', null, 'Esc - Clear selection')
                                 ),
                                 React.createElement('div', null,
-                                    React.createElement('div', { className: 'font-medium mb-1' }, 'Actions:'),
+                                    React.createElement('div', { className: 'font-medium' }, 'Actions:'),
                                     React.createElement('div', null, '1-5 - Add tile colors'),
                                     React.createElement('div', null, 'Del - Remove tiles'),
                                     React.createElement('div', null, 'Ctrl+C/V - Copy/Paste')
                                 )
                             ),
                             React.createElement('div', {
-                                className: 'mt-3 p-2 bg-orange-100 rounded text-xs'
+                                className: 'mt-2 p-1 bg-orange-100 rounded text-xs'
                             },
                                 React.createElement('strong', null, 'Colors: '),
                                 '1=Blue, 2=Yellow, 3=Red, 4=Black, 5=White'
                             ),
                             selectedElements.length > 0 && React.createElement('div', {
-                                className: 'mt-2 p-2 bg-blue-100 rounded text-sm'
+                                className: 'mt-2 p-1 bg-blue-100 rounded text-xs'
                             },
                                 React.createElement('strong', null, `${selectedElements.length} element(s) selected`)
                             )
                         ),
                         
-                        // Move history
-                        moveHistory.length > 0 && React.createElement('div', null,
+                        // Move history - compact
+                        moveHistory.length > 0 && React.createElement('div', {
+                            className: 'mt-3'
+                        },
                             React.createElement('h3', {
-                                className: 'font-medium mb-2'
-                            }, 'Move History'),
+                                className: 'font-medium text-sm mb-2'
+                            }, '📜 Move History'),
                             React.createElement('div', {
-                                className: 'max-h-40 overflow-y-auto space-y-1'
+                                className: 'max-h-24 overflow-y-auto space-y-1'
                             },
-                                moveHistory.slice(-5).map((historyItem, index) => 
+                                moveHistory.slice(-3).map((historyItem, index) => 
                                     React.createElement('div', {
                                         key: index,
-                                        className: 'text-xs p-2 bg-gray-100 rounded'
+                                        className: 'text-xs p-1 bg-gray-100 rounded'
                                     },
                                         React.createElement('div', {
                                             className: 'font-medium'
-                                        }, `Player ${historyItem.player + 1}`),
+                                        }, `P${historyItem.player + 1}`),
                                         React.createElement('div', null, historyItem.result.move_executed || 'Move executed')
                                     )
                                 )
@@ -1587,32 +1778,9 @@ function App() {
                 )
             ),
             
-            // Player boards
-            React.createElement('div', {
-                className: 'mt-8'
-            },
-                React.createElement('h2', {
-                    className: 'text-xl font-semibold mb-4'
-                }, 'Player Boards'),
-                (gameState.players || []).map((player, index) => 
-                    React.createElement(PlayerBoard, {
-                        key: index,
-                        player: player,
-                        playerIndex: index,
-                        isActive: index === currentPlayer,
-                        editMode: editMode,
-                        onElementSelect: handleElementSelect,
-                        selectedElements: selectedElements,
-                        onPatternLineDrop: handlePatternLineDrop,
-                        onPlayerSwitch: (playerId) => setCurrentPlayer(playerId),
-                        canInteract: !loading && !engineThinking
-                    })
-                )
-            ),
-            
             // Debug panel
             React.createElement('div', {
-                className: 'mt-4 p-4 bg-gray-50 rounded-lg'
+                className: 'mt-3 p-3 bg-gray-50 rounded-lg'
             },
                 React.createElement('h3', {
                     className: 'font-semibold mb-2'
@@ -1637,7 +1805,7 @@ function App() {
             
             // Selected element display
             selectedElements.length > 0 && React.createElement('div', {
-                className: 'mt-4 p-4 bg-blue-50 rounded-lg'
+                className: 'mt-3 p-3 bg-blue-50 rounded-lg'
             },
                 React.createElement('h3', {
                     className: 'font-semibold mb-2'

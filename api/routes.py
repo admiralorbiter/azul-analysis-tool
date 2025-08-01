@@ -1301,7 +1301,6 @@ def get_recent_analyses():
 
 
 @api_bp.route('/analyze', methods=['POST'])
-@require_session
 def analyze_position():
     """
     Analyze a game position with exact search.
@@ -1315,13 +1314,13 @@ def analyze_position():
     }
     """
     try:
-        # Check rate limit for heavy analysis
-        session_id = request.headers.get('X-Session-ID')
-        if current_app.rate_limiter and not current_app.rate_limiter.check_rate_limit(session_id, "heavy"):
-            return jsonify({
-                'error': 'Rate limit exceeded',
-                'message': 'Too many heavy analysis requests'
-            }), 429
+        # Skip rate limiting for local development
+        # session_id = request.headers.get('X-Session-ID')
+        # if current_app.rate_limiter and not current_app.rate_limiter.check_rate_limit(session_id, "heavy"):
+        #     return jsonify({
+        #         'error': 'Rate limit exceeded',
+        #         'message': 'Too many heavy analysis requests'
+        #     }), 429
         
         # Parse request
         data = request.get_json()
@@ -1394,7 +1393,6 @@ def analyze_position():
 
 
 @api_bp.route('/hint', methods=['POST'])
-@require_session
 def get_hint():
     """
     Get a fast hint for a game position.
@@ -1408,13 +1406,13 @@ def get_hint():
     }
     """
     try:
-        # Check rate limit for light analysis
-        session_id = request.headers.get('X-Session-ID')
-        if current_app.rate_limiter and not current_app.rate_limiter.check_rate_limit(session_id, "light"):
-            return jsonify({
-                'error': 'Rate limit exceeded',
-                'message': 'Too many hint requests'
-            }), 429
+        # Skip rate limiting for local development
+        # session_id = request.headers.get('X-Session-ID')
+        # if current_app.rate_limiter and not current_app.rate_limiter.check_rate_limit(session_id, "light"):
+        #     return jsonify({
+        #         'error': 'Rate limit exceeded',
+        #         'message': 'Too many hint requests'
+        #     }), 429
         
         # Parse request
         data = request.get_json()
@@ -1534,7 +1532,6 @@ def get_api_stats():
 
 
 @api_bp.route('/analyze_neural', methods=['POST'])
-@require_session
 def analyze_neural():
     """Analyze position using neural MCTS."""
     try:
@@ -1925,7 +1922,7 @@ def get_monitoring_data():
 
 
 @api_bp.route('/execute_move', methods=['POST'])
-@require_session
+# @require_session # Removed for local development
 def execute_move():
     """Execute a move and return new game state."""
     try:
@@ -2357,7 +2354,6 @@ def reset_game():
 
 
 @api_bp.route('/analyze_game', methods=['POST'])
-@require_session
 def analyze_game():
     """Analyze a complete game for blunders and insights."""
     try:

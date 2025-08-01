@@ -562,4 +562,248 @@ button:focus {
     .btn-group button {
         border-radius: 0.375rem !important;
     }
+}
+
+/* Analysis Panel Styles */
+.analysis-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+}
+
+.analysis-tools {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.analysis-results {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.analysis-stats {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-accent {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-accent:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.analysis-loading {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: loading 1s ease-in-out infinite;
+}
+
+@keyframes loading {
+    to { transform: rotate(360deg); }
+}
+
+.analysis-icon {
+    display: inline-block;
+    margin-right: 0.5rem;
+    font-size: 1.2em;
+}
+
+.analysis-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.analysis-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.analysis-section h3 {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.analysis-section h4 {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.move-variation {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.move-variation:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(2px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.move-score {
+    font-weight: 600;
+    color: #10b981;
+}
+
+.move-visits {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.heatmap-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.heatmap-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.heatmap-toggle.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Compact keyboard hints */
+.keyboard-hints {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Responsive adjustments for analysis panel */
+@media (max-width: 1024px) {
+    .analysis-panel {
+        position: static;
+        max-height: none;
+        margin-top: 1rem;
+        align-self: stretch;
+    }
+    
+    .lg\:col-span-1 {
+        grid-column: span 1;
+    }
+    
+    .lg\:col-span-2 {
+        grid-column: span 1;
+    }
+}
+
+/* Make the main grid layout more compact */
+.grid-cols-1.lg\:grid-cols-3 {
+    gap: 1rem;
+}
+
+/* Ensure the game boards section has proper spacing */
+.lg\:col-span-2 {
+    min-width: 0;
+}
+
+.lg\:col-span-2 .space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+
+/* Compact button styles for analysis panel */
+.analysis-panel .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.7rem;
+    min-height: 2rem;
+}
+
+.analysis-panel .btn-group {
+    gap: 0.25rem;
+}
+
+.analysis-panel .btn-group button {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Ensure player boards don't get too cramped */
+.player-board {
+    margin-bottom: 1rem;
+}
+
+/* Better spacing for the overall layout */
+.max-w-7xl {
+    max-width: 1400px;
+}
+
+/* Ensure factories grid works well in the new layout */
+.grid-cols-5 {
+    gap: 0.75rem;
+}
+
+@media (max-width: 1280px) {
+    .grid-cols-5 {
+        gap: 0.5rem;
+    }
 } 
