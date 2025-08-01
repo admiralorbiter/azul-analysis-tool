@@ -3032,11 +3032,18 @@ def calculate_position_similarity(hash1: str, hash2: str) -> float:
 class NeuralTrainingRequest(BaseModel):
     """Request model for neural training."""
     config: str = 'small'  # 'small', 'medium', 'large'
+    modelSize: Optional[str] = None  # Frontend sends this field name
     device: str = 'cpu'  # 'cpu', 'cuda'
     epochs: int = 5
     samples: int = 500
     batch_size: int = 16
     learning_rate: float = 0.001
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Handle field name mismatch between frontend and backend
+        if self.modelSize and not data.get('config'):
+            self.config = self.modelSize
 
 
 class NeuralEvaluationRequest(BaseModel):
