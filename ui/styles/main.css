@@ -1173,6 +1173,298 @@ button:focus {
     }
 }
 
+/* Neural Training Interface Styles */
+.neural-training-config {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border: 1px solid #c084fc;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.neural-training-config h3 {
+    color: #7c3aed;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.neural-training-config input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.neural-training-config input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #7c3aed;
+    cursor: pointer;
+}
+
+.neural-training-config input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #7c3aed;
+    cursor: pointer;
+    border: none;
+}
+
+.neural-training-config select {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+}
+
+.neural-training-config select:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.neural-training-config input[type="radio"] {
+    accent-color: #7c3aed;
+}
+
+.neural-training-config .btn-success {
+    background-color: #7c3aed;
+    border-color: #7c3aed;
+    color: white;
+}
+
+.neural-training-config .btn-success:hover {
+    background-color: #6d28d9;
+    border-color: #6d28d9;
+}
+
+.neural-training-config .btn-outline {
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+.neural-training-config .btn-outline:hover {
+    background-color: #7c3aed;
+    color: white;
+}
+
+/* Training Monitor Styles */
+.training-monitor {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.training-monitor h3 {
+    color: #d97706;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    transition: width 0.3s ease;
+}
+
+.loss-chart {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    height: 100px;
+}
+
+.training-log {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    max-height: 150px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+}
+
+.training-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+.training-log::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.training-log::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.training-log::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Model Evaluation Styles */
+.model-evaluator {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 1px solid #3b82f6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.model-evaluator h3 {
+    color: #1d4ed8;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.evaluation-results {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.evaluation-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.evaluation-metric:last-child {
+    border-bottom: none;
+}
+
+.evaluation-metric .label {
+    font-weight: 500;
+    color: #374151;
+}
+
+.evaluation-metric .value {
+    font-weight: 600;
+    color: #1d4ed8;
+}
+
+/* Training History Styles */
+.training-history {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #22c55e;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.training-history h3 {
+    color: #15803d;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.history-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.history-item .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.history-item .title {
+    font-weight: 600;
+    color: #374151;
+}
+
+.history-item .status {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.125rem;
+    font-weight: 500;
+}
+
+.history-item .status.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.history-item .status.running {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.history-item .status.failed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.history-item .details {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Responsive Neural Training */
+@media (max-width: 768px) {
+    .neural-training-config,
+    .training-monitor,
+    .model-evaluator,
+    .training-history {
+        padding: 0.75rem;
+    }
+    
+    .neural-training-config h3,
+    .training-monitor h3,
+    .model-evaluator h3,
+    .training-history h3 {
+        font-size: 0.875rem;
+    }
+    
+    .neural-training-config input[type="range"] {
+        height: 4px;
+    }
+    
+    .neural-training-config input[type="range"]::-webkit-slider-thumb {
+        width: 12px;
+        height: 12px;
+    }
+}
+
 @media (min-width: 1536px) {
     .space-y-6 > * + * {
         margin-top: 2.5rem;
@@ -1188,5 +1480,139 @@ button:focus {
     
     .p-6 {
         padding: 2.5rem;
+    }
+} 
+
+/* Navigation Styles */
+.navigation {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navigation button {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.navigation button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Neural Training Page Styles */
+.neural-training-page {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: calc(100vh - 80px);
+}
+
+.neural-training-page h1 {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.neural-training-page .flex.border-b {
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.neural-training-page .flex.border-b button {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.neural-training-page .flex.border-b button:hover {
+    background-color: #f3f4f6;
+}
+
+.neural-training-page .flex.border-b button.active {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.neural-training-page .flex.border-b button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #8b5cf6;
+}
+
+/* Tab Content Styles */
+.neural-training-config,
+.training-monitor,
+.model-evaluator,
+.training-history {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+.neural-training-config h2,
+.training-monitor h2,
+.model-evaluator h2,
+.training-history h2 {
+    color: #7c3aed;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Form Controls */
+.neural-training-page input,
+.neural-training-page select {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.neural-training-page input:focus,
+.neural-training-page select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Button Styles */
+.neural-training-page button {
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.neural-training-page button:hover {
+    transform: translateY(-1px);
+}
+
+.neural-training-page button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .neural-training-page {
+        padding: 1rem;
+    }
+    
+    .neural-training-page .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .neural-training-page .flex.border-b {
+        flex-wrap: wrap;
+    }
+    
+    .neural-training-page .flex.border-b button {
+        flex: 1;
+        min-width: 120px;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.25rem;
     }
 } 

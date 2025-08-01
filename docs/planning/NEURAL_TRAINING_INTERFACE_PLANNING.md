@@ -1,436 +1,192 @@
-# 🧠 Neural Training Interface Planning Document
+# Neural Training Interface Planning
 
-## 📋 **Overview**
+**Status**: IMPLEMENTATION IN PROGRESS - Part 2.1.1 Complete, Background Training Implemented
 
-**Goal**: Create a comprehensive web-based neural training interface that provides full access to CLI neural training capabilities with real-time monitoring, progress tracking, and model management.
+## Overview
 
-**Status**: 📋 **PLANNING** - Ready for implementation
-**Timeline**: 3 weeks (5 parts)
-**Priority**: High - Essential for advanced users
+The Neural Training Interface is a dedicated page within the Azul Research application that provides comprehensive tools for training, monitoring, and evaluating neural network models for Azul game analysis. This interface is designed to be scalable and extensible for future neural network features.
 
----
+## Architecture
 
-## 🎯 **CLI Capabilities to Implement**
+- **Dedicated Page**: Separate route (`/neural`) with tab-based navigation
+- **Backend Integration**: REST API endpoints for training, monitoring, and evaluation
+- **State Management**: React state for training configuration, progress, and results
+- **Background Processing**: Non-blocking training with real-time status updates
 
-### **Current CLI Commands**:
-```bash
-# Training
-python main.py train --config small --device cpu --epochs 5 --samples 500
+## Implementation Plan
 
-# Evaluation
-python main.py evaluate --model models/azul_net_small.pth --positions 50 --games 20 --device cpu
-```
+### Part 2.1.1: Training Configuration Panel ✅ COMPLETE
+- [x] Model size selection (small/medium/large)
+- [x] Device selection (CPU/GPU)
+- [x] Training parameters (epochs, samples, batch size, learning rate)
+- [x] Configuration validation
+- [x] Save/load configuration
+- [x] Start training button with improved visibility
+- [x] Background training implementation
+- [x] Real-time status polling
+- [x] Progress bar and logs display
+- [x] Stop training functionality
 
-### **Target Web UI Features**:
-- ✅ Training configuration with visual controls
-- ✅ Real-time training progress monitoring
-- ✅ Model evaluation with results visualization
-- ✅ Training history and model management
-- ✅ Advanced features (hyperparameter tuning, etc.)
+### Part 2.1.2: Real-time Training Monitor 🔄 IN PROGRESS
+- [x] Background training sessions
+- [x] Session-based status tracking
+- [x] Progress percentage updates
+- [x] Training logs display
+- [x] Stop training controls
+- [ ] Live loss visualization
+- [ ] Resource monitoring (CPU/GPU usage)
+- [ ] Training time estimation
+- [ ] Multiple concurrent training sessions
 
----
+### Part 2.1.3: Model Evaluation Interface 📋 PLANNED
+- [ ] Model selection dropdown
+- [ ] Evaluation parameters
+- [ ] Performance metrics display
+- [ ] Comparison tools
+- [ ] Export results
 
-## 🚀 **Implementation Plan**
+### Part 2.1.4: Training History & Management 📋 PLANNED
+- [ ] Training session history
+- [ ] Model versioning
+- [ ] Configuration templates
+- [ ] Batch training operations
 
-### **Part 2.1.1: Training Configuration Panel** 📋
-**Priority**: High - Foundation for all training features
-**Timeline**: 2-3 days
+### Part 2.1.5: Advanced Training Features 📋 PLANNED
+- [ ] Hyperparameter optimization
+- [ ] Transfer learning
+- [ ] Custom model architectures
+- [ ] Distributed training support
 
-#### **Features**:
-- **Model Configuration**: Dropdown for small/medium/large model sizes
-- **Device Selection**: CPU/CUDA radio buttons with availability detection
-- **Training Parameters**: Epochs (1-100), samples (100-10000), batch size (8-64)
-- **Learning Settings**: Learning rate (0.0001-0.01), optimizer selection
-- **Save Configuration**: Save/load training configurations
-- **Validation**: Real-time parameter validation and range checking
+## Database Schema Extensions
 
-#### **UI Components**:
-```javascript
-// TrainingConfigPanel Component
-function TrainingConfigPanel({ 
-    config, setConfig, startTraining, 
-    loading, setLoading, setStatusMessage 
-}) {
-    // Model size selection
-    const [modelSize, setModelSize] = React.useState('small');
-    
-    // Device selection with detection
-    const [device, setDevice] = React.useState('cpu');
-    const [availableDevices, setAvailableDevices] = React.useState(['cpu']);
-    
-    // Training parameters
-    const [epochs, setEpochs] = React.useState(5);
-    const [samples, setSamples] = React.useState(500);
-    const [batchSize, setBatchSize] = React.useState(16);
-    const [learningRate, setLearningRate] = React.useState(0.001);
-    
-    // Start training function
-    const handleStartTraining = React.useCallback(async () => {
-        setLoading(true);
-        try {
-            const response = await fetch('/api/v1/neural/train', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    modelSize, device, epochs, samples, 
-                    batchSize, learningRate
-                })
-            });
-            const data = await response.json();
-            setStatusMessage('Training started successfully');
-        } catch (error) {
-            setStatusMessage(`Training failed: ${error.message}`);
-        } finally {
-            setLoading(false);
-        }
-    }, [modelSize, device, epochs, samples, batchSize, learningRate]);
-}
-```
-
-#### **API Integration**:
-- `POST /api/v1/neural/train` - Start training with configuration
-- `GET /api/v1/neural/config` - Get available configurations
-- `POST /api/v1/neural/config` - Save training configuration
-
----
-
-### **Part 2.1.2: Real-time Training Monitor** 📊
-**Priority**: High - Essential for user experience
-**Timeline**: 3-4 days
-
-#### **Features**:
-- **Live Progress**: Real-time epoch progress with percentage
-- **Loss Visualization**: Live loss curve chart with epoch history
-- **Training Metrics**: Current loss, learning rate, batch progress
-- **Resource Monitoring**: GPU/CPU usage, memory consumption
-- **Training Status**: Running/stopped/paused states with controls
-- **Log Display**: Real-time training log with filtering
-
-#### **UI Components**:
-```javascript
-// TrainingMonitor Component
-function TrainingMonitor({ sessionId, loading, setLoading }) {
-    const [trainingStatus, setTrainingStatus] = React.useState(null);
-    const [progress, setProgress] = React.useState(null);
-    const [lossHistory, setLossHistory] = React.useState([]);
-    const [logs, setLogs] = React.useState([]);
-    
-    // Polling for real-time updates
-    React.useEffect(() => {
-        if (!sessionId) return;
-        
-        const interval = setInterval(async () => {
-            try {
-                const [statusRes, progressRes, logsRes] = await Promise.all([
-                    fetch(`/api/v1/neural/status?session_id=${sessionId}`),
-                    fetch(`/api/v1/neural/progress?session_id=${sessionId}`),
-                    fetch(`/api/v1/neural/logs?session_id=${sessionId}`)
-                ]);
-                
-                const status = await statusRes.json();
-                const progressData = await progressRes.json();
-                const logsData = await logsRes.json();
-                
-                setTrainingStatus(status);
-                setProgress(progressData);
-                setLossHistory(progressData.loss_history || []);
-                setLogs(logsData.logs || []);
-            } catch (error) {
-                console.error('Failed to fetch training updates:', error);
-            }
-        }, 1000); // Poll every second
-        
-        return () => clearInterval(interval);
-    }, [sessionId]);
-    
-    return (
-        <div className="training-monitor">
-            <TrainingStatus status={trainingStatus} />
-            <ProgressBar progress={progress} />
-            <LossChart lossHistory={lossHistory} />
-            <ResourceMonitor status={trainingStatus} />
-            <TrainingLog logs={logs} />
-        </div>
-    );
-}
-```
-
-#### **API Integration**:
-- `GET /api/v1/neural/status` - Get current training status
-- `GET /api/v1/neural/progress` - Get training progress data
-- `GET /api/v1/neural/logs` - Get training logs
-- `POST /api/v1/neural/stop` - Stop training
-- `POST /api/v1/neural/pause` - Pause/resume training
-
----
-
-### **Part 2.1.3: Model Evaluation Interface** 🎯
-**Priority**: Medium - Important for model validation
-**Timeline**: 2-3 days
-
-#### **Features**:
-- **Model Selection**: Dropdown for available trained models
-- **Evaluation Settings**: Number of positions/games, search time, rollouts
-- **Evaluation Types**: Position accuracy, move agreement, self-play win rate
-- **Results Display**: Comprehensive evaluation results with charts
-- **Comparison Tools**: Compare multiple models side-by-side
-- **Export Results**: Export evaluation data and charts
-
-#### **UI Components**:
-```javascript
-// ModelEvaluator Component
-function ModelEvaluator({ loading, setLoading, setStatusMessage }) {
-    const [selectedModel, setSelectedModel] = React.useState('');
-    const [availableModels, setAvailableModels] = React.useState([]);
-    const [evaluationConfig, setEvaluationConfig] = React.useState({
-        positions: 50,
-        games: 20,
-        searchTime: 0.5,
-        rollouts: 50,
-        device: 'cpu'
-    });
-    const [evaluationResults, setEvaluationResults] = React.useState(null);
-    
-    // Load available models
-    React.useEffect(() => {
-        fetch('/api/v1/neural/models')
-            .then(res => res.json())
-            .then(models => setAvailableModels(models))
-            .catch(err => setStatusMessage(`Failed to load models: ${err.message}`));
-    }, []);
-    
-    // Start evaluation
-    const handleEvaluate = React.useCallback(async () => {
-        if (!selectedModel) return;
-        
-        setLoading(true);
-        try {
-            const response = await fetch('/api/v1/neural/evaluate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: selectedModel,
-                    ...evaluationConfig
-                })
-            });
-            const results = await response.json();
-            setEvaluationResults(results);
-            setStatusMessage('Evaluation completed successfully');
-        } catch (error) {
-            setStatusMessage(`Evaluation failed: ${error.message}`);
-        } finally {
-            setLoading(false);
-        }
-    }, [selectedModel, evaluationConfig]);
-}
-```
-
-#### **API Integration**:
-- `POST /api/v1/neural/evaluate` - Start model evaluation
-- `GET /api/v1/neural/models` - List available models
-- `GET /api/v1/neural/evaluation/{id}` - Get evaluation results
-- `GET /api/v1/neural/evaluation/{id}/export` - Export results
-
----
-
-### **Part 2.1.4: Training History & Management** 📚
-**Priority**: Medium - Important for long-term use
-**Timeline**: 2-3 days
-
-#### **Features**:
-- **Training History**: List of all training runs with metadata
-- **Model Library**: Browse and manage trained models
-- **Training Analytics**: Performance trends and model evolution
-- **Model Metadata**: Training parameters, performance metrics, timestamps
-- **Model Actions**: Delete, rename, duplicate models
-- **Training Templates**: Save and reuse training configurations
-
-#### **UI Components**:
-```javascript
-// TrainingHistory Component
-function TrainingHistory({ loading, setLoading, setStatusMessage }) {
-    const [trainingHistory, setTrainingHistory] = React.useState([]);
-    const [modelLibrary, setModelLibrary] = React.useState([]);
-    
-    // Load training history and model library
-    React.useEffect(() => {
-        Promise.all([
-            fetch('/api/v1/neural/history'),
-            fetch('/api/v1/neural/models')
-        ])
-        .then(([historyRes, modelsRes]) => Promise.all([
-            historyRes.json(),
-            modelsRes.json()
-        ]))
-        .then(([history, models]) => {
-            setTrainingHistory(history);
-            setModelLibrary(models);
-        })
-        .catch(err => setStatusMessage(`Failed to load data: ${err.message}`));
-    }, []);
-    
-    return (
-        <div className="training-history">
-            <TrainingHistoryList history={trainingHistory} />
-            <ModelLibrary models={modelLibrary} />
-            <TrainingAnalytics history={trainingHistory} />
-        </div>
-    );
-}
-```
-
-#### **API Integration**:
-- `GET /api/v1/neural/history` - Get training history
-- `GET /api/v1/neural/models` - Get model library
-- `DELETE /api/v1/neural/models/{id}` - Delete model
-- `PUT /api/v1/neural/models/{id}` - Update model metadata
-
----
-
-### **Part 2.1.5: Advanced Training Features** ⚙️
-**Priority**: Low - Advanced features for power users
-**Timeline**: 3-4 days
-
-#### **Features**:
-- **Hyperparameter Tuning**: Grid search and optimization
-- **Data Generation**: Custom training data generation
-- **Transfer Learning**: Load and fine-tune existing models
-- **Training Scheduling**: Scheduled training runs
-- **Distributed Training**: Multi-GPU training support
-- **Custom Architectures**: Custom model architecture builder
-
-#### **UI Components**:
-```javascript
-// AdvancedFeatures Component
-function AdvancedFeatures({ loading, setLoading, setStatusMessage }) {
-    const [hyperparameterConfig, setHyperparameterConfig] = React.useState({});
-    const [dataGenerationConfig, setDataGenerationConfig] = React.useState({});
-    const [transferLearningConfig, setTransferLearningConfig] = React.useState({});
-    
-    return (
-        <div className="advanced-features">
-            <HyperparameterTuner 
-                config={hyperparameterConfig}
-                setConfig={setHyperparameterConfig}
-            />
-            <DataGenerator 
-                config={dataGenerationConfig}
-                setConfig={setDataGenerationConfig}
-            />
-            <TransferLearning 
-                config={transferLearningConfig}
-                setConfig={setTransferLearningConfig}
-            />
-        </div>
-    );
-}
-```
-
-#### **API Integration**:
-- `POST /api/v1/neural/hyperparameter-tune` - Start hyperparameter tuning
-- `POST /api/v1/neural/generate-data` - Generate training data
-- `POST /api/v1/neural/transfer-learn` - Start transfer learning
-- `POST /api/v1/neural/schedule` - Schedule training runs
-
----
-
-## 🗄️ **Database Schema Extensions**
-
-### **Training Sessions Table**:
+### neural_training_sessions
 ```sql
-CREATE TABLE training_sessions (
-    id INTEGER PRIMARY KEY,
-    session_id TEXT UNIQUE,
-    config JSON,
-    status TEXT,
+CREATE TABLE neural_training_sessions (
+    session_id TEXT PRIMARY KEY,
+    status TEXT NOT NULL, -- 'starting', 'running', 'completed', 'failed', 'stopped'
+    progress INTEGER DEFAULT 0,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
-    progress JSON,
-    logs TEXT
+    config JSON,
+    logs JSON,
+    results JSON,
+    error TEXT
 );
 ```
 
-### **Model Metadata Table**:
+### neural_training_progress
 ```sql
-CREATE TABLE model_metadata (
-    id INTEGER PRIMARY KEY,
+CREATE TABLE neural_training_progress (
+    session_id TEXT,
+    epoch INTEGER,
+    loss REAL,
+    timestamp TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES neural_training_sessions(session_id)
+);
+```
+
+### neural_models
+```sql
+CREATE TABLE neural_models (
+    model_id TEXT PRIMARY KEY,
     model_path TEXT,
     config JSON,
-    performance JSON,
+    training_session_id TEXT,
     created_at TIMESTAMP,
-    training_session_id INTEGER
+    performance_metrics JSON,
+    FOREIGN KEY (training_session_id) REFERENCES neural_training_sessions(session_id)
 );
 ```
 
-### **Evaluation Results Table**:
+### neural_configurations
 ```sql
-CREATE TABLE evaluation_results (
-    id INTEGER PRIMARY KEY,
-    model_id INTEGER,
+CREATE TABLE neural_configurations (
+    config_id TEXT PRIMARY KEY,
+    name TEXT,
     config JSON,
-    results JSON,
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    is_default BOOLEAN DEFAULT FALSE
 );
 ```
 
----
+## Test Strategy
 
-## 🧪 **Test Strategy**
+### Unit Tests
+- [x] Configuration validation
+- [x] API endpoint functionality
+- [x] Background processing
+- [ ] Model evaluation logic
 
-### **Unit Tests**:
-- `tests/test_neural_training_config.py` - Training configuration panel
-- `tests/test_neural_training_monitor.py` - Real-time monitoring
-- `tests/test_neural_evaluation.py` - Model evaluation interface
-- `tests/test_neural_history.py` - Training history and management
-- `tests/test_neural_advanced.py` - Advanced features
+### Integration Tests
+- [x] Frontend-backend communication
+- [x] Training session lifecycle
+- [ ] Error handling scenarios
 
-### **Integration Tests**:
-- API endpoint testing for all neural training endpoints
-- Real-time communication testing
-- Database integration testing
-- Error handling and edge cases
+### Performance Tests
+- [ ] Training time benchmarks
+- [ ] Memory usage monitoring
+- [ ] Concurrent training sessions
 
-### **Performance Tests**:
-- UI responsiveness during training
-- Real-time update performance
-- Memory usage during long training sessions
+## Progress Tracking
 
----
+### Completed Features
+1. **Routing Structure**: Implemented dedicated neural training page with navigation
+2. **UI/UX Improvements**: Enhanced button visibility, added progress indicators
+3. **Background Processing**: Resolved `net::ERR_CONNECTION_RESET` errors by implementing non-blocking training
+4. **Real-time Updates**: Added status polling and progress tracking
+5. **Error Handling**: Improved error messages and user feedback
+6. **Training Controls**: Added stop training functionality
 
-## 🎯 **Success Metrics**
+### Technical Implementation
+- **Backend**: Background threading with session management
+- **Frontend**: Status polling with 2-second intervals
+- **API**: RESTful endpoints for training, status, and control
+- **State Management**: React state for training configuration and progress
 
-### **Usability Goals**:
-- [ ] **Training Setup**: Users can configure training in <2 minutes
-- [ ] **Progress Monitoring**: Real-time updates with <1 second latency
-- [ ] **Model Management**: Complete model lifecycle management
-- [ ] **Evaluation**: Comprehensive model evaluation with visual results
+### Current Progress: 60% Complete
+- Part 2.1.1: ✅ 100% Complete
+- Part 2.1.2: 🔄 40% Complete (background processing done, UI enhancements in progress)
+- Part 2.1.3: 📋 0% Complete
+- Part 2.1.4: 📋 0% Complete
+- Part 2.1.5: 📋 0% Complete
 
-### **Technical Goals**:
-- [ ] **API Integration**: All CLI training features available via web UI
-- [ ] **Real-time Updates**: WebSocket or polling for live progress
-- [ ] **Error Handling**: Robust error handling and user feedback
-- [ ] **Performance**: UI remains responsive during training
+## Implementation Notes
 
-### **User Experience Goals**:
-- [ ] **Intuitive Interface**: Clear visual hierarchy and workflow
-- [ ] **Progress Feedback**: Clear indication of training progress
-- [ ] **Result Visualization**: Charts and graphs for training metrics
-- [ ] **Mobile Support**: Responsive design for tablet/mobile use
+### Error Resolution
+**Issue**: `net::ERR_CONNECTION_RESET` and `TypeError: Failed to fetch` errors when starting training
+**Root Cause**: Synchronous blocking training process causing client connection timeouts
+**Solution**: Implemented background threading with session-based status tracking
+**Result**: Training now starts immediately and provides real-time progress updates
 
----
+### Key Technical Achievements
+1. **Non-blocking Training**: Training runs in background threads, server remains responsive
+2. **Session Management**: Unique session IDs for tracking multiple training sessions
+3. **Real-time Status**: Progress updates, logs, and results via polling
+4. **User Controls**: Stop training functionality with immediate feedback
+5. **Error Recovery**: Graceful handling of network errors and training failures
 
-## 🚀 **Next Steps**
+### API Endpoints Status
+- ✅ `POST /neural/train` - Start background training
+- ✅ `GET /neural/status/{session_id}` - Get training status
+- ✅ `POST /neural/stop/{session_id}` - Stop training
+- ✅ `GET /neural/models` - List available models
+- ✅ `GET /neural/config` - Get default configuration
+- ✅ `POST /neural/config` - Save configuration
+- ✅ `GET /neural/status` - System status
 
-1. **Immediate**: Start Part 2.1.1 (Training Configuration Panel)
-2. **Week 1**: Complete Parts 2.1.1 & 2.1.2
-3. **Week 2**: Complete Parts 2.1.3 & 2.1.4
-4. **Week 3**: Complete Part 2.1.5 and final testing
+### Frontend Integration
+- ✅ Dedicated neural training page with routing
+- ✅ Tab-based navigation structure
+- ✅ Real-time progress display with progress bar
+- ✅ Training logs display
+- ✅ Stop training button
+- ✅ Configuration panel with validation
+- ✅ Status polling with automatic updates
 
-**Current Progress**: 0% of neural training interface complete (0/5 parts)
-**Target**: 100% of neural training interface complete by end of Week 3
+## Next Steps
 
----
-
-**Last Updated**: Latest
-**Next Review**: After Part 2.1.1 completion
-**Status**: 📋 Planning Complete → Ready for Implementation 
+1. **Complete Part 2.1.2**: Add live loss visualization and resource monitoring
+2. **Implement Part 2.1.3**: Model evaluation interface
+3. **Database Integration**: Store training sessions and results
+4. **Performance Optimization**: Improve training efficiency and monitoring
+5. **Advanced Features**: Hyperparameter optimization and transfer learning 

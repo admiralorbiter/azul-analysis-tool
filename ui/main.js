@@ -7,6 +7,336 @@ const { createRoot } = ReactDOM;
 const API_BASE = '/api/v1';
 let sessionId = null;
 
+// Simple Router Component
+function Router({ currentPage, onPageChange, children }) {
+    return React.createElement('div', { className: 'router' }, children);
+}
+
+// Navigation Component
+function Navigation({ currentPage, onPageChange }) {
+    return React.createElement('nav', { className: 'navigation bg-white shadow-md p-4 mb-4' },
+        React.createElement('div', { className: 'flex justify-between items-center' },
+            React.createElement('h1', { className: 'text-xl font-bold text-gray-800' }, 'Azul Solver & Analysis Toolkit'),
+            React.createElement('div', { className: 'flex space-x-4' },
+                React.createElement('button', {
+                    className: `px-4 py-2 rounded ${currentPage === 'main' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                    onClick: () => onPageChange('main')
+                }, 'Main Interface'),
+                React.createElement('button', {
+                    className: `px-4 py-2 rounded ${currentPage === 'neural' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                    onClick: () => onPageChange('neural')
+                }, '🧠 Neural Training')
+            )
+        )
+    );
+}
+
+// Neural Training Page Component
+function NeuralTrainingPage({ 
+    loading, setLoading, setStatusMessage,
+    trainingConfig, setTrainingConfig,
+    neuralExpanded, setNeuralExpanded
+}) {
+    const [activeTab, setActiveTab] = React.useState('training');
+    const [trainingStatus, setTrainingStatus] = React.useState(null);
+    const [trainingProgress, setTrainingProgress] = React.useState(null);
+    const [availableModels, setAvailableModels] = React.useState([]);
+    const [evaluationResults, setEvaluationResults] = React.useState(null);
+
+    // Load available models on component mount
+    React.useEffect(() => {
+        loadAvailableModels();
+    }, []);
+
+    const loadAvailableModels = async () => {
+        try {
+            const models = await getAvailableModels();
+            setAvailableModels(models.models || []);
+        } catch (error) {
+            console.error('Failed to load models:', error);
+            setStatusMessage('error', 'Failed to load available models');
+        }
+    };
+
+    const handleStartTraining = async () => {
+        setLoading(true);
+        setTrainingStatus(null);
+        try {
+            console.log('Starting neural training with config:', trainingConfig);
+            const result = await startNeuralTraining(trainingConfig);
+            console.log('Training result:', result);
+            
+            if (result.success) {
+                setStatusMessage('success', 'Training started in background!');
+                setTrainingStatus(result);
+                
+                // Start polling for status updates
+                const sessionId = result.session_id;
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusResult = await getNeuralTrainingStatus(sessionId);
+                        setTrainingStatus(statusResult);
+                        
+                        if (statusResult.status === 'completed' || statusResult.status === 'failed' || statusResult.status === 'stopped') {
+                            clearInterval(pollInterval);
+                            setLoading(false);
+                            
+                            if (statusResult.status === 'completed') {
+                                setStatusMessage('success', 'Training completed successfully!');
+                            } else if (statusResult.status === 'failed') {
+                                setStatusMessage('error', `Training failed: ${statusResult.error || 'Unknown error'}`);
+                            } else {
+                                setStatusMessage('info', 'Training stopped by user');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Failed to get training status:', error);
+                        clearInterval(pollInterval);
+                        setLoading(false);
+                        setStatusMessage('error', 'Failed to get training status');
+                    }
+                }, 2000); // Poll every 2 seconds
+                
+            } else {
+                setStatusMessage('error', `Training failed: ${result.message || 'Unknown error'}`);
+                setTrainingStatus({ success: false, message: result.message || 'Unknown error' });
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Failed to start training:', error);
+            setTrainingStatus({ success: false, message: error.message || 'Network error' });
+            setStatusMessage('error', `Failed to start training: ${error.message || 'Network error'}`);
+            setLoading(false);
+        }
+    };
+
+    const handleEvaluateModel = async (modelConfig) => {
+        setLoading(true);
+        try {
+            const result = await evaluateNeuralModel(modelConfig);
+            setEvaluationResults(result);
+            setStatusMessage('success', 'Model evaluation completed');
+        } catch (error) {
+            console.error('Failed to evaluate model:', error);
+            setStatusMessage('error', 'Failed to evaluate model');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return React.createElement('div', { className: 'neural-training-page p-6' },
+        // Page Header
+        React.createElement('div', { className: 'mb-6' },
+            React.createElement('h1', { className: 'text-3xl font-bold text-purple-800 mb-2' }, '🧠 Neural Training Interface'),
+            React.createElement('p', { className: 'text-gray-600' }, 'Train, evaluate, and manage neural network models for Azul analysis')
+        ),
+
+        // Tab Navigation
+        React.createElement('div', { className: 'mb-6' },
+            React.createElement('div', { className: 'flex border-b border-gray-200' },
+                React.createElement('button', {
+                    className: `px-4 py-2 ${activeTab === 'training' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`,
+                    onClick: () => setActiveTab('training')
+                }, 'Training Configuration'),
+                React.createElement('button', {
+                    className: `px-4 py-2 ${activeTab === 'monitor' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`,
+                    onClick: () => setActiveTab('monitor')
+                }, 'Training Monitor'),
+                React.createElement('button', {
+                    className: `px-4 py-2 ${activeTab === 'evaluation' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`,
+                    onClick: () => setActiveTab('evaluation')
+                }, 'Model Evaluation'),
+                React.createElement('button', {
+                    className: `px-4 py-2 ${activeTab === 'history' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'}`,
+                    onClick: () => setActiveTab('history')
+                }, 'Training History')
+            )
+        ),
+
+        // Tab Content
+        activeTab === 'training' && React.createElement('div', { className: 'neural-training-config' },
+            React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Training Configuration'),
+            React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                // Model Configuration
+                React.createElement('div', { className: 'space-y-4' },
+                    React.createElement('h3', { className: 'font-semibold text-gray-700' }, 'Model Settings'),
+                    React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Model Size'),
+                        React.createElement('select', {
+                            value: trainingConfig.modelSize,
+                            onChange: (e) => setTrainingConfig({...trainingConfig, modelSize: e.target.value}),
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        },
+                            React.createElement('option', { value: 'small' }, 'Small (Fast)'),
+                            React.createElement('option', { value: 'medium' }, 'Medium (Balanced)'),
+                            React.createElement('option', { value: 'large' }, 'Large (Accurate)')
+                        )
+                    ),
+                    React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Device'),
+                        React.createElement('select', {
+                            value: trainingConfig.device,
+                            onChange: (e) => setTrainingConfig({...trainingConfig, device: e.target.value}),
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        },
+                            React.createElement('option', { value: 'cpu' }, 'CPU'),
+                            React.createElement('option', { value: 'gpu' }, 'GPU (if available)')
+                        )
+                    )
+                ),
+
+                // Training Parameters
+                React.createElement('div', { className: 'space-y-4' },
+                    React.createElement('h3', { className: 'font-semibold text-gray-700' }, 'Training Parameters'),
+                    React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Epochs'),
+                        React.createElement('input', {
+                            type: 'number',
+                            value: trainingConfig.epochs,
+                            onChange: (e) => setTrainingConfig({...trainingConfig, epochs: parseInt(e.target.value)}),
+                            min: 1,
+                            max: 100,
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        })
+                    ),
+                    React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Samples'),
+                        React.createElement('input', {
+                            type: 'number',
+                            value: trainingConfig.samples,
+                            onChange: (e) => setTrainingConfig({...trainingConfig, samples: parseInt(e.target.value)}),
+                            min: 100,
+                            max: 10000,
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        })
+                    ),
+                    React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Batch Size'),
+                        React.createElement('input', {
+                            type: 'number',
+                            value: trainingConfig.batchSize,
+                            onChange: (e) => setTrainingConfig({...trainingConfig, batchSize: parseInt(e.target.value)}),
+                            min: 1,
+                            max: 128,
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        })
+                    ),
+                    React.createElement('div', { className: 'space-y-2' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Learning Rate'),
+                        React.createElement('input', {
+                            type: 'number',
+                            value: trainingConfig.learningRate,
+                            onChange: (e) => setTrainingConfig({...trainingConfig, learningRate: parseFloat(e.target.value)}),
+                            step: 0.0001,
+                            min: 0.0001,
+                            max: 0.1,
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                        })
+                    )
+                )
+            ),
+
+            // Action Buttons
+            React.createElement('div', { className: 'mt-6 flex space-x-4' },
+                React.createElement('button', {
+                    onClick: handleStartTraining,
+                    disabled: loading,
+                    className: 'px-8 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200'
+                }, loading ? '🚀 Starting Training...' : '🚀 Start Training'),
+                React.createElement('button', {
+                    onClick: () => saveNeuralConfig(trainingConfig),
+                    className: 'px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-semibold'
+                }, '💾 Save Configuration')
+            ),
+
+            // Training Status Display
+            trainingStatus && React.createElement('div', { className: 'mt-4 p-4 bg-green-50 border border-green-200 rounded-md' },
+                React.createElement('h4', { className: 'font-semibold text-green-800 mb-2' }, 'Training Status'),
+                trainingStatus.status && React.createElement('div', { className: 'mb-3' },
+                    React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+                        React.createElement('span', { className: 'text-sm font-medium text-gray-700' }, 
+                            `Status: ${trainingStatus.status.charAt(0).toUpperCase() + trainingStatus.status.slice(1)}`
+                        ),
+                        trainingStatus.status === 'running' && React.createElement('button', {
+                            onClick: async () => {
+                                if (trainingStatus.session_id) {
+                                    try {
+                                        await stopNeuralTraining(trainingStatus.session_id);
+                                        setStatusMessage('info', 'Training stop requested');
+                                    } catch (error) {
+                                        setStatusMessage('error', 'Failed to stop training');
+                                    }
+                                }
+                            },
+                            className: 'px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700'
+                        }, '⏹️ Stop Training')
+                    ),
+                    trainingStatus.progress !== undefined && React.createElement('div', { className: 'mb-2' },
+                        React.createElement('div', { className: 'w-full bg-gray-200 rounded-full h-2' },
+                            React.createElement('div', { 
+                                className: 'bg-purple-600 h-2 rounded-full transition-all duration-300',
+                                style: { width: `${trainingStatus.progress}%` }
+                            })
+                        ),
+                        React.createElement('p', { className: 'text-xs text-gray-600 mt-1' }, 
+                            `${trainingStatus.progress}% complete`
+                        )
+                    )
+                ),
+                trainingStatus.logs && trainingStatus.logs.length > 0 && React.createElement('div', { className: 'mt-3' },
+                    React.createElement('h5', { className: 'text-sm font-medium text-gray-700 mb-2' }, 'Training Logs'),
+                    React.createElement('div', { className: 'bg-gray-100 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto' },
+                        trainingStatus.logs.map((log, index) => 
+                            React.createElement('div', { key: index, className: 'text-gray-700' }, log)
+                        )
+                    )
+                ),
+                trainingStatus.results && React.createElement('div', { className: 'mt-3 p-3 bg-blue-50 rounded' },
+                    React.createElement('h5', { className: 'text-sm font-medium text-blue-800 mb-2' }, 'Training Results'),
+                    React.createElement('div', { className: 'text-sm text-blue-700' },
+                        React.createElement('p', null, `Final Loss: ${trainingStatus.results.final_loss?.toFixed(4) || 'N/A'}`),
+                        React.createElement('p', null, `Evaluation Error: ${trainingStatus.results.evaluation_error?.toFixed(4) || 'N/A'}`),
+                        React.createElement('p', null, `Model Path: ${trainingStatus.results.model_path || 'N/A'}`)
+                    )
+                ),
+                trainingStatus.error && React.createElement('div', { className: 'mt-3 p-3 bg-red-50 rounded' },
+                    React.createElement('h5', { className: 'text-sm font-medium text-red-800 mb-2' }, 'Training Error'),
+                    React.createElement('p', { className: 'text-sm text-red-700' }, trainingStatus.error)
+                )
+            ),
+
+            // Important Note
+            React.createElement('div', { className: 'mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md' },
+                React.createElement('h4', { className: 'font-semibold text-blue-800 mb-2' }, 'ℹ️ Training Information'),
+                React.createElement('p', { className: 'text-blue-700 text-sm' }, 
+                    'Training now runs in the background. You can monitor progress and stop training at any time. The server will remain responsive during training.'
+                )
+            )
+        ),
+
+        activeTab === 'monitor' && React.createElement('div', { className: 'training-monitor' },
+            React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Training Monitor'),
+            React.createElement('div', { className: 'bg-yellow-50 border border-yellow-200 rounded-md p-4' },
+                React.createElement('p', { className: 'text-yellow-800' }, 'Training monitor features will be implemented in Part 2.1.2')
+            )
+        ),
+
+        activeTab === 'evaluation' && React.createElement('div', { className: 'model-evaluator' },
+            React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Model Evaluation'),
+            React.createElement('div', { className: 'bg-yellow-50 border border-yellow-200 rounded-md p-4' },
+                React.createElement('p', { className: 'text-yellow-800' }, 'Model evaluation features will be implemented in Part 2.1.3')
+            )
+        ),
+
+        activeTab === 'history' && React.createElement('div', { className: 'training-history' },
+            React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Training History'),
+            React.createElement('div', { className: 'bg-yellow-50 border border-yellow-200 rounded-md p-4' },
+                React.createElement('p', { className: 'text-yellow-800' }, 'Training history features will be implemented in Part 2.1.4')
+            )
+        )
+    );
+}
+
 // API functions - No session required for local development
 async function initializeSession() {
     // Skip session initialization for local development
@@ -84,6 +414,112 @@ async function analyzeGame(gameData, analysisDepth = 3) {
         return await response.json();
     } catch (error) {
         console.error('Failed to analyze game:', error);
+        throw error;
+    }
+}
+
+// Neural Training API Functions
+async function startNeuralTraining(config) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/train`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to start neural training:', error);
+        throw error;
+    }
+}
+
+async function getNeuralTrainingStatus(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/status/${sessionId}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get training status:', error);
+        throw error;
+    }
+}
+
+async function getNeuralTrainingProgress(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/progress/${sessionId}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get training progress:', error);
+        throw error;
+    }
+}
+
+async function getNeuralTrainingLogs(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/logs/${sessionId}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get training logs:', error);
+        throw error;
+    }
+}
+
+async function stopNeuralTraining(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/stop/${sessionId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to stop training:', error);
+        throw error;
+    }
+}
+
+async function evaluateNeuralModel(config) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/evaluate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to evaluate model:', error);
+        throw error;
+    }
+}
+
+async function getAvailableModels() {
+    try {
+        const response = await fetch(`${API_BASE}/neural/models`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get available models:', error);
+        throw error;
+    }
+}
+
+async function getNeuralConfig() {
+    try {
+        const response = await fetch(`${API_BASE}/neural/config`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get neural config:', error);
+        throw error;
+    }
+}
+
+async function saveNeuralConfig(config) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to save neural config:', error);
         throw error;
     }
 }
@@ -1460,6 +1896,9 @@ function DevelopmentToolsPanel({
 
 // Main App Component
 function App() {
+    // Routing State
+    const [currentPage, setCurrentPage] = React.useState('main');
+    
     // State declarations
     const [sessionStatus, setSessionStatus] = React.useState('connecting');
     const [statusMessage, setStatusMessage] = React.useState('Initializing...');
@@ -1497,6 +1936,17 @@ function App() {
     
     // Development Tools Panel State
     const [devToolsExpanded, setDevToolsExpanded] = React.useState(false);
+    
+    // Neural Training State
+    const [neuralExpanded, setNeuralExpanded] = React.useState(false);
+    const [trainingConfig, setTrainingConfig] = React.useState({
+        modelSize: 'small',
+        device: 'cpu',
+        epochs: 5,
+        samples: 500,
+        batchSize: 16,
+        learningRate: 0.001
+    });
     
     // Initialize session
     React.useEffect(() => {
@@ -2098,9 +2548,20 @@ function App() {
         );
     }
     
-    return React.createElement('div', {
-        className: 'min-h-screen bg-gray-100'
+    return React.createElement(Router, {
+        currentPage: currentPage,
+        onPageChange: setCurrentPage
     },
+        // Navigation
+        React.createElement(Navigation, {
+            currentPage: currentPage,
+            onPageChange: setCurrentPage
+        }),
+        
+        // Page Content
+        currentPage === 'main' && React.createElement('div', {
+            className: 'min-h-screen bg-gray-100'
+        },
         // Header
         React.createElement('header', {
             className: 'bg-white shadow-sm border-b'
@@ -2677,6 +3138,254 @@ function App() {
             onAction: handleContextMenuAction,
             onClose: hideContextMenu
         })
+        ),
+        
+        // Neural Training Page
+        currentPage === 'neural' && React.createElement(NeuralTrainingPage, {
+            loading: loading,
+            setLoading: setLoading,
+            setStatusMessage: setStatusMessage,
+            trainingConfig: trainingConfig,
+            setTrainingConfig: setTrainingConfig,
+            neuralExpanded: neuralExpanded,
+            setNeuralExpanded: setNeuralExpanded
+        })
+    );
+}
+
+// Neural Training Components
+function TrainingConfigPanel({ 
+    loading, setLoading, setStatusMessage,
+    trainingConfig, setTrainingConfig,
+    neuralExpanded, setNeuralExpanded
+}) {
+    // Training configuration state
+    const [modelSize, setModelSize] = React.useState('small');
+    const [device, setDevice] = React.useState('cpu');
+    const [epochs, setEpochs] = React.useState(5);
+    const [samples, setSamples] = React.useState(500);
+    const [batchSize, setBatchSize] = React.useState(16);
+    const [learningRate, setLearningRate] = React.useState(0.001);
+    const [availableDevices, setAvailableDevices] = React.useState(['cpu']);
+
+    // Load available devices on component mount
+    React.useEffect(() => {
+        // For now, we'll assume CPU is always available
+        // In a real implementation, this would check for CUDA availability
+        setAvailableDevices(['cpu']);
+    }, []);
+
+    // Start training function
+    const handleStartTraining = React.useCallback(async () => {
+        setLoading(true);
+        try {
+            const config = {
+                modelSize,
+                device,
+                epochs,
+                samples,
+                batchSize,
+                learningRate
+            };
+            
+            const response = await startNeuralTraining(config);
+            if (response.success) {
+                setStatusMessage('Neural training started successfully');
+                // Store the session ID for monitoring
+                if (response.session_id) {
+                    localStorage.setItem('neural_training_session', response.session_id);
+                }
+            } else {
+                setStatusMessage(`Training failed: ${response.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            setStatusMessage(`Training failed: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    }, [modelSize, device, epochs, samples, batchSize, learningRate, setLoading, setStatusMessage]);
+
+    // Save configuration
+    const handleSaveConfig = React.useCallback(async () => {
+        try {
+            const config = {
+                modelSize,
+                device,
+                epochs,
+                samples,
+                batchSize,
+                learningRate
+            };
+            
+            await saveNeuralConfig(config);
+            setStatusMessage('Training configuration saved');
+        } catch (error) {
+            setStatusMessage(`Failed to save config: ${error.message}`);
+        }
+    }, [modelSize, device, epochs, samples, batchSize, learningRate, setStatusMessage]);
+
+    return React.createElement('div', {
+        className: 'neural-training-config'
+    },
+        React.createElement('h3', {
+            className: 'font-medium text-sm mb-3 flex items-center justify-between text-purple-700'
+        },
+            React.createElement('span', null, '🧠 Neural Training'),
+            React.createElement('button', {
+                className: 'text-xs text-gray-500 hover:text-gray-700',
+                onClick: () => setNeuralExpanded(!neuralExpanded)
+            }, neuralExpanded ? '−' : '+')
+        ),
+        
+        // Collapsible neural training content
+        neuralExpanded && React.createElement('div', {
+            className: 'space-y-3'
+        },
+            // Model Configuration
+            React.createElement('div', {
+                className: 'space-y-2'
+            },
+                React.createElement('label', {
+                    className: 'block text-xs font-medium text-gray-700'
+                }, 'Model Size'),
+                React.createElement('select', {
+                    className: 'w-full text-sm border border-gray-300 rounded px-2 py-1',
+                    value: modelSize,
+                    onChange: (e) => setModelSize(e.target.value)
+                },
+                    React.createElement('option', { value: 'small' }, 'Small (64 hidden, 2 layers)'),
+                    React.createElement('option', { value: 'medium' }, 'Medium (128 hidden, 3 layers)'),
+                    React.createElement('option', { value: 'large' }, 'Large (256 hidden, 4 layers)')
+                )
+            ),
+            
+            // Device Selection
+            React.createElement('div', {
+                className: 'space-y-2'
+            },
+                React.createElement('label', {
+                    className: 'block text-xs font-medium text-gray-700'
+                }, 'Device'),
+                React.createElement('div', {
+                    className: 'flex space-x-2'
+                },
+                    availableDevices.map(dev => 
+                        React.createElement('label', {
+                            key: dev,
+                            className: 'flex items-center space-x-1'
+                        },
+                            React.createElement('input', {
+                                type: 'radio',
+                                name: 'device',
+                                value: dev,
+                                checked: device === dev,
+                                onChange: (e) => setDevice(e.target.value),
+                                className: 'text-purple-600'
+                            }),
+                            React.createElement('span', {
+                                className: 'text-xs'
+                            }, dev.toUpperCase())
+                        )
+                    )
+                )
+            ),
+            
+            // Training Parameters
+            React.createElement('div', {
+                className: 'space-y-2'
+            },
+                React.createElement('label', {
+                    className: 'block text-xs font-medium text-gray-700'
+                }, 'Epochs (1-100)'),
+                React.createElement('input', {
+                    type: 'range',
+                    min: '1',
+                    max: '100',
+                    value: epochs,
+                    onChange: (e) => setEpochs(parseInt(e.target.value)),
+                    className: 'w-full'
+                }),
+                React.createElement('div', {
+                    className: 'text-xs text-gray-500'
+                }, `${epochs} epochs`)
+            ),
+            
+            React.createElement('div', {
+                className: 'space-y-2'
+            },
+                React.createElement('label', {
+                    className: 'block text-xs font-medium text-gray-700'
+                }, 'Samples (100-10000)'),
+                React.createElement('input', {
+                    type: 'range',
+                    min: '100',
+                    max: '10000',
+                    step: '100',
+                    value: samples,
+                    onChange: (e) => setSamples(parseInt(e.target.value)),
+                    className: 'w-full'
+                }),
+                React.createElement('div', {
+                    className: 'text-xs text-gray-500'
+                }, `${samples.toLocaleString()} samples`)
+            ),
+            
+            React.createElement('div', {
+                className: 'space-y-2'
+            },
+                React.createElement('label', {
+                    className: 'block text-xs font-medium text-gray-700'
+                }, 'Batch Size (8-64)'),
+                React.createElement('input', {
+                    type: 'range',
+                    min: '8',
+                    max: '64',
+                    step: '8',
+                    value: batchSize,
+                    onChange: (e) => setBatchSize(parseInt(e.target.value)),
+                    className: 'w-full'
+                }),
+                React.createElement('div', {
+                    className: 'text-xs text-gray-500'
+                }, `${batchSize} batch size`)
+            ),
+            
+            React.createElement('div', {
+                className: 'space-y-2'
+            },
+                React.createElement('label', {
+                    className: 'block text-xs font-medium text-gray-700'
+                }, 'Learning Rate (0.0001-0.01)'),
+                React.createElement('input', {
+                    type: 'range',
+                    min: '0.0001',
+                    max: '0.01',
+                    step: '0.0001',
+                    value: learningRate,
+                    onChange: (e) => setLearningRate(parseFloat(e.target.value)),
+                    className: 'w-full'
+                }),
+                React.createElement('div', {
+                    className: 'text-xs text-gray-500'
+                }, `${learningRate.toFixed(4)} learning rate`)
+            ),
+            
+            // Action Buttons
+            React.createElement('div', {
+                className: 'grid grid-cols-2 gap-2'
+            },
+                React.createElement('button', {
+                    className: `w-full btn-sm ${loading ? 'btn-secondary opacity-50' : 'btn-success'}`,
+                    onClick: handleStartTraining,
+                    disabled: loading
+                }, loading ? '🚀 Starting...' : '🚀 Start Training'),
+                
+                React.createElement('button', {
+                    className: 'w-full btn-sm btn-outline',
+                    onClick: handleSaveConfig
+                }, '💾 Save Config')
+            )
+        )
     );
 }
 

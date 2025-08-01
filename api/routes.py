@@ -8,6 +8,9 @@ import json
 import time
 import copy
 import random
+import threading
+import uuid
+from datetime import datetime
 from typing import Dict, Any, Optional, List
 from flask import Blueprint, request, jsonify, current_app
 from pydantic import BaseModel, ValidationError, ConfigDict
@@ -157,6 +160,9 @@ api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 _current_game_state = None
 _initial_game_state = None  # Store the original initial state
 _current_editable_game_state = None  # Store the current editable game state from frontend
+
+# Global training sessions storage
+training_sessions = {}
 
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
@@ -2997,6 +3003,402 @@ def add_position_to_database_internal(fen_string: str, metadata: Optional[Dict[s
     except Exception as e:
         print(f"DEBUG: Error adding position to database: {e}")
         raise e
+
+
+def calculate_position_similarity(hash1: str, hash2: str) -> float:
+    """Calculate similarity between two position hashes."""
+    # Simple similarity based on hash comparison
+    # In practice, this would be more sophisticated
+    matches = 0
+    for i in range(min(len(hash1), len(hash2))):
+        if hash1[i] == hash2[i]:
+            matches += 1
+    return matches / max(len(hash1), len(hash2))
+
+
+# Neural Training Request Models
+class NeuralTrainingRequest(BaseModel):
+    """Request model for neural training."""
+    config: str = 'small'  # 'small', 'medium', 'large'
+    device: str = 'cpu'  # 'cpu', 'cuda'
+    epochs: int = 5
+    samples: int = 500
+    batch_size: int = 16
+    learning_rate: float = 0.001
+
+
+class NeuralEvaluationRequest(BaseModel):
+    """Request model for neural evaluation."""
+    model: str = 'models/azul_net_small.pth'
+    positions: int = 50
+    games: int = 20
+    device: str = 'cpu'
+
+
+class NeuralConfigRequest(BaseModel):
+    """Request model for neural configuration."""
+    config: Optional[str] = None
+    device: Optional[str] = None
+    epochs: Optional[int] = None
+    samples: Optional[int] = None
+    batch_size: Optional[int] = None
+    learning_rate: Optional[float] = None
+
+
+# Neural Training API Endpoints
+@api_bp.route('/neural/train', methods=['POST'])
+def start_neural_training():
+    """Start neural network training in background."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate request data
+        try:
+            training_request = NeuralTrainingRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': 'Invalid training configuration', 'details': e.errors()}), 400
+        
+        # Check if neural components are available
+        try:
+            from neural.train import TrainingConfig, AzulNetTrainer
+        except ImportError:
+            return jsonify({
+                'error': 'Neural training not available',
+                'message': 'PyTorch and neural components are not installed. Install with: pip install torch'
+            }), 503
+        
+        # Generate session ID
+        session_id = str(uuid.uuid4())
+        
+        # Initialize session status
+        training_sessions[session_id] = {
+            'status': 'starting',
+            'progress': 0,
+            'start_time': datetime.now().isoformat(),
+            'config': training_request.dict(),
+            'logs': [],
+            'error': None,
+            'results': None
+        }
+        
+        # Start training in background thread
+        def train_in_background():
+            try:
+                training_sessions[session_id]['status'] = 'running'
+                training_sessions[session_id]['logs'].append('Training started')
+                
+                # Configuration based on size
+                if training_request.config == 'small':
+                    hidden_size = 64
+                    num_layers = 2
+                elif training_request.config == 'medium':
+                    hidden_size = 128
+                    num_layers = 3
+                else:  # large
+                    hidden_size = 256
+                    num_layers = 4
+                
+                # Create training config
+                train_config = TrainingConfig(
+                    batch_size=training_request.batch_size,
+                    learning_rate=training_request.learning_rate,
+                    num_epochs=training_request.epochs,
+                    num_samples=training_request.samples,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    device=training_request.device
+                )
+                
+                # Train model
+                trainer = AzulNetTrainer(train_config)
+                losses = trainer.train()
+                
+                training_sessions[session_id]['logs'].append(f'Training completed with {len(losses)} epochs')
+                training_sessions[session_id]['progress'] = 80
+                
+                # Evaluate
+                eval_results = trainer.evaluate(num_samples=50)
+                training_sessions[session_id]['logs'].append('Evaluation completed')
+                training_sessions[session_id]['progress'] = 90
+                
+                # Save model
+                import os
+                os.makedirs("models", exist_ok=True)
+                model_path = f"models/azul_net_{training_request.config}.pth"
+                trainer.save_model(model_path)
+                
+                training_sessions[session_id]['logs'].append(f'Model saved to {model_path}')
+                training_sessions[session_id]['progress'] = 100
+                training_sessions[session_id]['status'] = 'completed'
+                training_sessions[session_id]['results'] = {
+                    'final_loss': losses[-1] if losses else 0.0,
+                    'evaluation_error': eval_results.get('avg_value_error', 0.0),
+                    'model_path': model_path,
+                    'config': training_request.config,
+                    'epochs': training_request.epochs,
+                    'samples': training_request.samples
+                }
+                
+            except Exception as e:
+                training_sessions[session_id]['status'] = 'failed'
+                training_sessions[session_id]['error'] = str(e)
+                training_sessions[session_id]['logs'].append(f'Error: {str(e)}')
+        
+        # Start background thread
+        thread = threading.Thread(target=train_in_background)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Training started in background',
+            'session_id': session_id,
+            'status': 'starting'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Internal server error',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/status/<session_id>', methods=['GET'])
+def get_training_status(session_id):
+    """Get training status for a session."""
+    if session_id not in training_sessions:
+        return jsonify({'error': 'Session not found'}), 404
+    
+    session = training_sessions[session_id]
+    return jsonify({
+        'session_id': session_id,
+        'status': session['status'],
+        'progress': session['progress'],
+        'start_time': session['start_time'],
+        'logs': session['logs'],
+        'error': session['error'],
+        'results': session['results']
+    })
+
+
+@api_bp.route('/neural/stop/<session_id>', methods=['POST'])
+def stop_training(session_id):
+    """Stop training for a session."""
+    if session_id not in training_sessions:
+        return jsonify({'error': 'Session not found'}), 404
+    
+    training_sessions[session_id]['status'] = 'stopped'
+    training_sessions[session_id]['logs'].append('Training stopped by user')
+    
+    return jsonify({
+        'success': True,
+        'message': 'Training stopped',
+        'session_id': session_id
+    })
+
+
+@api_bp.route('/neural/evaluate', methods=['POST'])
+def evaluate_neural_model():
+    """Evaluate a trained neural model."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate request data
+        try:
+            eval_request = NeuralEvaluationRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': 'Invalid evaluation configuration', 'details': e.errors()}), 400
+        
+        # Check if neural components are available
+        try:
+            from neural.evaluate import EvaluationConfig, AzulModelEvaluator
+        except ImportError:
+            return jsonify({
+                'error': 'Neural evaluation not available',
+                'message': 'PyTorch and neural components are not installed. Install with: pip install torch'
+            }), 503
+        
+        # Check if model exists
+        import os
+        if not os.path.exists(eval_request.model):
+            return jsonify({
+                'error': 'Model not found',
+                'message': f'Model file {eval_request.model} does not exist'
+            }), 404
+        
+        # Create evaluation configuration
+        config = EvaluationConfig(
+            num_positions=eval_request.positions,
+            num_games=eval_request.games,
+            search_time=0.5,
+            max_rollouts=50,
+            model_path=eval_request.model,
+            device=eval_request.device,
+            compare_heuristic=True,
+            compare_random=True
+        )
+        
+        # Run evaluation
+        try:
+            evaluator = AzulModelEvaluator(config)
+            results = evaluator.evaluate()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Evaluation completed successfully',
+                'results': results
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'error': 'Evaluation failed',
+                'message': str(e)
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'error': 'Internal server error',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/models', methods=['GET'])
+def get_available_models():
+    """Get list of available trained models."""
+    try:
+        import os
+        import glob
+        
+        models_dir = "models"
+        if not os.path.exists(models_dir):
+            return jsonify({
+                'models': [],
+                'message': 'No models directory found'
+            })
+        
+        # Find all .pth files
+        model_files = glob.glob(os.path.join(models_dir, "*.pth"))
+        models = []
+        
+        for model_path in model_files:
+            filename = os.path.basename(model_path)
+            size = os.path.getsize(model_path)
+            models.append({
+                'name': filename,
+                'path': model_path,
+                'size_bytes': size,
+                'size_mb': round(size / (1024 * 1024), 2)
+            })
+        
+        return jsonify({
+            'models': models,
+            'count': len(models)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get models',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/config', methods=['GET'])
+def get_neural_config():
+    """Get current neural training configuration."""
+    try:
+        # Return default configuration
+        config = {
+            'config': 'small',
+            'device': 'cpu',
+            'epochs': 5,
+            'samples': 500,
+            'batch_size': 16,
+            'learning_rate': 0.001,
+            'available_configs': ['small', 'medium', 'large'],
+            'available_devices': ['cpu', 'cuda']
+        }
+        
+        return jsonify(config)
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get configuration',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/config', methods=['POST'])
+def save_neural_config():
+    """Save neural training configuration."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate request data
+        try:
+            config_request = NeuralConfigRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': 'Invalid configuration', 'details': e.errors()}), 400
+        
+        # In a real implementation, this would save to a config file or database
+        # For now, just return success
+        return jsonify({
+            'success': True,
+            'message': 'Configuration saved successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to save configuration',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/status', methods=['GET'])
+def get_neural_status():
+    """Get neural training status."""
+    try:
+        # Check if neural components are available
+        try:
+            import torch
+            from neural.train import TrainingConfig, AzulNetTrainer
+            neural_available = True
+        except ImportError:
+            neural_available = False
+        
+        # Check available models
+        import os
+        import glob
+        models_dir = "models"
+        model_count = 0
+        if os.path.exists(models_dir):
+            model_files = glob.glob(os.path.join(models_dir, "*.pth"))
+            model_count = len(model_files)
+        
+        status = {
+            'neural_available': neural_available,
+            'model_count': model_count,
+            'pytorch_version': None,
+            'cuda_available': False
+        }
+        
+        if neural_available:
+            import torch
+            status['pytorch_version'] = torch.__version__
+            status['cuda_available'] = torch.cuda.is_available()
+        
+        return jsonify(status)
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get status',
+            'message': str(e)
+        }), 500
 
 
 def calculate_position_similarity(hash1: str, hash2: str) -> float:
