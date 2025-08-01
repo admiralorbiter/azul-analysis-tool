@@ -1,0 +1,67 @@
+/* Edit Mode Styles for F1.1 Board Editing System */
+
+/* Edit Mode Base Styles */
+.edit-mode .tile {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-mode .tile:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px #f59e0b;
+}
+
+.edit-mode .factory {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-mode .factory:hover {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.edit-mode .pattern-line {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-mode .pattern-line:hover {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.edit-mode .wall-cell {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-mode .wall-cell:hover {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+/* Edit Mode Selected Element Visual Indicators */
+.edit-mode .factory.selected {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.2);
+    box-shadow: 0 0 0 2px #f59e0b;
+}
+
+.edit-mode .pattern-line.selected {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.2);
+    border-style: solid;
+}
+
+.edit-mode .wall-cell.selected {
+    background-color: rgba(245, 158, 11, 0.4);
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px #f59e0b;
+}
+
+.edit-mode .tile.selected {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 3px #f59e0b;
+    z-index: 10;
+} 

@@ -1,0 +1,192 @@
+/* Component-Specific Styles */
+
+/* Context Menu Styles */
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 150px;
+    padding: 4px 0;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+    transition: background-color 0.15s;
+}
+
+.context-menu-item:hover {
+    background-color: #f3f4f6;
+}
+
+.context-menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.context-menu-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.context-menu-separator {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 4px 0;
+}
+
+/* Player Board Styles */
+.player-board {
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.player-board.active {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.player-board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.player-board-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.player-board-score {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Analysis Panel Styles */
+.analysis-panel {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #374151;
+}
+
+.analysis-content {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Game Management Panel Styles */
+.game-management {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-management-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #374151;
+}
+
+.game-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.game-button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.game-button.primary {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.game-button.primary:hover {
+    background-color: #2563eb;
+}
+
+.game-button.secondary {
+    background-color: #6b7280;
+    color: white;
+}
+
+.game-button.secondary:hover {
+    background-color: #4b5563;
+}
+
+.game-button.danger {
+    background-color: #dc2626;
+    color: white;
+}
+
+.game-button.danger:hover {
+    background-color: #b91c1c;
+}
+
+.game-button.success {
+    background-color: #059669;
+    color: white;
+}
+
+.game-button.success:hover {
+    background-color: #047857;
+}
+
+/* Status Message Styles */
+.status-message {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.status-message.success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.status-message.error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.status-message.warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.status-message.info {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+} 
