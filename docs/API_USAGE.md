@@ -1,5 +1,7 @@
 # 🌐 Azul Solver REST API Usage Guide
 
+> **Note:** Board editing features (edit mode, element selection) are now available in the Web UI. Backend/CLI tests cover state logic; UI tests are manual only.
+
 > Complete guide for using the Azul Solver REST API for game analysis, caching, and research.
 
 ## 🚀 Quick Start
@@ -55,6 +57,8 @@ curl -H "Authorization: Bearer abc123def456" \
 **Note**: Interactive endpoints (`/api/v1/execute_move`, `/api/v1/get_game_state`, `/api/v1/reset_game`) do not require authentication for web UI integration.
 
 ## 🎮 Interactive Game Play
+
+> **Note:** Board editing (edit mode, element selection) is available in the Web UI. Use the edit mode toggle in the Game Management panel to enable board editing. CLI/Backend tests cover state logic; UI tests are manual only.
 
 ### Execute Move
 ```bash

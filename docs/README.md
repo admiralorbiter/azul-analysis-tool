@@ -177,3 +177,19 @@ AZUL-RESEARCH/
 ---
 
 **Current Status**: ✅ M1-M5 Complete → Ready for M6 Web UI Development 🎉 
+
+## 🆕 Board Editing Progress (F1.1)
+
+- **Edit Mode Toggle**: Implemented in the Web UI (Game Management panel)
+- **State Management**: `editMode` and `selectedElement` React state added
+- **Visual Feedback**: CSS for edit mode, hover, and selection
+- **Keyboard Support**: Escape key exits edit mode
+- **CLI/Backend Tests**: Automated tests for state logic, validation, and API endpoint mocks (see `tests/test_board_editing_cli.py`)
+- **UI Tests**: Manual only (no Selenium/UI automation)
+
+### Next Steps
+- **Element Selection**: Add click handlers and context menus for board elements
+- **Context Menus**: Right-click editing options for factories, pattern lines, wall, floor
+- **Documentation**: Keep this section updated as new board editing features are added
+
+**Status:** F1.1 (Edit Mode Toggle) complete and tested. Ready for F1.1 Piece 2 (Element Selection System). 
