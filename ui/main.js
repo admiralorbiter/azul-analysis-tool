@@ -319,51 +319,59 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
         onContextMenu: handleFactoryRightClick,
         style: { position: 'relative' }
     },
-        tiles.map((tile, index) => {
-            const heatmapKey = `${factoryIndex}_${tile === 'B' ? 0 : tile === 'Y' ? 1 : tile === 'R' ? 2 : tile === 'K' ? 3 : 4}`;
-            const heatmapInfo = heatmapEnabled && heatmapData ? heatmapData[heatmapKey] : null;
-            
-            return React.createElement('div', {
-                key: index,
-                style: { position: 'relative' }
-            },
-                React.createElement(Tile, {
-                color: tile,
-                onClick: () => onTileClick ? onTileClick(factoryIndex, index, tile) : null,
-                draggable: true,
-                onDragStart: (e) => {
-                    e.dataTransfer.setData('application/json', JSON.stringify({
-                        sourceType: 'factory',
-                        sourceId: factoryIndex,
-                        tileIndex: index,
-                        tile: tile
-                    }));
+        // Factory label
+        React.createElement('div', {
+            className: 'text-xs text-gray-600 mb-1 text-center font-medium'
+        }, `Factory ${factoryIndex + 1}`),
+        React.createElement('div', {
+            className: 'flex flex-wrap gap-1'
+        },
+            tiles.map((tile, index) => {
+                const heatmapKey = `${factoryIndex}_${tile === 'B' ? 0 : tile === 'Y' ? 1 : tile === 'R' ? 2 : tile === 'K' ? 3 : 4}`;
+                const heatmapInfo = heatmapEnabled && heatmapData ? heatmapData[heatmapKey] : null;
+                
+                return React.createElement('div', {
+                    key: index,
+                    style: { position: 'relative' }
                 },
-                isSelected: selectedTile && selectedTile.sourceId === factoryIndex && selectedTile.tileIndex === index
-                }),
-                // Heatmap overlay
-                heatmapInfo && React.createElement('div', {
-                    className: 'heatmap-overlay',
-                    style: {
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: heatmapInfo.color,
-                        borderRadius: '4px',
-                        pointerEvents: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '10px',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        textShadow: '1px 1px 1px rgba(0,0,0,0.8)'
-                    }
-                }, heatmapInfo.delta > 0 ? `+${heatmapInfo.delta.toFixed(1)}` : heatmapInfo.delta.toFixed(1))
-            );
-        })
+                    React.createElement(Tile, {
+                        color: tile,
+                        onClick: () => onTileClick ? onTileClick(factoryIndex, index, tile) : null,
+                        draggable: true,
+                        onDragStart: (e) => {
+                            e.dataTransfer.setData('application/json', JSON.stringify({
+                                sourceType: 'factory',
+                                sourceId: factoryIndex,
+                                tileIndex: index,
+                                tile: tile
+                            }));
+                        },
+                        isSelected: selectedTile && selectedTile.sourceId === factoryIndex && selectedTile.tileIndex === index
+                    }),
+                    // Heatmap overlay
+                    heatmapInfo && React.createElement('div', {
+                        className: 'heatmap-overlay',
+                        style: {
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: heatmapInfo.color,
+                            borderRadius: '4px',
+                            pointerEvents: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            textShadow: '1px 1px 1px rgba(0,0,0,0.8)'
+                        }
+                    }, heatmapInfo.delta > 0 ? `+${heatmapInfo.delta.toFixed(1)}` : heatmapInfo.delta.toFixed(1))
+                );
+            })
+        )
     );
 }
 
@@ -476,19 +484,27 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
         onClick: handlePatternLineClick,
         onContextMenu: handlePatternLineRightClick
     },
-        tiles.map((tile, index) => 
-            React.createElement(Tile, {
-                key: index,
-                color: tile,
-                onClick: () => onTileClick ? onTileClick(rowIndex, index, tile) : null
-            })
-        ),
-        Array.from({ length: maxTiles - tiles.length }, (_, index) => 
-            React.createElement('div', {
-                key: `empty-${index}`,
-                className: 'empty-slot',
-                onClick: () => onDestinationClick ? onDestinationClick(rowIndex, tiles.length + index) : null
-            })
+        // Row label
+        React.createElement('div', {
+            className: 'text-xs text-gray-600 font-medium'
+        }, `Row ${rowIndex + 1}`),
+        React.createElement('div', {
+            className: 'tiles-container'
+        },
+            tiles.map((tile, index) => 
+                React.createElement(Tile, {
+                    key: index,
+                    color: tile,
+                    onClick: () => onTileClick ? onTileClick(rowIndex, index, tile) : null
+                })
+            ),
+            Array.from({ length: maxTiles - tiles.length }, (_, index) => 
+                React.createElement('div', {
+                    key: `empty-${index}`,
+                    className: 'empty-slot',
+                    onClick: () => onDestinationClick ? onDestinationClick(rowIndex, tiles.length + index) : null
+                })
+            )
         )
     );
 }
@@ -531,11 +547,27 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
         ref: wallRef,
         className: 'wall'
     },
+        // Column labels
+        React.createElement('div', {
+            className: 'wall-column-labels'
+        },
+            React.createElement('div', { className: 'wall-cell-label' }, ''),
+            ['B', 'Y', 'R', 'K', 'W'].map((color, index) => 
+                React.createElement('div', {
+                    key: index,
+                    className: 'wall-cell-label text-xs text-gray-600 font-medium'
+                }, color)
+            )
+        ),
         wall.map((row, rowIndex) => 
             React.createElement('div', {
                 key: rowIndex,
                 className: 'wall-row'
             },
+                // Row label
+                React.createElement('div', {
+                    className: 'wall-cell-label text-xs text-gray-600 font-medium'
+                }, `Row ${rowIndex + 1}`),
                 row.map((cell, colIndex) => {
                     const isSelected = editMode && selectedElements.some(el => 
                         el.type === 'wall-cell' && 
@@ -1454,32 +1486,32 @@ function App() {
                 },
                     // Factories
                     React.createElement('div', null,
-                        React.createElement('h2', {
-                            className: 'text-xl font-semibold mb-4'
-                        }, 'Factories'),
-                        React.createElement('div', {
-                            className: 'grid grid-cols-5 gap-4'
-                        },
-                            (gameState.factories || []).map((factory, index) => 
-                                React.createElement(Factory, {
-                                    key: index,
-                                    tiles: factory,
-                                    factoryIndex: index,
-                                    onTileClick: (factoryIndex, tileIndex, tile) => {
-                                        setSelectedTile({ sourceId: factoryIndex, tileIndex, tile });
-                                        setStatusMessage(`Selected ${tile} from factory ${factoryIndex}`);
-                                    },
-                                    selectedTile: selectedTile,
-                                    editMode: editMode,
-                                    onElementSelect: handleElementSelect,
+                    React.createElement('h2', {
+                        className: 'text-xl font-semibold mb-4'
+                    }, 'Factories'),
+                    React.createElement('div', {
+                        className: 'grid grid-cols-5 gap-4'
+                    },
+                        (gameState.factories || []).map((factory, index) => 
+                            React.createElement(Factory, {
+                                key: index,
+                                tiles: factory,
+                                factoryIndex: index,
+                                onTileClick: (factoryIndex, tileIndex, tile) => {
+                                    setSelectedTile({ sourceId: factoryIndex, tileIndex, tile });
+                                    setStatusMessage(`Selected ${tile} from factory ${factoryIndex}`);
+                                },
+                                selectedTile: selectedTile,
+                                editMode: editMode,
+                                onElementSelect: handleElementSelect,
                                     selectedElements: selectedElements,
                                     heatmapEnabled: heatmapEnabled,
                                     heatmapData: heatmapData
-                                })
-                            )
+                            })
                         )
-                    ),
-                    
+                    )
+                ),
+                
                     // Player boards
                     React.createElement('div', null,
                         React.createElement('h2', {
@@ -1515,8 +1547,8 @@ function App() {
                         // Action buttons - compact
                         React.createElement('div', {
                             className: 'btn-group w-full'
-                        },
-                            React.createElement('button', {
+                    },
+                        React.createElement('button', {
                                 className: 'btn-warning btn-sm flex-1',
                                 onClick: handleUndo,
                                 disabled: moveHistory.length === 0 || loading
@@ -1552,10 +1584,10 @@ function App() {
                                 },
                                     React.createElement('button', {
                                         className: `btn-primary btn-sm ${loading ? 'opacity-50' : ''}`,
-                                        onClick: () => {
-                                            setLoading(true);
+                            onClick: () => {
+                                setLoading(true);
                                             analyzePosition(gameState.fen_string || 'initial', 3, 4.0)
-                                            .then(data => {
+                                    .then(data => {
                                                 if (data.success && data.analysis) {
                                                     setVariations([{
                                                         move: data.analysis.best_move,
@@ -1572,11 +1604,11 @@ function App() {
                                                 } else {
                                                     setStatusMessage('Analysis failed: Invalid response');
                                                 }
-                                            })
-                                            .catch(error => {
-                                                setStatusMessage(`Analysis failed: ${error.message}`);
-                                            })
-                                            .finally(() => setLoading(false));
+                                    })
+                                    .catch(error => {
+                                        setStatusMessage(`Analysis failed: ${error.message}`);
+                                    })
+                                    .finally(() => setLoading(false));
                                         },
                                         disabled: loading
                                     }, loading ? '🤖' : '🔍'),
@@ -1711,7 +1743,7 @@ function App() {
                         editMode && editHints && React.createElement('div', {
                             className: 'keyboard-hints mt-3 p-3 bg-orange-50 rounded text-xs'
                         },
-                            React.createElement('div', {
+            React.createElement('div', {
                                 className: 'flex justify-between items-center mb-2'
                             },
                                 React.createElement('h3', {
@@ -1763,7 +1795,7 @@ function App() {
                             },
                                 moveHistory.slice(-3).map((historyItem, index) => 
                                     React.createElement('div', {
-                                        key: index,
+                        key: index,
                                         className: 'text-xs p-1 bg-gray-100 rounded'
                                     },
                                         React.createElement('div', {
@@ -1796,7 +1828,7 @@ function App() {
                         React.createElement('summary', {
                             className: 'cursor-pointer font-medium'
                         }, 'Server State'),
-                        React.createElement('pre', {
+                React.createElement('pre', {
                             className: 'text-xs mt-2 bg-white p-2 rounded overflow-auto max-h-40'
                         }, gameState ? JSON.stringify(gameState, null, 2) : 'Loading...')
                     )

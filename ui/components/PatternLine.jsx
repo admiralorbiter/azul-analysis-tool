@@ -97,7 +97,10 @@ function PatternLine({
             onClick={editMode ? handlePatternLineClick : undefined}
             onContextMenu={editMode ? handlePatternLineRightClick : undefined}
         >
-            {tiles.map((tile, index) => {
+            {/* Row label */}
+            <div className="text-xs text-gray-600 font-medium">Row {rowIndex + 1}</div>
+            <div className="flex gap-1">
+                {tiles.map((tile, index) => {
                 // Check if this tile is selected in edit mode
                 const isEditSelected = selectedElement && 
                     selectedElement.type === 'pattern-line-tile' && 
@@ -161,6 +164,38 @@ function PatternLine({
                     />
                 );
             })}
+            {Array.from({ length: emptySlots }, (_, index) => {
+                // Check if this empty slot is selected in edit mode
+                const isEditSelected = selectedElement && 
+                    selectedElement.type === 'pattern-line-empty' && 
+                    selectedElement.data.playerIndex === playerIndex && 
+                    selectedElement.data.rowIndex === rowIndex && 
+                    selectedElement.data.emptyIndex === index;
+                
+                return (
+                    <div 
+                        key={`empty-${index}`}
+                        className={`tile ${isEditSelected ? 'selected' : ''}`}
+                        style={{ backgroundColor: 'transparent', border: '2px dashed #d1d5db' }}
+                        onClick={() => {
+                            if (editMode && onElementSelect) {
+                                onElementSelect('pattern-line-empty', { playerIndex, rowIndex, emptyIndex: index });
+                            } else if (isValidDestination) {
+                                onDestinationClick('pattern', { rowIndex, tileIndex: tiles.length + index });
+                            }
+                        }}
+                        onContextMenu={(event) => {
+                            if (editMode) {
+                                event.preventDefault();
+                                if (window.showContextMenu) {
+                                    window.showContextMenu(event, 'pattern-line-empty', { playerIndex, rowIndex, emptyIndex: index });
+                                }
+                            }
+                        }}
+                    />
+                );
+            })}
+            </div>
         </div>
     );
 }

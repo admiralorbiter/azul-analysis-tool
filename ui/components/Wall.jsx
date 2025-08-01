@@ -61,9 +61,23 @@ function Wall({
     
     return (
         <div ref={wallRef} className="wall">
+            {/* Column labels */}
+            <div className="wall-column-labels">
+                <div className="wall-cell-label"></div>
+                {['B', 'Y', 'R', 'K', 'W'].map((color, index) => (
+                    <div key={index} className="wall-cell-label text-xs text-gray-600 font-medium">
+                        {color}
+                    </div>
+                ))}
+            </div>
             {wall.map((row, rowIndex) => (
-                row.map((cell, colIndex) => {
-                    const isValidDestination = selectedTile && onDestinationClick && !cell;
+                <div key={rowIndex} className="wall-row">
+                    {/* Row label */}
+                    <div className="wall-cell-label text-xs text-gray-600 font-medium">
+                        Row {rowIndex + 1}
+                    </div>
+                    {row.map((cell, colIndex) => {
+                        const isValidDestination = selectedTile && onDestinationClick && !cell;
                     
                     // Check if this wall cell is selected in edit mode
                     const isEditSelected = selectedElement && 

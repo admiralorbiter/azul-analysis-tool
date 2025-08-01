@@ -81,7 +81,7 @@ function Factory({
             onClick={editMode ? handleFactoryClick : undefined}
             onContextMenu={editMode ? handleFactoryRightClick : undefined}
         >
-            <div className="text-xs text-gray-600 mb-2">Factory {factoryIndex + 1}</div>
+            <div className="text-xs text-gray-600 font-medium text-center">Factory {factoryIndex + 1}</div>
             <div className="flex flex-wrap gap-1">
                 {tiles.map((tile, index) => {
                     const tileData = {

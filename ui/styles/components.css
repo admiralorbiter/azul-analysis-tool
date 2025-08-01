@@ -88,6 +88,44 @@
     min-height: 44px;
 }
 
+.empty-slot {
+    width: 40px;
+    height: 40px;
+    border: 2px dashed #d1d5db;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.empty-slot:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+/* Factory Section */
+.factory {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    min-width: 120px;
+    transition: all 0.2s ease;
+}
+
+.factory:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.factory.selected {
+    border-color: #f59e0b;
+    background: #fef3c7;
+}
+
 /* Wall Section */
 .wall-section {
     display: flex;
@@ -101,17 +139,78 @@
     gap: 2px;
     padding: 8px;
     background: #f9fafb;
+    border-radius: 6px;
+}
+
+.wall-column-labels {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+
+.wall-cell-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.wall-row {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.wall-cell {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wall-cell:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.wall-cell.occupied {
+    background: #f3f4f6;
+}
+
+.wall-cell.valid-drop {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+
+.wall-cell.selected {
+    border-color: #f59e0b;
+    background: #fef3c7;
+}
+    gap: 2px;
+    padding: 8px;
+    background: #f9fafb;
     border-radius: 4px;
 }
 
 /* Analysis Panel Styles */
 .analysis-panel {
-    background: white;
-    border-radius: 8px;
-    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
     margin-bottom: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 .analysis-title {
@@ -149,49 +248,59 @@
 }
 
 .game-button {
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 10px 18px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .game-button.primary {
-    background-color: #3b82f6;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .game-button.primary:hover {
-    background-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 .game-button.secondary {
-    background-color: #6b7280;
+    background: rgba(255, 255, 255, 0.1);
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .game-button.secondary:hover {
-    background-color: #4b5563;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
 }
 
 .game-button.danger {
-    background-color: #dc2626;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
     color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
 }
 
 .game-button.danger:hover {
-    background-color: #b91c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
 }
 
 .game-button.success {
-    background-color: #059669;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     color: white;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
 }
 
 .game-button.success:hover {
-    background-color: #047857;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
 }
 
 /* Status Message Styles */
