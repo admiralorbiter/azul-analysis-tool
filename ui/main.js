@@ -14,7 +14,7 @@ async function initializeSession() {
     return { session_id: 'local-dev' };
 }
 
-async function analyzePosition(fenString, depth = 3, timeBudget = 4.0) {
+async function analyzePosition(fenString, depth = 3, timeBudget = 4.0, agentId = 0) {
     try {
         const response = await fetch(`${API_BASE}/analyze`, {
             method: 'POST',
@@ -22,7 +22,8 @@ async function analyzePosition(fenString, depth = 3, timeBudget = 4.0) {
             body: JSON.stringify({ 
                 fen_string: fenString,
                 depth: depth,
-                time_budget: timeBudget
+                time_budget: timeBudget,
+                agent_id: agentId
             })
         });
         return await response.json();
@@ -32,7 +33,7 @@ async function analyzePosition(fenString, depth = 3, timeBudget = 4.0) {
     }
 }
 
-async function getHint(fenString, budget = 0.2, rollouts = 100) {
+async function getHint(fenString, budget = 0.2, rollouts = 100, agentId = 0) {
     try {
         const response = await fetch(`${API_BASE}/hint`, {
             method: 'POST',
@@ -40,7 +41,8 @@ async function getHint(fenString, budget = 0.2, rollouts = 100) {
             body: JSON.stringify({ 
                 fen_string: fenString,
                 budget: budget,
-                rollouts: rollouts
+                rollouts: rollouts,
+                agent_id: agentId
             })
         });
         return await response.json();
@@ -50,7 +52,7 @@ async function getHint(fenString, budget = 0.2, rollouts = 100) {
     }
 }
 
-async function analyzeNeural(fenString, timeBudget = 2.0, maxRollouts = 100) {
+async function analyzeNeural(fenString, timeBudget = 2.0, maxRollouts = 100, agentId = 0) {
     try {
         const response = await fetch(`${API_BASE}/analyze_neural`, {
             method: 'POST',
@@ -58,7 +60,8 @@ async function analyzeNeural(fenString, timeBudget = 2.0, maxRollouts = 100) {
             body: JSON.stringify({ 
                 fen: fenString,
                 time_budget: timeBudget,
-                max_rollouts: maxRollouts
+                max_rollouts: maxRollouts,
+                agent_id: agentId
             })
         });
         return await response.json();
@@ -777,6 +780,127 @@ function ContextMenu({ visible, x, y, options, onAction, onClose }) {
     );
 }
 
+// AdvancedAnalysisControls Component
+function AdvancedAnalysisControls({ loading, setLoading, analyzePosition, getHint, analyzeNeural, gameState, setVariations, setHeatmapData, setStatusMessage, moveHistory, analyzeGame, depth, setDepth, timeBudget, setTimeBudget, rollouts, setRollouts, agentId, setAgentId }) {
+
+    const handleAnalyze = React.useCallback(() => {
+        setLoading(true);
+        analyzePosition(gameState.fen_string || 'initial', depth, timeBudget, agentId)
+            .then(data => {
+                if (data.success && data.analysis) {
+                    setVariations([{
+                        move: data.analysis.best_move,
+                        score: data.analysis.best_score,
+                        visits: data.analysis.nodes_searched
+                    }]);
+                    const heatmap = generateHeatmapData({ variations: [{
+                        move: data.analysis.best_move,
+                        score: data.analysis.best_score,
+                        move_data: { source_id: 0, tile_type: 0 }
+                    }] });
+                    setHeatmapData(heatmap);
+                    setStatusMessage(`Analysis complete: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
+                } else {
+                    setStatusMessage('Analysis failed: Invalid response');
+                }
+            })
+            .catch(error => {
+                setStatusMessage(`Analysis failed: ${error.message}`);
+            })
+            .finally(() => setLoading(false));
+    }, [loading, setLoading, analyzePosition, gameState, depth, timeBudget, rollouts, agentId, setVariations, setHeatmapData, setStatusMessage]);
+
+    const handleQuickHint = React.useCallback(() => {
+        setLoading(true);
+        getHint(gameState.fen_string || 'initial', timeBudget, rollouts, agentId)
+            .then(data => {
+                if (data.success && data.hint) {
+                    setStatusMessage(`Hint: ${data.hint.best_move} (EV: ${data.hint.expected_value.toFixed(2)})`);
+                } else {
+                    setStatusMessage('Hint failed: Invalid response');
+                }
+            })
+            .catch(error => {
+                setStatusMessage(`Hint failed: ${error.message}`);
+            })
+            .finally(() => setLoading(false));
+    }, [loading, setLoading, getHint, gameState, timeBudget, rollouts, agentId, setStatusMessage]);
+
+    const handleNeuralAnalysis = React.useCallback(() => {
+        setLoading(true);
+        analyzeNeural(gameState.fen_string || 'initial', 2.0, 100, agentId)
+            .then(data => {
+                if (data.success && data.analysis) {
+                    setStatusMessage(`Neural: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
+                } else {
+                    setStatusMessage('Neural analysis failed: Invalid response');
+                }
+            })
+            .catch(error => {
+                setStatusMessage(`Neural analysis failed: ${error.message}`);
+            })
+            .finally(() => setLoading(false));
+    }, [loading, setLoading, analyzeNeural, gameState, agentId, setStatusMessage]);
+
+    return React.createElement('div', {
+        className: 'space-y-3'
+    },
+        React.createElement('div', {
+            className: 'flex items-center space-x-2'
+        },
+            React.createElement('button', {
+                className: `btn-primary btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
+                onClick: handleAnalyze,
+                disabled: loading
+            }, loading ? '🤖 Analyzing...' : '🔍 Engine Analysis'),
+            React.createElement('button', {
+                className: `btn-info btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
+                onClick: handleQuickHint,
+                disabled: loading
+            }, loading ? '💡 Thinking...' : '💡 Quick Hint')
+        ),
+        React.createElement('div', {
+            className: 'flex items-center space-x-2'
+        },
+            React.createElement('button', {
+                className: `btn-accent btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
+                onClick: handleNeuralAnalysis,
+                disabled: loading
+            }, loading ? '🧠 Processing...' : '🧠 Neural Net'),
+            React.createElement('button', {
+                className: `btn-sm flex-1 ${loading ? 'btn-secondary opacity-50' : 'btn-outline'}`,
+                onClick: () => {
+                    setLoading(true);
+                    const gameData = {
+                        moves: moveHistory.map((move, index) => ({
+                            move: move,
+                            player: index % 2,
+                            position_before: 'initial'
+                        })),
+                        players: ['Player 1', 'Player 2'],
+                        result: { winner: null, score: [0, 0] }
+                    };
+                    
+                    analyzeGame(gameData, 3)
+                        .then(data => {
+                            if (data.success) {
+                                const blunderCount = data.summary.blunder_count;
+                                setStatusMessage(`Game analysis complete: ${blunderCount} blunders found`);
+                            } else {
+                                setStatusMessage('Game analysis failed');
+                            }
+                        })
+                        .catch(error => {
+                            setStatusMessage(`Game analysis failed: ${error.message}`);
+                        })
+                        .finally(() => setLoading(false));
+                },
+                disabled: loading || moveHistory.length === 0
+            }, loading ? '📊 Analyzing Game...' : '📊 Analyze Full Game')
+        )
+    );
+}
+
 // Main App Component
 function App() {
     // State declarations
@@ -799,6 +923,12 @@ function App() {
     const [heatmapData, setHeatmapData] = React.useState(null);
     const [analysisExpanded, setAnalysisExpanded] = React.useState(true); // New state for analysis panel expansion
     const [advancedExpanded, setAdvancedExpanded] = React.useState(true); // New state for advanced tools expansion
+    
+    // Advanced Analysis Controls State
+    const [depth, setDepth] = React.useState(3);
+    const [timeBudget, setTimeBudget] = React.useState(4.0);
+    const [rollouts, setRollouts] = React.useState(100);
+    const [agentId, setAgentId] = React.useState(0);
     
     // Initialize session
     React.useEffect(() => {
@@ -1600,98 +1730,134 @@ function App() {
                             analysisExpanded && React.createElement('div', {
                                 className: 'space-y-3'
                             },
-                                // Analysis buttons with labels
+                                                            // Advanced Analysis Controls
+                            React.createElement(AdvancedAnalysisControls, {
+                                loading: loading,
+                                setLoading: setLoading,
+                                analyzePosition: analyzePosition,
+                                getHint: getHint,
+                                analyzeNeural: analyzeNeural,
+                                gameState: gameState,
+                                setVariations: setVariations,
+                                setHeatmapData: setHeatmapData,
+                                setStatusMessage: setStatusMessage,
+                                moveHistory: moveHistory,
+                                analyzeGame: analyzeGame,
+                                depth: depth,
+                                setDepth: setDepth,
+                                timeBudget: timeBudget,
+                                setTimeBudget: setTimeBudget,
+                                rollouts: rollouts,
+                                setRollouts: setRollouts,
+                                agentId: agentId,
+                                setAgentId: setAgentId
+                            }),
+                            
+                            // Advanced Analysis Settings Panel
+                            React.createElement('div', {
+                                className: 'bg-gray-50 p-3 rounded-lg border border-gray-200'
+                            },
+                                React.createElement('h4', {
+                                    className: 'text-sm font-medium text-gray-700 mb-3'
+                                }, '⚙️ Analysis Settings'),
+                                
                                 React.createElement('div', {
-                                    className: 'space-y-2'
+                                    className: 'space-y-3'
                                 },
+                                    // Depth control
                                     React.createElement('div', {
-                                        className: 'flex items-center space-x-2'
+                                        className: 'flex items-center justify-between'
                                     },
-                                        React.createElement('button', {
-                                            className: `btn-primary btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
-                                            onClick: () => {
-                                                setLoading(true);
-                                                analyzePosition(gameState.fen_string || 'initial', 3, 4.0)
-                                                    .then(data => {
-                                                        if (data.success && data.analysis) {
-                                                            setVariations([{
-                                                                move: data.analysis.best_move,
-                                                                score: data.analysis.best_score,
-                                                                visits: data.analysis.nodes_searched
-                                                            }]);
-                                                            const heatmap = generateHeatmapData({ variations: [{
-                                                                move: data.analysis.best_move,
-                                                                score: data.analysis.best_score,
-                                                                move_data: { source_id: 0, tile_type: 0 }
-                                                            }] });
-                                                            setHeatmapData(heatmap);
-                                                            setStatusMessage(`Analysis complete: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
-                                                        } else {
-                                                            setStatusMessage('Analysis failed: Invalid response');
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        setStatusMessage(`Analysis failed: ${error.message}`);
-                                                    })
-                                                    .finally(() => setLoading(false));
-                                            },
-                                            disabled: loading
-                                        }, loading ? '🤖 Analyzing...' : '🔍 Engine Analysis'),
-                                        
-                                        React.createElement('button', {
-                                            className: `btn-info btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
-                                            onClick: () => {
-                                                setLoading(true);
-                                                getHint(gameState.fen_string || 'initial', 0.2, 100)
-                                                    .then(data => {
-                                                        if (data.success && data.hint) {
-                                                            setStatusMessage(`Hint: ${data.hint.best_move} (EV: ${data.hint.expected_value.toFixed(2)})`);
-                                                        } else {
-                                                            setStatusMessage('Hint failed: Invalid response');
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        setStatusMessage(`Hint failed: ${error.message}`);
-                                                    })
-                                                    .finally(() => setLoading(false));
-                                            },
-                                            disabled: loading
-                                        }, loading ? '💡 Thinking...' : '💡 Quick Hint')
+                                        React.createElement('label', {
+                                            className: 'text-xs text-gray-600'
+                                        }, 'Depth:'),
+                                        React.createElement('input', {
+                                            type: 'range',
+                                            min: '1',
+                                            max: '5',
+                                            value: depth,
+                                            onChange: (e) => setDepth(parseInt(e.target.value)),
+                                            className: 'w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer'
+                                        }),
+                                        React.createElement('span', {
+                                            className: 'text-xs text-gray-700 w-4 text-center'
+                                        }, depth)
                                     ),
                                     
+                                    // Time budget control
                                     React.createElement('div', {
-                                        className: 'flex items-center space-x-2'
+                                        className: 'flex items-center justify-between'
                                     },
-                                        React.createElement('button', {
-                                            className: `btn-accent btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
-                                            onClick: () => {
-                                                setLoading(true);
-                                                analyzeNeural(gameState.fen_string || 'initial', 2.0, 100)
-                                                    .then(data => {
-                                                        if (data.success && data.analysis) {
-                                                            setStatusMessage(`Neural: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
-                                                        } else {
-                                                            setStatusMessage('Neural analysis failed: Invalid response');
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        setStatusMessage(`Neural analysis failed: ${error.message}`);
-                                                    })
-                                                    .finally(() => setLoading(false));
-                                            },
-                                            disabled: loading
-                                        }, loading ? '🧠 Processing...' : '🧠 Neural Net'),
-                                        
-                                        React.createElement('button', {
-                                            className: `btn-sm flex-1 ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
-                                            onClick: () => {
-                                                setHeatmapEnabled(!heatmapEnabled);
-                                                setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
-                                            },
-                                            disabled: !heatmapData
-                                        }, heatmapEnabled ? '🔥 Heatmap ON' : '🔥 Heatmap OFF')
+                                        React.createElement('label', {
+                                            className: 'text-xs text-gray-600'
+                                        }, 'Time (s):'),
+                                        React.createElement('input', {
+                                            type: 'range',
+                                            min: '0.1',
+                                            max: '10.0',
+                                            step: '0.1',
+                                            value: timeBudget,
+                                            onChange: (e) => setTimeBudget(parseFloat(e.target.value)),
+                                            className: 'w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer'
+                                        }),
+                                        React.createElement('span', {
+                                            className: 'text-xs text-gray-700 w-8 text-center'
+                                        }, timeBudget.toFixed(1))
+                                    ),
+                                    
+                                    // Rollouts control
+                                    React.createElement('div', {
+                                        className: 'flex items-center justify-between'
+                                    },
+                                        React.createElement('label', {
+                                            className: 'text-xs text-gray-600'
+                                        }, 'Rollouts:'),
+                                        React.createElement('input', {
+                                            type: 'range',
+                                            min: '10',
+                                            max: '1000',
+                                            step: '10',
+                                            value: rollouts,
+                                            onChange: (e) => setRollouts(parseInt(e.target.value)),
+                                            className: 'w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer'
+                                        }),
+                                        React.createElement('span', {
+                                            className: 'text-xs text-gray-700 w-12 text-center'
+                                        }, rollouts)
+                                    ),
+                                    
+                                    // Agent selection
+                                    React.createElement('div', {
+                                        className: 'flex items-center justify-between'
+                                    },
+                                        React.createElement('label', {
+                                            className: 'text-xs text-gray-600'
+                                        }, 'Agent:'),
+                                        React.createElement('select', {
+                                            value: agentId,
+                                            onChange: (e) => setAgentId(parseInt(e.target.value)),
+                                            className: 'text-xs border border-gray-300 rounded px-2 py-1'
+                                        },
+                                            React.createElement('option', { value: 0 }, 'Player 1'),
+                                            React.createElement('option', { value: 1 }, 'Player 2')
+                                        )
                                     )
-                                ),
+                                )
+                            ),
+                            
+                            // Heatmap toggle
+                            React.createElement('div', {
+                                className: 'flex items-center space-x-2'
+                            },
+                                React.createElement('button', {
+                                    className: `btn-sm flex-1 ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
+                                    onClick: () => {
+                                        setHeatmapEnabled(!heatmapEnabled);
+                                        setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
+                                    },
+                                    disabled: !heatmapData
+                                }, heatmapEnabled ? '🔥 Heatmap ON' : '🔥 Heatmap OFF')
+                            ),
                                 
                                 // Analysis results display
                                 variations.length > 0 && React.createElement('div', {
