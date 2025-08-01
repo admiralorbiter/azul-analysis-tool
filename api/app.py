@@ -79,6 +79,30 @@ def create_app(config=None):
         
         return response
     
+    # Serve UI files at root level for easier access
+    @app.route('/<path:filename>')
+    def static_files(filename):
+        ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
+        
+        # Only serve files that exist in the ui directory
+        if os.path.exists(os.path.join(ui_dir, filename)):
+            response = send_from_directory(ui_dir, filename)
+            
+            # Set correct MIME types
+            if filename.endswith('.js') or filename.endswith('.jsx'):
+                response.headers['Content-Type'] = 'application/javascript'
+            elif filename.endswith('.css'):
+                response.headers['Content-Type'] = 'text/css'
+            elif filename.endswith('.png'):
+                response.headers['Content-Type'] = 'image/png'
+            elif filename.endswith('.jpg') or filename.endswith('.jpeg'):
+                response.headers['Content-Type'] = 'image/jpeg'
+            
+            return response
+        else:
+            # Fall back to index.html for SPA routing
+            return send_from_directory(ui_dir, 'index.html')
+    
     # API info endpoint
     @app.route('/api')
     def api_info():

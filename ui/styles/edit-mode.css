@@ -43,25 +43,74 @@
 
 /* Edit Mode Selected Element Visual Indicators */
 .edit-mode .factory.selected {
-    border-color: #f59e0b;
-    background-color: rgba(245, 158, 11, 0.2);
-    box-shadow: 0 0 0 2px #f59e0b;
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 3px #3b82f6;
+    animation: pulse-selection 2s infinite;
 }
 
 .edit-mode .pattern-line.selected {
-    border-color: #f59e0b;
-    background-color: rgba(245, 158, 11, 0.2);
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.2);
     border-style: solid;
+    box-shadow: 0 0 0 2px #3b82f6;
+    animation: pulse-selection 2s infinite;
 }
 
 .edit-mode .wall-cell.selected {
-    background-color: rgba(245, 158, 11, 0.4);
-    border-color: #f59e0b;
-    box-shadow: 0 0 0 2px #f59e0b;
+    background-color: rgba(59, 130, 246, 0.4);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px #3b82f6;
+    animation: pulse-selection 2s infinite;
 }
 
 .edit-mode .tile.selected {
     transform: scale(1.15);
-    box-shadow: 0 0 0 3px #f59e0b;
+    box-shadow: 0 0 0 3px #3b82f6;
     z-index: 10;
+    animation: pulse-selection 2s infinite;
+}
+
+/* Multi-selection indicator */
+.edit-mode .factory.selected::after,
+.edit-mode .pattern-line.selected::after,
+.edit-mode .wall-cell.selected::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 100;
+}
+
+/* Pulse animation for selected elements */
+@keyframes pulse-selection {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3);
+    }
+}
+
+/* Keyboard hints styling */
+.edit-mode .keyboard-hints {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.edit-mode .keyboard-hints h3 {
+    color: #1e40af;
+    font-weight: 600;
 } 

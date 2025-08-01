@@ -182,7 +182,7 @@ function Tile({ color, onClick, className = "", draggable = false, onDragStart, 
 }
 
 // Factory Component
-function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTile = null, onTileSelection = null, editMode = false, onElementSelect = null, selectedElement = null, heatmapEnabled = false, heatmapData = null }) {
+function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTile = null, onTileSelection = null, editMode = false, onElementSelect = null, selectedElements = [], heatmapEnabled = false, heatmapData = null }) {
     const factoryRef = React.useRef(null);
     
     React.useEffect(() => {
@@ -216,16 +216,11 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
     
     const handleFactoryClick = (e) => {
         if (editMode && onElementSelect) {
-            // In edit mode, handle edit actions
-            if (window.handleEditClick) {
-                window.handleEditClick('factory', { factoryIndex, tiles });
-            } else {
-                onElementSelect({
-                    type: 'factory',
-                    data: { factoryIndex, tiles },
-                    timestamp: Date.now()
-                });
-            }
+            const isCtrlClick = e.ctrlKey;
+            onElementSelect({
+                type: 'factory',
+                data: { factoryIndex, tiles }
+            }, isCtrlClick);
         }
     };
     
@@ -236,7 +231,7 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
         }
     };
     
-    const isSelected = selectedElement && selectedElement.type === 'factory' && selectedElement.data.factoryIndex === factoryIndex;
+    const isSelected = editMode && selectedElements.some(el => el.type === 'factory' && el.data.factoryIndex === factoryIndex);
     const isEditSelected = editMode && isSelected;
     
     // Get heatmap overlay style for this factory
@@ -282,18 +277,18 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
                 style: { position: 'relative' }
             },
                 React.createElement(Tile, {
-                    color: tile,
-                    onClick: () => onTileClick ? onTileClick(factoryIndex, index, tile) : null,
-                    draggable: true,
-                    onDragStart: (e) => {
-                        e.dataTransfer.setData('application/json', JSON.stringify({
-                            sourceType: 'factory',
-                            sourceId: factoryIndex,
-                            tileIndex: index,
-                            tile: tile
-                        }));
-                    },
-                    isSelected: selectedTile && selectedTile.sourceId === factoryIndex && selectedTile.tileIndex === index
+                color: tile,
+                onClick: () => onTileClick ? onTileClick(factoryIndex, index, tile) : null,
+                draggable: true,
+                onDragStart: (e) => {
+                    e.dataTransfer.setData('application/json', JSON.stringify({
+                        sourceType: 'factory',
+                        sourceId: factoryIndex,
+                        tileIndex: index,
+                        tile: tile
+                    }));
+                },
+                isSelected: selectedTile && selectedTile.sourceId === factoryIndex && selectedTile.tileIndex === index
                 }),
                 // Heatmap overlay
                 heatmapInfo && React.createElement('div', {
@@ -371,7 +366,7 @@ async function executeMove(fenString, move, agentId = 0) {
 }
 
 // PatternLine Component
-function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElement = null }) {
+function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
     const patternLineRef = React.useRef(null);
     
     React.useEffect(() => {
@@ -406,16 +401,11 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
     
     const handlePatternLineClick = (e) => {
         if (editMode && onElementSelect) {
-            // In edit mode, handle edit actions
-            if (window.handleEditClick) {
-                window.handleEditClick('pattern-line', { playerIndex, rowIndex, tiles, maxTiles });
-            } else {
-                onElementSelect({
-                    type: 'pattern-line',
-                    data: { playerIndex, rowIndex, tiles, maxTiles },
-                    timestamp: Date.now()
-                });
-            }
+            const isCtrlClick = e.ctrlKey;
+            onElementSelect({
+                type: 'pattern-line',
+                data: { playerIndex, rowIndex, tiles, maxTiles }
+            }, isCtrlClick);
         }
     };
     
@@ -426,7 +416,7 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
         }
     };
     
-    const isSelected = selectedElement && selectedElement.type === 'pattern-line' && selectedElement.data.rowIndex === rowIndex;
+    const isSelected = editMode && selectedElements.some(el => el.type === 'pattern-line' && el.data.rowIndex === rowIndex && el.data.playerIndex === playerIndex);
     const isEditSelected = editMode && isSelected;
     
     return React.createElement('div', {
@@ -453,7 +443,7 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
 }
 
 // Wall Component
-function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElement = null }) {
+function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
     const wallRef = React.useRef(null);
     
     React.useEffect(() => {
@@ -495,13 +485,24 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
                 key: rowIndex,
                 className: 'wall-row'
             },
-                row.map((cell, colIndex) => 
-                    React.createElement('div', {
+                row.map((cell, colIndex) => {
+                    const isSelected = editMode && selectedElements.some(el => 
+                        el.type === 'wall-cell' && 
+                        el.data.playerIndex === playerIndex && 
+                        el.data.rowIndex === rowIndex && 
+                        el.data.colIndex === colIndex
+                    );
+                    
+                    return React.createElement('div', {
                         key: colIndex,
-                        className: `wall-cell ${cell ? 'filled' : 'empty'}`,
-                        onClick: () => {
-                            if (editMode && window.handleEditClick) {
-                                window.handleEditClick('wall-cell', { playerIndex, rowIndex, colIndex, cell });
+                        className: `wall-cell ${cell ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''}`,
+                        onClick: (e) => {
+                            if (editMode && onElementSelect) {
+                                const isCtrlClick = e.ctrlKey;
+                                onElementSelect({
+                                    type: 'wall-cell',
+                                    data: { playerIndex, rowIndex, colIndex, cell }
+                                }, isCtrlClick);
                             } else if (onWallClick) {
                                 onWallClick(rowIndex, colIndex, cell);
                             }
@@ -514,15 +515,15 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
                         }
                     },
                         cell ? React.createElement(Tile, { color: cell }) : null
-                    )
-                )
+                    );
+                })
             )
         )
     );
 }
 
 // PlayerBoard Component
-function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onPatternLineDrop, onWallDrop, selectedTile = null, onDestinationClick = null, isActive = false, onPlayerSwitch = null, canInteract = true, gameMode = 'sandbox', editMode = false, onElementSelect = null, selectedElement = null }) {
+function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onPatternLineDrop, onWallDrop, selectedTile = null, onDestinationClick = null, isActive = false, onPlayerSwitch = null, canInteract = true, gameMode = 'sandbox', editMode = false, onElementSelect = null, selectedElements = [] }) {
     const borderClass = isActive ? 'border-4 border-blue-500 bg-blue-50' : 'border-2 border-gray-300 bg-gray-50';
     const headerClass = isActive ? 'text-blue-700 font-bold' : 'text-gray-700';
     
@@ -564,7 +565,7 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
                         editMode: editMode,
                         onElementSelect: onElementSelect,
                         playerIndex: playerIndex,
-                        selectedElement: selectedElement
+                        selectedElements: selectedElements
                     })
                 )
             ),
@@ -580,7 +581,7 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
                     editMode: editMode,
                     onElementSelect: onElementSelect,
                     playerIndex: playerIndex,
-                    selectedElement: selectedElement
+                    selectedElements: selectedElements
                 })
             )
         ),
@@ -684,9 +685,9 @@ function App() {
     const [gameState, setGameState] = React.useState(null);
     const [selectedTile, setSelectedTile] = React.useState(null);
     const [editMode, setEditMode] = React.useState(false);
-    const [selectedElement, setSelectedElement] = React.useState(null);
-    const [editTarget, setEditTarget] = React.useState(null); // For tracking what we're editing
-    const [editAction, setEditAction] = React.useState(null); // 'add', 'remove', 'move'
+    const [selectedElements, setSelectedElements] = React.useState([]); // Array of selected elements
+    const [clipboard, setClipboard] = React.useState(null); // For copy/paste
+    const [editHints, setEditHints] = React.useState(true); // Show keyboard hints
     const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, options: [] });
     const [variations, setVariations] = React.useState([]);
     const [moveAnnotations, setMoveAnnotations] = React.useState({});
@@ -733,75 +734,100 @@ function App() {
     // Clear selection function
     const clearSelection = React.useCallback(() => {
         setSelectedTile(null);
-        setSelectedElement(null);
+        setSelectedElements([]);
         setStatusMessage('Selection cleared');
     }, []);
     
-    // Handle element selection
-    const handleElementSelect = React.useCallback((element) => {
-        setSelectedElement(element);
-        setStatusMessage(formatSelectedElement(element));
-    }, []);
-
     // Edit mode functions
     const handleEditModeToggle = React.useCallback(() => {
         const newEditMode = !editMode;
         setEditMode(newEditMode);
         
         if (newEditMode) {
-            setStatusMessage('Edit mode enabled. Click on elements to select them.');
+            setStatusMessage('Edit mode enabled. Click tiles to select, use 1-5 for colors, Delete to remove.');
+            setSelectedElements([]);
         } else {
             setStatusMessage('Edit mode disabled.');
-            setSelectedElement(null);
-            setEditTarget(null);
-            setEditAction(null);
+            setSelectedElements([]);
+            setClipboard(null);
         }
     }, [editMode]);
 
-    const handleEditAction = React.useCallback((action, target) => {
-        setEditAction(action);
-        setEditTarget(target);
-        
-        switch (action) {
-            case 'add':
-                setStatusMessage(`Click where you want to add a ${target} tile`);
-                break;
-            case 'remove':
-                setStatusMessage(`Click on a ${target} tile to remove it`);
-                break;
-            case 'move':
-                setStatusMessage(`Click on a tile to move it`);
-                break;
-            default:
-                setStatusMessage('Select an edit action');
-        }
-    }, []);
-
-    const handleEditClick = React.useCallback((elementType, elementData) => {
+    // Handle element selection in edit mode
+    const handleElementSelect = React.useCallback((element, isCtrlClick = false) => {
         if (!editMode) return;
 
-        switch (editAction) {
-            case 'add':
-                // Add tile to the clicked location
-                console.log('Adding tile to:', elementType, elementData);
-                setStatusMessage(`Added tile to ${elementType}`);
-                break;
-            case 'remove':
-                // Remove tile from the clicked location
-                console.log('Removing tile from:', elementType, elementData);
-                setStatusMessage(`Removed tile from ${elementType}`);
-                break;
-            case 'move':
-                // Move tile to the clicked location
-                console.log('Moving tile to:', elementType, elementData);
-                setStatusMessage(`Moved tile to ${elementType}`);
-                break;
-            default:
-                // Just select the element
-                setSelectedElement({ type: elementType, data: elementData });
-                setStatusMessage(`Selected ${elementType}`);
+        const elementId = `${element.type}_${element.data.factoryIndex || element.data.playerIndex || 0}_${element.data.rowIndex || 0}_${element.data.colIndex || element.data.tileIndex || 0}`;
+        
+        setSelectedElements(prev => {
+            if (isCtrlClick) {
+                // Multi-select with Ctrl+click
+                const isAlreadySelected = prev.some(el => el.id === elementId);
+                if (isAlreadySelected) {
+                    return prev.filter(el => el.id !== elementId);
+                } else {
+                    return [...prev, { ...element, id: elementId }];
+                }
+            } else {
+                // Single select
+                return [{ ...element, id: elementId }];
+            }
+        });
+
+        const count = isCtrlClick ? 'multiple' : '1';
+        setStatusMessage(`Selected ${count} element(s). Use 1-5 for colors, Delete to remove, Ctrl+C/V to copy/paste.`);
+    }, [editMode]);
+
+    // Apply tile color to selected elements
+    const applyTileColor = React.useCallback((colorKey) => {
+        if (!editMode || selectedElements.length === 0) return;
+
+        const colorMap = { '1': 'B', '2': 'Y', '3': 'R', '4': 'K', '5': 'W' };
+        const color = colorMap[colorKey];
+        
+        if (!color) return;
+
+        // Here you would implement the actual tile placement logic
+        console.log(`Applying ${color} tiles to:`, selectedElements);
+        setStatusMessage(`Applied ${color} tiles to ${selectedElements.length} location(s)`);
+        
+        // Clear selection after applying
+        setSelectedElements([]);
+    }, [editMode, selectedElements]);
+
+    // Remove tiles from selected elements
+    const removeSelectedTiles = React.useCallback(() => {
+        if (!editMode || selectedElements.length === 0) return;
+
+        // Here you would implement the actual tile removal logic
+        console.log('Removing tiles from:', selectedElements);
+        setStatusMessage(`Removed tiles from ${selectedElements.length} location(s)`);
+        
+        // Clear selection after removing
+        setSelectedElements([]);
+    }, [editMode, selectedElements]);
+
+    // Copy selected elements
+    const copySelection = React.useCallback(() => {
+        if (!editMode || selectedElements.length === 0) return;
+
+        setClipboard([...selectedElements]);
+        setStatusMessage(`Copied ${selectedElements.length} element(s) to clipboard`);
+    }, [editMode, selectedElements]);
+
+    // Paste clipboard to selected location
+    const pasteSelection = React.useCallback(() => {
+        if (!editMode || !clipboard || selectedElements.length !== 1) {
+            setStatusMessage('Select exactly one location to paste to');
+            return;
         }
-    }, [editMode, editAction]);
+
+        // Here you would implement the actual paste logic
+        console.log('Pasting from clipboard:', clipboard, 'to:', selectedElements[0]);
+        setStatusMessage(`Pasted ${clipboard.length} element(s)`);
+        
+        setSelectedElements([]);
+    }, [editMode, clipboard, selectedElements]);
     
     // Handle move execution
     const handleMoveExecution = React.useCallback(async (move) => {
@@ -1054,8 +1080,7 @@ function App() {
     React.useEffect(() => {
         window.showContextMenu = showContextMenu;
         window.hideContextMenu = hideContextMenu;
-        window.handleEditClick = handleEditClick;
-    }, [showContextMenu, hideContextMenu, handleEditClick]);
+    }, [showContextMenu, hideContextMenu]);
     
     // Handle clicks outside context menu
     React.useEffect(() => {
@@ -1083,22 +1108,46 @@ function App() {
     React.useEffect(() => {
         const handleKeyPress = (e) => {
             if (e.key === 'Escape') {
+                if (editMode) {
+                    setSelectedElements([]);
+                    setStatusMessage('Selection cleared');
+                } else {
                 clearSelection();
+                }
             } else if (e.key === 'e' && e.ctrlKey) {
                 e.preventDefault();
-                setEditMode(!editMode);
-            } else if (e.key === 'z' && e.ctrlKey) {
+                handleEditModeToggle();
+            } else if (e.key === 'z' && e.ctrlKey && !editMode) {
                 e.preventDefault();
                 handleUndo();
-            } else if (e.key === 'y' && e.ctrlKey) {
+            } else if (e.key === 'y' && e.ctrlKey && !editMode) {
                 e.preventDefault();
                 handleRedo();
+            } else if (editMode) {
+                // Edit mode keyboard shortcuts
+                if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                    e.preventDefault();
+                    applyTileColor(e.key);
+                } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                    e.preventDefault();
+                    removeSelectedTiles();
+                } else if (e.key === 'c' && e.ctrlKey) {
+                    e.preventDefault();
+                    copySelection();
+                } else if (e.key === 'v' && e.ctrlKey) {
+                    e.preventDefault();
+                    pasteSelection();
+                } else if (e.key === 'a' && e.ctrlKey) {
+                    e.preventDefault();
+                    // Select all tiles in current view
+                    setStatusMessage('Select All not implemented yet');
+                }
             }
         };
         
         document.addEventListener('keydown', handleKeyPress);
         return () => document.removeEventListener('keydown', handleKeyPress);
-    }, [clearSelection, editMode, handleUndo, handleRedo]);
+    }, [editMode, clearSelection, handleEditModeToggle, handleUndo, handleRedo, applyTileColor, removeSelectedTiles, copySelection, pasteSelection]);
     
     // Update body class for edit mode
     React.useEffect(() => {
@@ -1194,10 +1243,10 @@ function App() {
             React.createElement('div', {
                 className: 'mb-4 space-y-2'
             },
-                React.createElement(StatusMessage, {
-                    type: sessionStatus === 'connected' ? 'success' : 'error',
-                    message: statusMessage
-                }),
+            React.createElement(StatusMessage, {
+                type: sessionStatus === 'connected' ? 'success' : 'error',
+                message: statusMessage
+            }),
                 React.createElement('div', {
                     className: 'flex justify-between items-center p-3 bg-blue-50 rounded-lg'
                 },
@@ -1243,7 +1292,7 @@ function App() {
                                 selectedTile: selectedTile,
                                 editMode: editMode,
                                 onElementSelect: handleElementSelect,
-                                selectedElement: selectedElement,
+                                selectedElements: selectedElements,
                                 heatmapEnabled: heatmapEnabled,
                                 heatmapData: heatmapData
                             })
@@ -1264,8 +1313,8 @@ function App() {
                         // Action buttons
                         React.createElement('div', {
                             className: 'btn-group w-full'
-                        },
-                            React.createElement('button', {
+                    },
+                        React.createElement('button', {
                                 className: 'btn-warning btn-sm flex-1',
                                 onClick: handleUndo,
                                 disabled: moveHistory.length === 0 || loading
@@ -1283,19 +1332,19 @@ function App() {
                         },
                             React.createElement('button', {
                                 className: `w-full btn-primary ${loading ? 'opacity-50' : ''}`,
-                                onClick: () => {
-                                    setLoading(true);
+                            onClick: () => {
+                                setLoading(true);
                                     analyzePosition(gameState.fen_string || 'initial')
-                                        .then(data => {
-                                            setVariations(data.variations || []);
+                                    .then(data => {
+                                        setVariations(data.variations || []);
                                             const heatmap = generateHeatmapData(data);
                                             setHeatmapData(heatmap);
-                                            setStatusMessage('Analysis complete');
-                                        })
-                                        .catch(error => {
-                                            setStatusMessage(`Analysis failed: ${error.message}`);
-                                        })
-                                        .finally(() => setLoading(false));
+                                        setStatusMessage('Analysis complete');
+                                    })
+                                    .catch(error => {
+                                        setStatusMessage(`Analysis failed: ${error.message}`);
+                                    })
+                                    .finally(() => setLoading(false));
                                 },
                                 disabled: loading
                             }, loading ? '🤖 Analyzing...' : '🔍 Analyze Position'),
@@ -1315,85 +1364,59 @@ function App() {
                             React.createElement('h3', {
                                 className: 'font-medium mb-2'
                             }, 'Best Moves'),
-                            variations.map((variation, index) => 
-                                React.createElement(MoveOption, {
-                                    key: index,
-                                    move: variation.move,
-                                    score: variation.score,
-                                    visits: variation.visits,
-                                    onClick: () => setStatusMessage(`Selected: ${variation.move}`),
-                                    isSelected: false
-                                })
-                            )
+                        variations.map((variation, index) => 
+                            React.createElement(MoveOption, {
+                                key: index,
+                                move: variation.move,
+                                score: variation.score,
+                                visits: variation.visits,
+                                onClick: () => setStatusMessage(`Selected: ${variation.move}`),
+                                isSelected: false
+                            })
+                        )
                         ),
                         
-                        // Edit Controls Panel (only show when edit mode is active)
-                        editMode && React.createElement('div', {
-                            className: 'edit-controls mt-6 p-4'
+                        // Edit Mode Keyboard Hints (only show when edit mode is active)
+                        editMode && editHints && React.createElement('div', {
+                            className: 'keyboard-hints mt-6 p-4'
                         },
-                            React.createElement('h3', {
-                                className: 'font-medium mb-3'
-                            }, '✏️ Edit Controls'),
                             React.createElement('div', {
-                                className: 'space-y-3'
+                                className: 'flex justify-between items-center mb-3'
                             },
-                                // Edit Actions
-                                React.createElement('div', {
-                                    className: 'btn-group w-full'
-                                },
-                                    React.createElement('button', {
-                                        className: 'btn-warning btn-sm flex-1',
-                                        onClick: () => handleEditAction('add', 'blue')
-                                    }, '➕ Add'),
-                                    React.createElement('button', {
-                                        className: 'btn-danger btn-sm flex-1',
-                                        onClick: () => handleEditAction('remove', 'tile')
-                                    }, '➖ Remove'),
-                                    React.createElement('button', {
-                                        className: 'btn-info btn-sm flex-1',
-                                        onClick: () => handleEditAction('move', 'tile')
-                                    }, '↔️ Move')
+                                React.createElement('h3', {
+                                    className: 'font-medium'
+                                }, '⌨️ Keyboard Shortcuts'),
+                                React.createElement('button', {
+                                    className: 'btn-secondary btn-sm',
+                                    onClick: () => setEditHints(false)
+                                }, '✕')
+                            ),
+                            React.createElement('div', {
+                                className: 'grid grid-cols-2 gap-3 text-sm'
+                            },
+                                React.createElement('div', null,
+                                    React.createElement('div', { className: 'font-medium mb-1' }, 'Selection:'),
+                                    React.createElement('div', null, 'Click - Select'),
+                                    React.createElement('div', null, 'Ctrl+Click - Multi-select'),
+                                    React.createElement('div', null, 'Esc - Clear selection')
                                 ),
-                                
-                                // Tile Color Selection (for add action)
-                                editAction === 'add' && React.createElement('div', {
-                                    className: 'space-y-2'
-                                },
-                                    React.createElement('p', {
-                                        className: 'text-sm text-orange-700'
-                                    }, 'Select tile color:'),
-                                    React.createElement('div', {
-                                        className: 'tile-color-grid'
-                                    },
-                                        ['B', 'Y', 'R', 'K', 'W'].map(color => 
-                                            React.createElement('button', {
-                                                key: color,
-                                                className: `tile-color-button ${getTileColor(color)} ${editTarget === color ? 'selected' : ''}`,
-                                                onClick: () => handleEditAction('add', color)
-                                            })
-                                        )
-                                    )
-                                ),
-                                
-                                // Current Action Status
-                                editAction && React.createElement('div', {
-                                    className: 'edit-action-status'
-                                },
-                                    React.createElement('strong', null, 'Current Action: '),
-                                    editAction === 'add' ? `Add ${editTarget} tiles` :
-                                    editAction === 'remove' ? 'Remove tiles' :
-                                    editAction === 'move' ? 'Move tiles' : 'Select action'
-                                ),
-                                
-                                // Clear Action Button
-                                editAction && React.createElement('button', {
-                                    className: 'w-full btn-secondary btn-sm',
-                                    onClick: () => {
-                                        setEditAction(null);
-                                        setEditTarget(null);
-                                        setStatusMessage('Edit action cleared');
-                                    }
-                                }, '❌ Clear Action')
+                                React.createElement('div', null,
+                                    React.createElement('div', { className: 'font-medium mb-1' }, 'Actions:'),
+                                    React.createElement('div', null, '1-5 - Add tile colors'),
+                                    React.createElement('div', null, 'Del - Remove tiles'),
+                                    React.createElement('div', null, 'Ctrl+C/V - Copy/Paste')
+                                )
+                            ),
+                            React.createElement('div', {
+                                className: 'mt-3 p-2 bg-orange-100 rounded text-xs'
+                            },
+                                React.createElement('strong', null, 'Colors: '),
+                                '1=Blue, 2=Yellow, 3=Red, 4=Black, 5=White'
+                            ),
+                            selectedElements.length > 0 && React.createElement('div', {
+                                className: 'mt-2 p-2 bg-blue-100 rounded text-sm'
+                            },
+                                React.createElement('strong', null, `${selectedElements.length} element(s) selected`)
                             )
                         ),
                         
@@ -1437,7 +1460,7 @@ function App() {
                         isActive: index === currentPlayer,
                         editMode: editMode,
                         onElementSelect: handleElementSelect,
-                        selectedElement: selectedElement,
+                        selectedElements: selectedElements,
                         onPatternLineDrop: handlePatternLineDrop,
                         onPlayerSwitch: (playerId) => setCurrentPlayer(playerId),
                         canInteract: !loading && !engineThinking
@@ -1471,15 +1494,21 @@ function App() {
             ),
             
             // Selected element display
-            selectedElement && React.createElement('div', {
+            selectedElements.length > 0 && React.createElement('div', {
                 className: 'mt-4 p-4 bg-blue-50 rounded-lg'
             },
                 React.createElement('h3', {
                     className: 'font-semibold mb-2'
-                }, 'Selected Element'),
-                React.createElement('pre', {
-                    className: 'text-sm'
-                }, formatSelectedElement(selectedElement))
+                }, `Selected Elements (${selectedElements.length})`),
+                selectedElements.map((element, index) => 
+                    React.createElement('div', {
+                        key: index,
+                        className: 'mb-2 p-2 bg-blue-100 rounded'
+                    },
+                        React.createElement('strong', null, `${element.type}: `),
+                        formatSelectedElement(element)
+                    )
+                )
             )
         ),
         
