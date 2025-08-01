@@ -10,6 +10,8 @@ import copy
 import random
 import threading
 import uuid
+import psutil
+import os
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from flask import Blueprint, request, jsonify, current_app
@@ -163,6 +165,86 @@ _current_editable_game_state = None  # Store the current editable game state fro
 
 # Global training sessions storage
 training_sessions = {}
+
+# Enhanced session tracking for live loss visualization
+class TrainingSession:
+    """Enhanced training session with loss tracking and resource monitoring."""
+    
+    def __init__(self, session_id: str, config: dict):
+        self.session_id = session_id
+        self.status = 'starting'
+        self.progress = 0
+        self.start_time = datetime.now()
+        self.end_time = None
+        self.config = config
+        self.logs = []
+        self.error = None
+        self.results = None
+        
+        # Loss tracking for visualization
+        self.loss_history = []
+        self.epoch_history = []
+        self.timestamp_history = []
+        
+        # Resource monitoring
+        self.cpu_usage = []
+        self.memory_usage = []
+        self.gpu_usage = []
+        
+        # Training time estimation
+        self.estimated_total_time = None
+        self.current_epoch = 0
+        self.total_epochs = config.get('epochs', 5)
+        
+        # Stop flag for graceful termination
+        self.stop_requested = False
+    
+    def update_progress(self, epoch: int, loss: float, progress: int):
+        """Update training progress with loss tracking."""
+        self.current_epoch = epoch
+        self.progress = progress
+        
+        # Record loss for visualization
+        self.loss_history.append(loss)
+        self.epoch_history.append(epoch)
+        self.timestamp_history.append(datetime.now().isoformat())
+        
+        # Estimate remaining time
+        if epoch > 0:
+            elapsed_time = (datetime.now() - self.start_time).total_seconds()
+            avg_time_per_epoch = elapsed_time / epoch
+            remaining_epochs = self.total_epochs - epoch
+            self.estimated_total_time = avg_time_per_epoch * self.total_epochs
+    
+    def update_resource_usage(self, cpu: float, memory: float, gpu: float = None):
+        """Update resource usage metrics."""
+        self.cpu_usage.append(cpu)
+        self.memory_usage.append(memory)
+        if gpu is not None:
+            self.gpu_usage.append(gpu)
+    
+    def to_dict(self) -> dict:
+        """Convert session to dictionary for API response."""
+        return {
+            'session_id': self.session_id,
+            'status': self.status,
+            'progress': self.progress,
+            'start_time': self.start_time.isoformat(),
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'config': self.config,
+            'logs': self.logs,
+            'error': self.error,
+            'results': self.results,
+            'loss_history': self.loss_history,
+            'epoch_history': self.epoch_history,
+            'timestamp_history': self.timestamp_history,
+            'cpu_usage': self.cpu_usage,
+            'memory_usage': self.memory_usage,
+            'gpu_usage': self.gpu_usage,
+            'estimated_total_time': self.estimated_total_time,
+            'current_epoch': self.current_epoch,
+            'total_epochs': self.total_epochs
+        }
 
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
@@ -3048,7 +3130,7 @@ class NeuralConfigRequest(BaseModel):
 # Neural Training API Endpoints
 @api_bp.route('/neural/train', methods=['POST'])
 def start_neural_training():
-    """Start neural network training in background."""
+    """Start neural network training in background with enhanced monitoring."""
     try:
         data = request.get_json()
         if not data:
@@ -3072,22 +3154,15 @@ def start_neural_training():
         # Generate session ID
         session_id = str(uuid.uuid4())
         
-        # Initialize session status
-        training_sessions[session_id] = {
-            'status': 'starting',
-            'progress': 0,
-            'start_time': datetime.now().isoformat(),
-            'config': training_request.dict(),
-            'logs': [],
-            'error': None,
-            'results': None
-        }
+        # Create enhanced training session
+        session = TrainingSession(session_id, training_request.dict())
+        training_sessions[session_id] = session
         
         # Start training in background thread
         def train_in_background():
             try:
-                training_sessions[session_id]['status'] = 'running'
-                training_sessions[session_id]['logs'].append('Training started')
+                session.status = 'running'
+                session.logs.append('Training started')
                 
                 # Configuration based on size
                 if training_request.config == 'small':
@@ -3111,17 +3186,47 @@ def start_neural_training():
                     device=training_request.device
                 )
                 
-                # Train model
-                trainer = AzulNetTrainer(train_config)
+                # Create custom trainer with progress callbacks
+                class MonitoredTrainer(AzulNetTrainer):
+                    def __init__(self, config, session):
+                        super().__init__(config)
+                        self.session = session
+                        self.epoch_count = 0
+                    
+                    def _train_epoch(self, states, policy_targets, value_targets):
+                        """Override to add progress monitoring."""
+                        # Get resource usage
+                        resources = get_process_resources()
+                        session.update_resource_usage(
+                            resources['cpu_percent'],
+                            resources['memory_percent']
+                        )
+                        
+                        # Train epoch
+                        loss = super()._train_epoch(states, policy_targets, value_targets)
+                        
+                        # Update progress
+                        self.epoch_count += 1
+                        progress = min(80, (self.epoch_count / train_config.num_epochs) * 80)
+                        session.update_progress(self.epoch_count, loss, progress)
+                        
+                        # Check if stop requested
+                        if session.stop_requested:
+                            raise InterruptedError("Training stopped by user")
+                        
+                        return loss
+                
+                # Train model with monitoring
+                trainer = MonitoredTrainer(train_config, session)
                 losses = trainer.train()
                 
-                training_sessions[session_id]['logs'].append(f'Training completed with {len(losses)} epochs')
-                training_sessions[session_id]['progress'] = 80
+                session.logs.append(f'Training completed with {len(losses)} epochs')
+                session.progress = 80
                 
                 # Evaluate
                 eval_results = trainer.evaluate(num_samples=50)
-                training_sessions[session_id]['logs'].append('Evaluation completed')
-                training_sessions[session_id]['progress'] = 90
+                session.logs.append('Evaluation completed')
+                session.progress = 90
                 
                 # Save model
                 import os
@@ -3129,10 +3234,11 @@ def start_neural_training():
                 model_path = f"models/azul_net_{training_request.config}.pth"
                 trainer.save_model(model_path)
                 
-                training_sessions[session_id]['logs'].append(f'Model saved to {model_path}')
-                training_sessions[session_id]['progress'] = 100
-                training_sessions[session_id]['status'] = 'completed'
-                training_sessions[session_id]['results'] = {
+                session.logs.append(f'Model saved to {model_path}')
+                session.progress = 100
+                session.status = 'completed'
+                session.end_time = datetime.now()
+                session.results = {
                     'final_loss': losses[-1] if losses else 0.0,
                     'evaluation_error': eval_results.get('avg_value_error', 0.0),
                     'model_path': model_path,
@@ -3141,10 +3247,15 @@ def start_neural_training():
                     'samples': training_request.samples
                 }
                 
+            except InterruptedError:
+                session.status = 'stopped'
+                session.logs.append('Training stopped by user')
+                session.end_time = datetime.now()
             except Exception as e:
-                training_sessions[session_id]['status'] = 'failed'
-                training_sessions[session_id]['error'] = str(e)
-                training_sessions[session_id]['logs'].append(f'Error: {str(e)}')
+                session.status = 'failed'
+                session.error = str(e)
+                session.logs.append(f'Error: {str(e)}')
+                session.end_time = datetime.now()
         
         # Start background thread
         thread = threading.Thread(target=train_in_background)
@@ -3167,20 +3278,26 @@ def start_neural_training():
 
 @api_bp.route('/neural/status/<session_id>', methods=['GET'])
 def get_training_status(session_id):
-    """Get training status for a session."""
+    """Get enhanced training status for a session with loss history and resource monitoring."""
     if session_id not in training_sessions:
         return jsonify({'error': 'Session not found'}), 404
     
     session = training_sessions[session_id]
-    return jsonify({
-        'session_id': session_id,
-        'status': session['status'],
-        'progress': session['progress'],
-        'start_time': session['start_time'],
-        'logs': session['logs'],
-        'error': session['error'],
-        'results': session['results']
-    })
+    
+    # Convert session object to dictionary
+    if hasattr(session, 'to_dict'):
+        return jsonify(session.to_dict())
+    else:
+        # Fallback for old session format
+        return jsonify({
+            'session_id': session_id,
+            'status': session['status'],
+            'progress': session['progress'],
+            'start_time': session['start_time'],
+            'logs': session['logs'],
+            'error': session['error'],
+            'results': session['results']
+        })
 
 
 @api_bp.route('/neural/stop/<session_id>', methods=['POST'])
@@ -3189,12 +3306,20 @@ def stop_training(session_id):
     if session_id not in training_sessions:
         return jsonify({'error': 'Session not found'}), 404
     
-    training_sessions[session_id]['status'] = 'stopped'
-    training_sessions[session_id]['logs'].append('Training stopped by user')
+    session = training_sessions[session_id]
+    
+    # Set stop flag for graceful termination
+    if hasattr(session, 'stop_requested'):
+        session.stop_requested = True
+        session.logs.append('Stop requested - training will terminate gracefully')
+    else:
+        # Fallback for old session format
+        session['status'] = 'stopped'
+        session['logs'].append('Training stopped by user')
     
     return jsonify({
         'success': True,
-        'message': 'Training stopped',
+        'message': 'Training stop requested',
         'session_id': session_id
     })
 
@@ -3410,3 +3535,109 @@ def calculate_position_similarity(hash1: str, hash2: str) -> float:
         if hash1[i] == hash2[i]:
             matches += 1
     return matches / max(len(hash1), len(hash2))
+
+
+def get_system_resources():
+    """Get current system resource usage."""
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory()
+        memory_percent = memory.percent
+        
+        # Try to get GPU usage if available
+        gpu_percent = None
+        try:
+            import torch
+            if torch.cuda.is_available():
+                gpu_percent = torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated() * 100
+        except ImportError:
+            pass
+        
+        return {
+            'cpu_percent': cpu_percent,
+            'memory_percent': memory_percent,
+            'memory_used_gb': memory.used / (1024**3),
+            'memory_total_gb': memory.total / (1024**3),
+            'gpu_percent': gpu_percent
+        }
+    except Exception as e:
+        return {
+            'cpu_percent': 0.0,
+            'memory_percent': 0.0,
+            'memory_used_gb': 0.0,
+            'memory_total_gb': 0.0,
+            'gpu_percent': None,
+            'error': str(e)
+        }
+
+
+def get_process_resources():
+    """Get current process resource usage."""
+    try:
+        process = psutil.Process()
+        cpu_percent = process.cpu_percent()
+        memory_info = process.memory_info()
+        memory_percent = process.memory_percent()
+        
+        return {
+            'cpu_percent': cpu_percent,
+            'memory_percent': memory_percent,
+            'memory_used_mb': memory_info.rss / (1024**2),
+            'threads': process.num_threads()
+        }
+    except Exception as e:
+        return {
+            'cpu_percent': 0.0,
+            'memory_percent': 0.0,
+            'memory_used_mb': 0.0,
+            'threads': 0,
+            'error': str(e)
+        }
+
+
+@api_bp.route('/neural/sessions', methods=['GET'])
+def get_all_training_sessions():
+    """Get all active training sessions."""
+    try:
+        sessions = []
+        for session_id, session in training_sessions.items():
+            if hasattr(session, 'to_dict'):
+                sessions.append(session.to_dict())
+            else:
+                # Fallback for old session format
+                sessions.append({
+                    'session_id': session_id,
+                    'status': session['status'],
+                    'progress': session['progress'],
+                    'start_time': session['start_time'],
+                    'logs': session['logs'],
+                    'error': session['error'],
+                    'results': session['results']
+                })
+        
+        return jsonify({
+            'sessions': sessions,
+            'count': len(sessions),
+            'active_count': len([s for s in sessions if s['status'] in ['starting', 'running']])
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get sessions',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/sessions/<session_id>', methods=['DELETE'])
+def delete_training_session(session_id):
+    """Delete a training session."""
+    if session_id not in training_sessions:
+        return jsonify({'error': 'Session not found'}), 404
+    
+    del training_sessions[session_id]
+    
+    return jsonify({
+        'success': True,
+        'message': 'Session deleted',
+        'session_id': session_id
+    })

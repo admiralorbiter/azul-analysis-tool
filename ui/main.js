@@ -31,6 +31,258 @@ function Navigation({ currentPage, onPageChange }) {
     );
 }
 
+// Enhanced Training Monitor Component
+function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading }) {
+    const [allSessions, setAllSessions] = React.useState([]);
+    const [selectedSession, setSelectedSession] = React.useState(null);
+    const [refreshInterval, setRefreshInterval] = React.useState(null);
+
+    // Load all sessions on mount
+    React.useEffect(() => {
+        loadAllSessions();
+        const interval = setInterval(loadAllSessions, 3000); // Refresh every 3 seconds
+        setRefreshInterval(interval);
+        
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, []);
+
+    const loadAllSessions = async () => {
+        try {
+            const result = await getAllTrainingSessions();
+            setAllSessions(result.sessions || []);
+            
+            // Auto-select active session if none selected
+            if (!selectedSession && result.sessions) {
+                const activeSession = result.sessions.find(s => s.status === 'running');
+                if (activeSession) {
+                    setSelectedSession(activeSession);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load sessions:', error);
+        }
+    };
+
+    const handleStopSession = async (sessionId) => {
+        try {
+            await stopNeuralTraining(sessionId);
+            setStatusMessage('info', 'Training stop requested');
+        } catch (error) {
+            setStatusMessage('error', 'Failed to stop training');
+        }
+    };
+
+    const handleDeleteSession = async (sessionId) => {
+        try {
+            await deleteTrainingSession(sessionId);
+            setStatusMessage('success', 'Session deleted');
+            loadAllSessions();
+        } catch (error) {
+            setStatusMessage('error', 'Failed to delete session');
+        }
+    };
+
+    const formatDuration = (startTime, endTime) => {
+        const start = new Date(startTime);
+        const end = endTime ? new Date(endTime) : new Date();
+        const duration = Math.floor((end - start) / 1000);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        return `${minutes}m ${seconds}s`;
+    };
+
+    const formatETA = (estimatedTime) => {
+        if (!estimatedTime) return 'Calculating...';
+        const minutes = Math.floor(estimatedTime / 60);
+        const seconds = Math.floor(estimatedTime % 60);
+        return `${minutes}m ${seconds}s`;
+    };
+
+    return React.createElement('div', { className: 'training-monitor p-4' },
+        React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Live Training Monitor'),
+        
+        // Session List
+        React.createElement('div', { className: 'mb-6' },
+            React.createElement('h3', { className: 'text-lg font-medium mb-3 text-gray-700' }, 'Active Sessions'),
+            allSessions.length === 0 ? 
+                React.createElement('div', { className: 'text-gray-500 text-center py-8' }, 'No training sessions found') :
+                React.createElement('div', { className: 'space-y-3' },
+                    allSessions.map(session => 
+                        React.createElement('div', { 
+                            key: session.session_id,
+                            className: `p-4 border rounded-lg cursor-pointer transition-colors ${
+                                selectedSession?.session_id === session.session_id 
+                                    ? 'border-purple-500 bg-purple-50' 
+                                    : 'border-gray-200 hover:border-purple-300'
+                            }`
+                        },
+                            React.createElement('div', { className: 'flex justify-between items-start' },
+                                React.createElement('div', { className: 'flex-1' },
+                                    React.createElement('div', { className: 'flex items-center space-x-2 mb-2' },
+                                        React.createElement('span', { 
+                                            className: `px-2 py-1 text-xs rounded-full ${
+                                                session.status === 'running' ? 'bg-green-100 text-green-800' :
+                                                session.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                                session.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`
+                                        }, session.status),
+                                        React.createElement('span', { className: 'text-sm text-gray-600' }, 
+                                            `Session: ${session.session_id.slice(0, 8)}...`
+                                        )
+                                    ),
+                                    React.createElement('div', { className: 'text-sm text-gray-600' },
+                                        React.createElement('p', null, `Started: ${new Date(session.start_time).toLocaleString()}`),
+                                        session.end_time && React.createElement('p', null, 
+                                            `Duration: ${formatDuration(session.start_time, session.end_time)}`
+                                        ),
+                                        session.estimated_total_time && React.createElement('p', null,
+                                            `ETA: ${formatETA(session.estimated_total_time)}`
+                                        )
+                                    )
+                                ),
+                                React.createElement('div', { className: 'flex space-x-2' },
+                                    session.status === 'running' && React.createElement('button', {
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            handleStopSession(session.session_id);
+                                        },
+                                        className: 'px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700'
+                                    }, 'Stop'),
+                                    React.createElement('button', {
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            handleDeleteSession(session.session_id);
+                                        },
+                                        className: 'px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700'
+                                    }, 'Delete')
+                                )
+                            ),
+                            React.createElement('div', { className: 'mt-3' },
+                                React.createElement('div', { className: 'w-full bg-gray-200 rounded-full h-2' },
+                                    React.createElement('div', { 
+                                        className: 'bg-purple-600 h-2 rounded-full transition-all duration-300',
+                                        style: { width: `${session.progress || 0}%` }
+                                    })
+                                ),
+                                React.createElement('p', { className: 'text-xs text-gray-600 mt-1' }, 
+                                    `${session.progress || 0}% complete`
+                                )
+                            )
+                        )
+                    )
+                )
+        ),
+
+        // Selected Session Details
+        selectedSession && React.createElement('div', { className: 'border-t pt-6' },
+            React.createElement('h3', { className: 'text-lg font-medium mb-4 text-gray-700' }, 'Session Details'),
+            
+            // Loss Visualization
+            selectedSession.loss_history && selectedSession.loss_history.length > 0 && 
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Training Loss'),
+                React.createElement('div', { className: 'bg-white border rounded-lg p-4' },
+                    React.createElement('div', { className: 'h-48 flex items-end space-x-1' },
+                        selectedSession.loss_history.map((loss, index) => 
+                            React.createElement('div', {
+                                key: index,
+                                className: 'bg-purple-500 rounded-t',
+                                style: {
+                                    width: '4px',
+                                    height: `${Math.max(2, (loss / Math.max(...selectedSession.loss_history)) * 180)}px`
+                                }
+                            })
+                        )
+                    ),
+                    React.createElement('div', { className: 'flex justify-between text-xs text-gray-500 mt-2' },
+                        React.createElement('span', null, 'Epoch 1'),
+                        React.createElement('span', null, `Epoch ${selectedSession.loss_history.length}`)
+                    )
+                )
+            ),
+
+            // Resource Monitoring
+            (selectedSession.cpu_usage && selectedSession.cpu_usage.length > 0) &&
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Resource Usage'),
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                    React.createElement('div', { className: 'bg-white border rounded-lg p-4' },
+                        React.createElement('h5', { className: 'text-sm font-medium text-gray-700 mb-2' }, 'CPU Usage'),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                            React.createElement('div', { className: 'flex-1 bg-gray-200 rounded-full h-2' },
+                                React.createElement('div', { 
+                                    className: 'bg-blue-500 h-2 rounded-full',
+                                    style: { width: `${selectedSession.cpu_usage[selectedSession.cpu_usage.length - 1] || 0}%` }
+                                })
+                            ),
+                            React.createElement('span', { className: 'text-sm text-gray-600' },
+                                `${selectedSession.cpu_usage[selectedSession.cpu_usage.length - 1] || 0}%`
+                            )
+                        )
+                    ),
+                    React.createElement('div', { className: 'bg-white border rounded-lg p-4' },
+                        React.createElement('h5', { className: 'text-sm font-medium text-gray-700 mb-2' }, 'Memory Usage'),
+                        React.createElement('div', { className: 'flex items-center space-x-2' },
+                            React.createElement('div', { className: 'flex-1 bg-gray-200 rounded-full h-2' },
+                                React.createElement('div', { 
+                                    className: 'bg-green-500 h-2 rounded-full',
+                                    style: { width: `${selectedSession.memory_usage[selectedSession.memory_usage.length - 1] || 0}%` }
+                                })
+                            ),
+                            React.createElement('span', { className: 'text-sm text-gray-600' },
+                                `${selectedSession.memory_usage[selectedSession.memory_usage.length - 1] || 0}%`
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // Training Logs
+            selectedSession.logs && selectedSession.logs.length > 0 &&
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Training Logs'),
+                React.createElement('div', { className: 'bg-gray-100 p-4 rounded-lg max-h-48 overflow-y-auto' },
+                    selectedSession.logs.map((log, index) => 
+                        React.createElement('div', { 
+                            key: index, 
+                            className: 'text-sm font-mono text-gray-700 mb-1' 
+                        }, log)
+                    )
+                )
+            ),
+
+            // Results
+            selectedSession.results && 
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Training Results'),
+                React.createElement('div', { className: 'bg-blue-50 border border-blue-200 rounded-lg p-4' },
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Final Loss: ${selectedSession.results.final_loss?.toFixed(4) || 'N/A'}`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Evaluation Error: ${selectedSession.results.evaluation_error?.toFixed(4) || 'N/A'}`
+                            )
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Model Path: ${selectedSession.results.model_path || 'N/A'}`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Config: ${selectedSession.results.config || 'N/A'}`
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    );
+}
+
 // Neural Training Page Component
 function NeuralTrainingPage({ 
     loading, setLoading, setStatusMessage,
@@ -314,12 +566,12 @@ function NeuralTrainingPage({
             )
         ),
 
-        activeTab === 'monitor' && React.createElement('div', { className: 'training-monitor' },
-            React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Training Monitor'),
-            React.createElement('div', { className: 'bg-yellow-50 border border-yellow-200 rounded-md p-4' },
-                React.createElement('p', { className: 'text-yellow-800' }, 'Training monitor features will be implemented in Part 2.1.2')
-            )
-        ),
+        activeTab === 'monitor' && React.createElement(TrainingMonitor, {
+            trainingStatus,
+            setStatusMessage,
+            loading,
+            setLoading
+        }),
 
         activeTab === 'evaluation' && React.createElement('div', { className: 'model-evaluator' },
             React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Model Evaluation'),
@@ -459,6 +711,29 @@ async function getNeuralTrainingLogs(sessionId) {
         return await response.json();
     } catch (error) {
         console.error('Failed to get training logs:', error);
+        throw error;
+    }
+}
+
+async function getAllTrainingSessions() {
+    try {
+        const response = await fetch(`${API_BASE}/neural/sessions`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get training sessions:', error);
+        throw error;
+    }
+}
+
+async function deleteTrainingSession(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/sessions/${sessionId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to delete training session:', error);
         throw error;
     }
 }
