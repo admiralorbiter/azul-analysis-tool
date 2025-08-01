@@ -45,6 +45,7 @@
     padding: 16px;
     margin-bottom: 16px;
     transition: all 0.2s ease;
+    background: white;
 }
 
 .player-board.active {
@@ -70,6 +71,39 @@
     color: #6b7280;
 }
 
+/* Pattern Lines Section */
+.pattern-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.pattern-line {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px;
+    border-radius: 4px;
+    min-height: 44px;
+}
+
+/* Wall Section */
+.wall-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wall {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    padding: 8px;
+    background: #f9fafb;
+    border-radius: 4px;
+}
+
 /* Analysis Panel Styles */
 .analysis-panel {
     background: white;
@@ -77,6 +111,7 @@
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
 }
 
 .analysis-title {
@@ -189,4 +224,74 @@
     background-color: #dbeafe;
     color: #1e40af;
     border: 1px solid #bfdbfe;
+}
+
+/* Header Styles */
+header {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Main Content Area */
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.max-w-7xl {
+    max-width: 80rem;
+}
+
+/* Button Variants */
+.bg-blue-600 {
+    background-color: #2563eb;
+}
+
+.bg-blue-600:hover {
+    background-color: #1d4ed8;
+}
+
+.bg-gray-200 {
+    background-color: #e5e7eb;
+}
+
+.bg-gray-200:hover {
+    background-color: #d1d5db;
+}
+
+.bg-green-600 {
+    background-color: #059669;
+}
+
+.bg-green-600:hover {
+    background-color: #047857;
+}
+
+.text-white {
+    color: white;
+}
+
+.text-gray-700 {
+    color: #374151;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .player-board {
+        padding: 12px;
+    }
+    
+    .analysis-panel {
+        padding: 12px;
+    }
+    
+    .game-controls {
+        flex-direction: column;
+    }
 } 

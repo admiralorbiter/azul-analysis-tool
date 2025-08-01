@@ -69,7 +69,15 @@ def create_app(config=None):
     @app.route('/ui/<path:filename>')
     def ui_static(filename):
         ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
-        return send_from_directory(ui_dir, filename)
+        response = send_from_directory(ui_dir, filename)
+        
+        # Set correct MIME types for JavaScript files
+        if filename.endswith('.js') or filename.endswith('.jsx'):
+            response.headers['Content-Type'] = 'application/javascript'
+        elif filename.endswith('.css'):
+            response.headers['Content-Type'] = 'text/css'
+        
+        return response
     
     # API info endpoint
     @app.route('/api')

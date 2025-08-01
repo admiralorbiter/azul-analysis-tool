@@ -1924,6 +1924,7 @@ def get_monitoring_data():
 
 
 @api_bp.route('/execute_move', methods=['POST'])
+@require_session
 def execute_move():
     """Execute a move and return new game state."""
     try:
@@ -2024,6 +2025,9 @@ def execute_move():
     except ValidationError as e:
         return jsonify({'error': f'Invalid request: {str(e)}'}), 400
     except Exception as e:
+        import traceback
+        print(f"ERROR in execute_move: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': f'Failed to execute move: {str(e)}'}), 500
 
 
