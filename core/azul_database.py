@@ -1172,14 +1172,14 @@ class AzulDatabase:
                 
                 # Parse JSON fields
                 config = json.loads(row['config']) if row['config'] else None
-                logs = json.loads(row['logs']) if row['logs'] else None
+                logs = json.loads(row['logs']) if row['logs'] else []
                 results = json.loads(row['results']) if row['results'] else None
-                loss_history = json.loads(row['loss_history']) if row['loss_history'] else None
-                epoch_history = json.loads(row['epoch_history']) if row['epoch_history'] else None
-                timestamp_history = json.loads(row['timestamp_history']) if row['timestamp_history'] else None
-                cpu_usage = json.loads(row['cpu_usage']) if row['cpu_usage'] else None
-                memory_usage = json.loads(row['memory_usage']) if row['memory_usage'] else None
-                gpu_usage = json.loads(row['gpu_usage']) if row['gpu_usage'] else None
+                loss_history = json.loads(row['loss_history']) if row['loss_history'] else []
+                epoch_history = json.loads(row['epoch_history']) if row['epoch_history'] else []
+                timestamp_history = json.loads(row['timestamp_history']) if row['timestamp_history'] else []
+                cpu_usage = json.loads(row['cpu_usage']) if row['cpu_usage'] else []
+                memory_usage = json.loads(row['memory_usage']) if row['memory_usage'] else []
+                gpu_usage = json.loads(row['gpu_usage']) if row['gpu_usage'] else []
                 
                 metadata = json.loads(row['metadata']) if row['metadata'] else None
                 
@@ -1243,14 +1243,14 @@ class AzulDatabase:
                 for row in cursor.fetchall():
                     # Parse JSON fields
                     config = json.loads(row['config']) if row['config'] else None
-                    logs = json.loads(row['logs']) if row['logs'] else None
+                    logs = json.loads(row['logs']) if row['logs'] else []
                     results = json.loads(row['results']) if row['results'] else None
-                    loss_history = json.loads(row['loss_history']) if row['loss_history'] else None
-                    epoch_history = json.loads(row['epoch_history']) if row['epoch_history'] else None
-                    timestamp_history = json.loads(row['timestamp_history']) if row['timestamp_history'] else None
-                    cpu_usage = json.loads(row['cpu_usage']) if row['cpu_usage'] else None
-                    memory_usage = json.loads(row['memory_usage']) if row['memory_usage'] else None
-                    gpu_usage = json.loads(row['gpu_usage']) if row['gpu_usage'] else None
+                    loss_history = json.loads(row['loss_history']) if row['loss_history'] else []
+                    epoch_history = json.loads(row['epoch_history']) if row['epoch_history'] else []
+                    timestamp_history = json.loads(row['timestamp_history']) if row['timestamp_history'] else []
+                    cpu_usage = json.loads(row['cpu_usage']) if row['cpu_usage'] else []
+                    memory_usage = json.loads(row['memory_usage']) if row['memory_usage'] else []
+                    gpu_usage = json.loads(row['gpu_usage']) if row['gpu_usage'] else []
                     metadata = json.loads(row['metadata']) if row['metadata'] else None
                     
                     session = NeuralTrainingSession(

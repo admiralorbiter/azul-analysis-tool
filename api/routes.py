@@ -174,85 +174,7 @@ _current_editable_game_state = None  # Store the current editable game state fro
 # Global evaluation sessions storage
 evaluation_sessions = {}
 
-# Enhanced session tracking for live loss visualization
-class TrainingSession:
-    """Enhanced training session with loss tracking and resource monitoring."""
-    
-    def __init__(self, session_id: str, config: dict):
-        self.session_id = session_id
-        self.status = 'starting'
-        self.progress = 0
-        self.start_time = datetime.now()
-        self.end_time = None
-        self.config = config
-        self.logs = []
-        self.error = None
-        self.results = None
-        
-        # Loss tracking for visualization
-        self.loss_history = []
-        self.epoch_history = []
-        self.timestamp_history = []
-        
-        # Resource monitoring
-        self.cpu_usage = []
-        self.memory_usage = []
-        self.gpu_usage = []
-        
-        # Training time estimation
-        self.estimated_total_time = None
-        self.current_epoch = 0
-        self.total_epochs = config.get('epochs', 5)
-        
-        # Stop flag for graceful termination
-        self.stop_requested = False
-    
-    def update_progress(self, epoch: int, loss: float, progress: int):
-        """Update training progress with loss tracking."""
-        self.current_epoch = epoch
-        self.progress = progress
-        
-        # Record loss for visualization
-        self.loss_history.append(loss)
-        self.epoch_history.append(epoch)
-        self.timestamp_history.append(datetime.now().isoformat())
-        
-        # Estimate remaining time
-        if epoch > 0:
-            elapsed_time = (datetime.now() - self.start_time).total_seconds()
-            avg_time_per_epoch = elapsed_time / epoch
-            remaining_epochs = self.total_epochs - epoch
-            self.estimated_total_time = avg_time_per_epoch * self.total_epochs
-    
-    def update_resource_usage(self, cpu: float, memory: float, gpu: float = None):
-        """Update resource usage metrics."""
-        self.cpu_usage.append(cpu)
-        self.memory_usage.append(memory)
-        if gpu is not None:
-            self.gpu_usage.append(gpu)
-    
-    def to_dict(self) -> dict:
-        """Convert session to dictionary for API response."""
-        return {
-            'session_id': self.session_id,
-            'status': self.status,
-            'progress': self.progress,
-            'start_time': self.start_time.isoformat(),
-            'end_time': self.end_time.isoformat() if self.end_time else None,
-            'config': self.config,
-            'logs': self.logs,
-            'error': self.error,
-            'results': self.results,
-            'loss_history': self.loss_history,
-            'epoch_history': self.epoch_history,
-            'timestamp_history': self.timestamp_history,
-            'cpu_usage': self.cpu_usage,
-            'memory_usage': self.memory_usage,
-            'gpu_usage': self.gpu_usage,
-            'estimated_total_time': self.estimated_total_time,
-            'current_epoch': self.current_epoch,
-            'total_epochs': self.total_epochs
-        }
+# The TrainingSession class has been removed - we now use database-backed NeuralTrainingSession only
 
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
@@ -3162,35 +3084,49 @@ def start_neural_training():
         # Generate session ID
         session_id = str(uuid.uuid4())
         
-        # Create enhanced training session and save to database
-        session = TrainingSession(session_id, training_request.dict())
-        
-        # Save initial session to database
+        # Create database session only (no in-memory session)
         from core.azul_database import NeuralTrainingSession
         db_session = NeuralTrainingSession(
             session_id=session_id,
             status='starting',
             progress=0,
-            config=json.dumps(training_request.dict()),
-            logs=json.dumps(['Training session created']),
+            start_time=datetime.now(),
+            config=training_request.dict(),
+            logs=['Training session created'],
             error=None,
             results=None,
-            metadata=json.dumps({
+            loss_history=[],
+            epoch_history=[],
+            timestamp_history=[],
+            cpu_usage=[],
+            memory_usage=[],
+            gpu_usage=[],
+            estimated_total_time=None,
+            current_epoch=0,
+            total_epochs=training_request.epochs,
+            created_at=datetime.now(),
+            metadata={
                 'device': training_request.device,
                 'config_size': training_request.config,
                 'epochs': training_request.epochs,
                 'samples': training_request.samples,
                 'batch_size': training_request.batch_size,
                 'learning_rate': training_request.learning_rate
-            })
+            }
         )
         db.save_neural_training_session(db_session)
         
         # Start training in background thread
         def train_in_background():
             try:
-                session.status = 'running'
-                session.logs.append('Training started')
+                # Update status to running
+                db_session = db.get_neural_training_session(session_id)
+                if not db_session:
+                    return
+                
+                db_session.status = 'running'
+                db_session.logs.append('Training started')
+                db.save_neural_training_session(db_session)
                 
                 # Configuration based on size
                 if training_request.config == 'small':
@@ -3216,19 +3152,27 @@ def start_neural_training():
                 
                 # Create custom trainer with progress callbacks
                 class MonitoredTrainer(AzulNetTrainer):
-                    def __init__(self, config, session):
+                    def __init__(self, config, session_id, db):
                         super().__init__(config)
-                        self.session = session
+                        self.session_id = session_id
+                        self.db = db
                         self.epoch_count = 0
                     
                     def _train_epoch(self, states, policy_targets, value_targets):
                         """Override to add progress monitoring."""
+                        # Get current session from database
+                        db_session = self.db.get_neural_training_session(self.session_id)
+                        if not db_session:
+                            raise InterruptedError("Session not found")
+                        
+                        # Check if stop requested
+                        if db_session.status == 'stopped':
+                            raise InterruptedError("Training stopped by user")
+                        
                         # Get resource usage
                         resources = get_process_resources()
-                        session.update_resource_usage(
-                            resources['cpu_percent'],
-                            resources['memory_percent']
-                        )
+                        db_session.cpu_usage.append(resources['cpu_percent'])
+                        db_session.memory_usage.append(resources['memory_percent'])
                         
                         # Train epoch
                         loss = super()._train_epoch(states, policy_targets, value_targets)
@@ -3236,25 +3180,36 @@ def start_neural_training():
                         # Update progress
                         self.epoch_count += 1
                         progress = min(80, (self.epoch_count / train_config.num_epochs) * 80)
-                        session.update_progress(self.epoch_count, loss, progress)
                         
-                        # Check if stop requested
-                        if session.stop_requested:
-                            raise InterruptedError("Training stopped by user")
+                        # Update database session with progress
+                        db_session.progress = int(progress)
+                        db_session.current_epoch = self.epoch_count
+                        db_session.loss_history.append(loss)
+                        db_session.epoch_history.append(self.epoch_count)
+                        db_session.timestamp_history.append(datetime.now().isoformat())
+                        
+                        # Save progress to database
+                        self.db.save_neural_training_session(db_session)
                         
                         return loss
                 
                 # Train model with monitoring
-                trainer = MonitoredTrainer(train_config, session)
+                trainer = MonitoredTrainer(train_config, session_id, db)
                 losses = trainer.train()
                 
-                session.logs.append(f'Training completed with {len(losses)} epochs')
-                session.progress = 80
+                # Get final session and update with completion
+                db_session = db.get_neural_training_session(session_id)
+                if db_session:
+                    db_session.logs.append(f'Training completed with {len(losses)} epochs')
+                    db_session.progress = 80
+                    db.save_neural_training_session(db_session)
                 
                 # Evaluate
                 eval_results = trainer.evaluate(num_samples=50)
-                session.logs.append('Evaluation completed')
-                session.progress = 90
+                if db_session:
+                    db_session.logs.append('Evaluation completed')
+                    db_session.progress = 90
+                    db.save_neural_training_session(db_session)
                 
                 # Save model
                 import os
@@ -3262,92 +3217,50 @@ def start_neural_training():
                 model_path = f"models/azul_net_{training_request.config}.pth"
                 trainer.save_model(model_path)
                 
-                session.logs.append(f'Model saved to {model_path}')
-                session.progress = 100
-                session.status = 'completed'
-                session.end_time = datetime.now()
-                session.results = {
-                    'final_loss': losses[-1] if losses else 0.0,
-                    'evaluation_error': eval_results.get('avg_value_error', 0.0),
-                    'model_path': model_path,
-                    'config': training_request.config,
-                    'epochs': training_request.epochs,
-                    'samples': training_request.samples
-                }
-                
-                # Update database with final results
-                db_session = NeuralTrainingSession(
-                    session_id=session_id,
-                    status='completed',
-                    progress=100,
-                    config=json.dumps(training_request.dict()),
-                    logs=json.dumps(session.logs),
-                    error=None,
-                    results=json.dumps(session.results),
-                    metadata=json.dumps({
-                        'device': training_request.device,
-                        'config_size': training_request.config,
+                # Final update with completed status
+                if db_session:
+                    db_session.logs.append(f'Model saved to {model_path}')
+                    db_session.progress = 100
+                    db_session.status = 'completed'
+                    db_session.end_time = datetime.now()
+                    db_session.results = {
+                        'final_loss': losses[-1] if losses else 0.0,
+                        'evaluation_error': eval_results.get('avg_value_error', 0.0),
+                        'model_path': model_path,
+                        'config': training_request.config,
                         'epochs': training_request.epochs,
-                        'samples': training_request.samples,
-                        'batch_size': training_request.batch_size,
-                        'learning_rate': training_request.learning_rate,
+                        'samples': training_request.samples
+                    }
+                    
+                    # Update metadata with final results
+                    if not db_session.metadata:
+                        db_session.metadata = {}
+                    db_session.metadata.update({
                         'final_loss': losses[-1] if losses else 0.0,
                         'evaluation_error': eval_results.get('avg_value_error', 0.0),
                         'model_path': model_path
                     })
-                )
-                db.save_neural_training_session(db_session)
+                    
+                    db.save_neural_training_session(db_session)
                 
             except InterruptedError:
-                session.status = 'stopped'
-                session.logs.append('Training stopped by user')
-                session.end_time = datetime.now()
-                
                 # Update database with stopped status
-                db_session = NeuralTrainingSession(
-                    session_id=session_id,
-                    status='stopped',
-                    progress=session.progress,
-                    config=json.dumps(training_request.dict()),
-                    logs=json.dumps(session.logs),
-                    error=None,
-                    results=None,
-                    metadata=json.dumps({
-                        'device': training_request.device,
-                        'config_size': training_request.config,
-                        'epochs': training_request.epochs,
-                        'samples': training_request.samples,
-                        'batch_size': training_request.batch_size,
-                        'learning_rate': training_request.learning_rate
-                    })
-                )
-                db.save_neural_training_session(db_session)
+                db_session = db.get_neural_training_session(session_id)
+                if db_session:
+                    db_session.status = 'stopped'
+                    db_session.logs.append('Training stopped by user')
+                    db_session.end_time = datetime.now()
+                    db.save_neural_training_session(db_session)
                 
             except Exception as e:
-                session.status = 'failed'
-                session.error = str(e)
-                session.logs.append(f'Error: {str(e)}')
-                session.end_time = datetime.now()
-                
                 # Update database with failed status
-                db_session = NeuralTrainingSession(
-                    session_id=session_id,
-                    status='failed',
-                    progress=session.progress,
-                    config=json.dumps(training_request.dict()),
-                    logs=json.dumps(session.logs),
-                    error=str(e),
-                    results=None,
-                    metadata=json.dumps({
-                        'device': training_request.device,
-                        'config_size': training_request.config,
-                        'epochs': training_request.epochs,
-                        'samples': training_request.samples,
-                        'batch_size': training_request.batch_size,
-                        'learning_rate': training_request.learning_rate
-                    })
-                )
-                db.save_neural_training_session(db_session)
+                db_session = db.get_neural_training_session(session_id)
+                if db_session:
+                    db_session.status = 'failed'
+                    db_session.error = str(e)
+                    db_session.logs.append(f'Error: {str(e)}')
+                    db_session.end_time = datetime.now()
+                    db.save_neural_training_session(db_session)
         
         # Start background thread
         thread = threading.Thread(target=train_in_background)
@@ -3382,13 +3295,23 @@ def get_training_status(session_id):
             'session_id': db_session.session_id,
             'status': db_session.status,
             'progress': db_session.progress,
-            'start_time': db_session.created_at.isoformat() if db_session.created_at else None,
-            'end_time': db_session.updated_at.isoformat() if db_session.updated_at else None,
-            'config': json.loads(db_session.config) if db_session.config else {},
-            'logs': json.loads(db_session.logs) if db_session.logs else [],
+            'start_time': db_session.start_time.isoformat() if db_session.start_time else None,
+            'end_time': db_session.end_time.isoformat() if db_session.end_time else None,
+            'config': db_session.config if isinstance(db_session.config, dict) else {},
+            'logs': db_session.logs if isinstance(db_session.logs, list) else [],
             'error': db_session.error,
-            'results': json.loads(db_session.results) if db_session.results else None,
-            'metadata': json.loads(db_session.metadata) if db_session.metadata else {}
+            'results': db_session.results if isinstance(db_session.results, dict) else None,
+            'metadata': db_session.metadata if isinstance(db_session.metadata, dict) else {},
+            # Enhanced monitoring fields
+            'loss_history': db_session.loss_history if db_session.loss_history else [],
+            'epoch_history': db_session.epoch_history if db_session.epoch_history else [],
+            'timestamp_history': db_session.timestamp_history if db_session.timestamp_history else [],
+            'cpu_usage': db_session.cpu_usage if db_session.cpu_usage else [],
+            'memory_usage': db_session.memory_usage if db_session.memory_usage else [],
+            'gpu_usage': db_session.gpu_usage if db_session.gpu_usage else [],
+            'estimated_total_time': db_session.estimated_total_time,
+            'current_epoch': db_session.current_epoch,
+            'total_epochs': db_session.total_epochs
         }
         
         return jsonify(response_data)
@@ -3411,9 +3334,7 @@ def stop_training(session_id):
         
         # Update session status to stopped
         db_session.status = 'stopped'
-        logs = json.loads(db_session.logs) if db_session.logs else []
-        logs.append('Stop requested - training will terminate gracefully')
-        db_session.logs = json.dumps(logs)
+        db_session.logs.append('Stop requested - training will terminate gracefully')
         
         # Save updated session to database
         db.save_neural_training_session(db_session)
