@@ -484,26 +484,31 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
         onClick: handlePatternLineClick,
         onContextMenu: handlePatternLineRightClick
     },
-        // Row label
         React.createElement('div', {
-            className: 'text-xs text-gray-600 font-medium'
-        }, `Row ${rowIndex + 1}`),
-        React.createElement('div', {
-            className: 'tiles-container'
+            className: 'flex items-center gap-2'
         },
-            tiles.map((tile, index) => 
-                React.createElement(Tile, {
-                    key: index,
-                    color: tile,
-                    onClick: () => onTileClick ? onTileClick(rowIndex, index, tile) : null
-                })
-            ),
-            Array.from({ length: maxTiles - tiles.length }, (_, index) => 
-                React.createElement('div', {
-                    key: `empty-${index}`,
-                    className: 'empty-slot',
-                    onClick: () => onDestinationClick ? onDestinationClick(rowIndex, tiles.length + index) : null
-                })
+            // Row label - more compact
+            React.createElement('div', {
+                className: 'text-xs text-gray-600 font-medium w-8 flex-shrink-0'
+            }, `R${rowIndex + 1}`),
+            React.createElement('div', {
+                className: 'flex gap-1 flex-wrap'
+            },
+                tiles.map((tile, index) => 
+                    React.createElement(Tile, {
+                        key: index,
+                        color: tile,
+                        className: 'w-6 h-6',
+                        onClick: () => onTileClick ? onTileClick(rowIndex, index, tile) : null
+                    })
+                ),
+                Array.from({ length: maxTiles - tiles.length }, (_, index) => 
+                    React.createElement('div', {
+                        key: `empty-${index}`,
+                        className: 'w-6 h-6 border border-gray-300 rounded bg-gray-50',
+                        onClick: () => onDestinationClick ? onDestinationClick(rowIndex, tiles.length + index) : null
+                    })
+                )
             )
         )
     );
@@ -547,27 +552,29 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
         ref: wallRef,
         className: 'wall'
     },
-        // Column labels
+        // Column labels - more compact
         React.createElement('div', {
-            className: 'wall-column-labels'
+            className: 'flex gap-1 mb-1'
         },
-            React.createElement('div', { className: 'wall-cell-label' }, ''),
+            React.createElement('div', { 
+                className: 'w-6 h-4 text-xs text-gray-500 font-medium flex items-center justify-center' 
+            }, ''),
             ['B', 'Y', 'R', 'K', 'W'].map((color, index) => 
                 React.createElement('div', {
                     key: index,
-                    className: 'wall-cell-label text-xs text-gray-600 font-medium'
+                    className: 'w-6 h-4 text-xs text-gray-600 font-medium flex items-center justify-center'
                 }, color)
             )
         ),
         wall.map((row, rowIndex) => 
             React.createElement('div', {
                 key: rowIndex,
-                className: 'wall-row'
+                className: 'flex gap-1 mb-1'
             },
-                // Row label
+                // Row label - more compact
                 React.createElement('div', {
-                    className: 'wall-cell-label text-xs text-gray-600 font-medium'
-                }, `Row ${rowIndex + 1}`),
+                    className: 'w-6 h-6 text-xs text-gray-600 font-medium flex items-center justify-center'
+                }, `R${rowIndex + 1}`),
                 row.map((cell, colIndex) => {
                     const isSelected = editMode && selectedElements.some(el => 
                         el.type === 'wall-cell' && 
@@ -578,7 +585,7 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
                     
                     return React.createElement('div', {
                         key: colIndex,
-                        className: `wall-cell ${cell ? 'filled' : 'empty'} ${isSelected ? 'selected' : ''}`,
+                        className: `w-6 h-6 border border-gray-300 rounded flex items-center justify-center ${cell ? 'bg-gray-100' : 'bg-white'} ${isSelected ? 'ring-2 ring-blue-500' : ''}`,
                         onClick: (e) => {
                             if (editMode && onElementSelect) {
                                 const isCtrlClick = e.ctrlKey;
@@ -597,7 +604,10 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
                             }
                         }
                     },
-                        cell ? React.createElement(Tile, { color: cell }) : null
+                        cell ? React.createElement(Tile, { 
+                            color: cell,
+                            className: 'w-4 h-4'
+                        }) : null
                     );
                 })
             )
@@ -611,30 +621,35 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
     const headerClass = isActive ? 'text-blue-700 font-bold' : 'text-gray-700';
     
     return React.createElement('div', {
-        className: `player-board ${borderClass} p-4 rounded-lg mb-4`
+        className: `player-board ${borderClass} p-3 rounded-lg mb-3`
     },
         React.createElement('div', {
-            className: `flex justify-between items-center mb-4 ${headerClass}`
+            className: `flex justify-between items-center mb-3 ${headerClass}`
         },
-            React.createElement('h3', null, `Player ${playerIndex + 1}`),
+            React.createElement('h3', {
+                className: 'text-lg font-semibold'
+            }, `Player ${playerIndex + 1}`),
             React.createElement('div', {
-                className: 'flex space-x-2'
+                className: 'flex space-x-2 items-center'
             },
                 React.createElement('button', {
-                    className: 'px-3 py-1 bg-blue-500 text-white rounded text-sm',
+                    className: 'px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600',
                     onClick: () => onPlayerSwitch ? onPlayerSwitch(playerIndex) : null
                 }, 'Switch'),
                 React.createElement('span', {
-                    className: 'text-sm'
+                    className: 'text-sm font-medium'
                 }, `Score: ${player.score || 0}`)
             )
         ),
         React.createElement('div', {
-            className: 'grid grid-cols-2 gap-4'
+            className: 'grid grid-cols-2 gap-3'
         },
             React.createElement('div', {
                 className: 'pattern-lines'
             },
+                React.createElement('h4', {
+                    className: 'text-sm font-medium mb-2 text-gray-700'
+                }, 'Pattern Lines'),
                 player.pattern_lines.map((line, index) => 
                     React.createElement(PatternLine, {
                         key: index,
@@ -655,6 +670,9 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
             React.createElement('div', {
                 className: 'wall-section'
             },
+                React.createElement('h4', {
+                    className: 'text-sm font-medium mb-2 text-gray-700'
+                }, 'Wall'),
                 React.createElement(Wall, {
                     wall: player.wall,
                     onWallClick: onWallClick,
@@ -669,25 +687,25 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
             )
         ),
         React.createElement('div', {
-            className: 'floor-line mt-4'
+            className: 'floor-line mt-3'
         },
             React.createElement('h4', {
-                className: 'text-sm font-medium mb-2'
+                className: 'text-sm font-medium mb-2 text-gray-700'
             }, 'Floor Line'),
             React.createElement('div', {
                 className: 'flex flex-wrap gap-1'
             },
-                (player.floor_line || []).map((tile, index) => 
+                (player.floor || []).map((tile, index) => 
                     React.createElement(Tile, {
                         key: index,
                         color: tile,
-                        className: 'w-6 h-6'
+                        className: 'w-5 h-5'
                     })
                 ),
-                Array.from({ length: 7 - (player.floor_line || []).length }, (_, index) => 
+                Array.from({ length: 7 - (player.floor || []).length }, (_, index) => 
                     React.createElement('div', {
                         key: `empty-floor-${index}`,
-                        className: 'w-6 h-6 border border-gray-300 rounded',
+                        className: 'w-5 h-5 border border-gray-300 rounded',
                         onContextMenu: (e) => {
                             e.preventDefault();
                             if (editMode && window.showContextMenu) {
@@ -1512,24 +1530,28 @@ function App() {
                     )
                 ),
                 
-                    // Player boards
+                    // Player boards - side by side layout
                     React.createElement('div', null,
                         React.createElement('h2', {
                             className: 'text-xl font-semibold mb-3'
                         }, 'Player Boards'),
-                        (gameState.players || []).map((player, index) => 
-                            React.createElement(PlayerBoard, {
-                                key: index,
-                                player: player,
-                                playerIndex: index,
-                                isActive: index === currentPlayer,
-                                editMode: editMode,
-                                onElementSelect: handleElementSelect,
-                                selectedElements: selectedElements,
-                                onPatternLineDrop: handlePatternLineDrop,
-                                onPlayerSwitch: (playerId) => setCurrentPlayer(playerId),
-                                canInteract: !loading && !engineThinking
-                            })
+                        React.createElement('div', {
+                            className: 'grid grid-cols-1 md:grid-cols-2 gap-4'
+                        },
+                            (gameState.players || []).map((player, index) => 
+                                React.createElement(PlayerBoard, {
+                                    key: index,
+                                    player: player,
+                                    playerIndex: index,
+                                    isActive: index === currentPlayer,
+                                    editMode: editMode,
+                                    onElementSelect: handleElementSelect,
+                                    selectedElements: selectedElements,
+                                    onPatternLineDrop: handlePatternLineDrop,
+                                    onPlayerSwitch: (playerId) => setCurrentPlayer(playerId),
+                                    canInteract: !loading && !engineThinking
+                                })
+                            )
                         )
                     )
                 ),
@@ -1560,14 +1582,14 @@ function App() {
                             }, '↷ Redo')
                         ),
                         
-                        // Quick Analysis Tools - compact grid
+                        // Analysis Tools - Organized with better labels
                         React.createElement('div', {
                             className: 'analysis-tools'
                         },
                             React.createElement('h3', {
-                                className: 'font-medium text-sm mb-2 flex items-center justify-between'
+                                className: 'font-medium text-sm mb-3 flex items-center justify-between text-blue-700'
                             },
-                                React.createElement('span', null, '🔍 Quick Analysis'),
+                                React.createElement('span', null, '🔍 Position Analysis'),
                                 React.createElement('button', {
                                     className: 'text-xs text-gray-500 hover:text-gray-700',
                                     onClick: () => setAnalysisExpanded(!analysisExpanded)
@@ -1576,111 +1598,133 @@ function App() {
                             
                             // Collapsible analysis content
                             analysisExpanded && React.createElement('div', {
-                                className: 'space-y-2'
+                                className: 'space-y-3'
                             },
-                                // Analysis buttons in a compact grid
+                                // Analysis buttons with labels
                                 React.createElement('div', {
-                                    className: 'grid grid-cols-2 gap-2'
+                                    className: 'space-y-2'
                                 },
-                                    React.createElement('button', {
-                                        className: `btn-primary btn-sm ${loading ? 'opacity-50' : ''}`,
-                            onClick: () => {
-                                setLoading(true);
-                                            analyzePosition(gameState.fen_string || 'initial', 3, 4.0)
-                                    .then(data => {
-                                                if (data.success && data.analysis) {
-                                                    setVariations([{
-                                                        move: data.analysis.best_move,
-                                                        score: data.analysis.best_score,
-                                                        visits: data.analysis.nodes_searched
-                                                    }]);
-                                                    const heatmap = generateHeatmapData({ variations: [{
-                                                        move: data.analysis.best_move,
-                                                        score: data.analysis.best_score,
-                                                        move_data: { source_id: 0, tile_type: 0 }
-                                                    }] });
-                                                    setHeatmapData(heatmap);
-                                                    setStatusMessage(`Analysis complete: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
-                                                } else {
-                                                    setStatusMessage('Analysis failed: Invalid response');
-                                                }
-                                    })
-                                    .catch(error => {
-                                        setStatusMessage(`Analysis failed: ${error.message}`);
-                                    })
-                                    .finally(() => setLoading(false));
-                                        },
-                                        disabled: loading
-                                    }, loading ? '🤖' : '🔍'),
+                                    React.createElement('div', {
+                                        className: 'flex items-center space-x-2'
+                                    },
+                                        React.createElement('button', {
+                                            className: `btn-primary btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
+                                            onClick: () => {
+                                                setLoading(true);
+                                                analyzePosition(gameState.fen_string || 'initial', 3, 4.0)
+                                                    .then(data => {
+                                                        if (data.success && data.analysis) {
+                                                            setVariations([{
+                                                                move: data.analysis.best_move,
+                                                                score: data.analysis.best_score,
+                                                                visits: data.analysis.nodes_searched
+                                                            }]);
+                                                            const heatmap = generateHeatmapData({ variations: [{
+                                                                move: data.analysis.best_move,
+                                                                score: data.analysis.best_score,
+                                                                move_data: { source_id: 0, tile_type: 0 }
+                                                            }] });
+                                                            setHeatmapData(heatmap);
+                                                            setStatusMessage(`Analysis complete: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
+                                                        } else {
+                                                            setStatusMessage('Analysis failed: Invalid response');
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        setStatusMessage(`Analysis failed: ${error.message}`);
+                                                    })
+                                                    .finally(() => setLoading(false));
+                                            },
+                                            disabled: loading
+                                        }, loading ? '🤖 Analyzing...' : '🔍 Engine Analysis'),
+                                        
+                                        React.createElement('button', {
+                                            className: `btn-info btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
+                                            onClick: () => {
+                                                setLoading(true);
+                                                getHint(gameState.fen_string || 'initial', 0.2, 100)
+                                                    .then(data => {
+                                                        if (data.success && data.hint) {
+                                                            setStatusMessage(`Hint: ${data.hint.best_move} (EV: ${data.hint.expected_value.toFixed(2)})`);
+                                                        } else {
+                                                            setStatusMessage('Hint failed: Invalid response');
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        setStatusMessage(`Hint failed: ${error.message}`);
+                                                    })
+                                                    .finally(() => setLoading(false));
+                                            },
+                                            disabled: loading
+                                        }, loading ? '💡 Thinking...' : '💡 Quick Hint')
+                                    ),
                                     
-                                    React.createElement('button', {
-                                        className: `btn-secondary btn-sm ${loading ? 'opacity-50' : ''}`,
-                                        onClick: () => {
-                                            setLoading(true);
-                                            getHint(gameState.fen_string || 'initial', 0.2, 100)
-                                                .then(data => {
-                                                    if (data.success && data.hint) {
-                                                        setStatusMessage(`Hint: ${data.hint.best_move} (EV: ${data.hint.expected_value.toFixed(2)})`);
-                                                    } else {
-                                                        setStatusMessage('Hint failed: Invalid response');
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    setStatusMessage(`Hint failed: ${error.message}`);
-                                                })
-                                                .finally(() => setLoading(false));
-                                        },
-                                        disabled: loading
-                                    }, loading ? '💡' : '💡'),
-                                    
-                                    React.createElement('button', {
-                                        className: `btn-accent btn-sm ${loading ? 'opacity-50' : ''}`,
-                                        onClick: () => {
-                                            setLoading(true);
-                                            analyzeNeural(gameState.fen_string || 'initial', 2.0, 100)
-                                                .then(data => {
-                                                    if (data.success && data.analysis) {
-                                                        setStatusMessage(`Neural: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
-                                                    } else {
-                                                        setStatusMessage('Neural analysis failed: Invalid response');
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    setStatusMessage(`Neural analysis failed: ${error.message}`);
-                                                })
-                                                .finally(() => setLoading(false));
-                                        },
-                                        disabled: loading
-                                    }, loading ? '🧠' : '🧠'),
-                                    
-                                    React.createElement('button', {
-                                        className: `btn-sm ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
-                                        onClick: () => {
-                                            setHeatmapEnabled(!heatmapEnabled);
-                                            setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
-                                        },
-                                        disabled: !heatmapData
-                                    }, heatmapEnabled ? '🔥' : '🔥')
+                                    React.createElement('div', {
+                                        className: 'flex items-center space-x-2'
+                                    },
+                                        React.createElement('button', {
+                                            className: `btn-accent btn-sm flex-1 ${loading ? 'opacity-50' : ''}`,
+                                            onClick: () => {
+                                                setLoading(true);
+                                                analyzeNeural(gameState.fen_string || 'initial', 2.0, 100)
+                                                    .then(data => {
+                                                        if (data.success && data.analysis) {
+                                                            setStatusMessage(`Neural: ${data.analysis.best_move} (${data.analysis.best_score.toFixed(2)})`);
+                                                        } else {
+                                                            setStatusMessage('Neural analysis failed: Invalid response');
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        setStatusMessage(`Neural analysis failed: ${error.message}`);
+                                                    })
+                                                    .finally(() => setLoading(false));
+                                            },
+                                            disabled: loading
+                                        }, loading ? '🧠 Processing...' : '🧠 Neural Net'),
+                                        
+                                        React.createElement('button', {
+                                            className: `btn-sm flex-1 ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
+                                            onClick: () => {
+                                                setHeatmapEnabled(!heatmapEnabled);
+                                                setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
+                                            },
+                                            disabled: !heatmapData
+                                        }, heatmapEnabled ? '🔥 Heatmap ON' : '🔥 Heatmap OFF')
+                                    )
                                 ),
                                 
-                                // Quick results display
+                                // Analysis results display
                                 variations.length > 0 && React.createElement('div', {
-                                    className: 'bg-blue-50 p-2 rounded text-xs'
+                                    className: 'bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg border border-blue-200'
                                 },
-                                    React.createElement('div', { className: 'font-medium mb-1' }, 'Best Move:'),
-                                    React.createElement('div', null, `${variations[0].move} (${variations[0].score.toFixed(2)})`)
+                                    React.createElement('div', { 
+                                        className: 'font-semibold mb-2 text-blue-800 text-sm' 
+                                    }, '📊 Analysis Results'),
+                                    React.createElement('div', { 
+                                        className: 'text-xs space-y-1' 
+                                    },
+                                        React.createElement('div', { 
+                                            className: 'font-medium text-blue-700' 
+                                        }, 'Best Move:'),
+                                        React.createElement('div', { 
+                                            className: 'bg-white p-2 rounded border' 
+                                        }, `${variations[0].move} (${variations[0].score.toFixed(2)})`),
+                                        variations[0].visits && React.createElement('div', { 
+                                            className: 'text-gray-600 mt-1' 
+                                        }, `Nodes searched: ${variations[0].visits}`)
+                                    )
                                 )
                             )
                         ),
                         
-                        // Advanced Tools - collapsible
+                        // Advanced Tools - Organized with better labels
                         React.createElement('div', {
                             className: 'analysis-tools'
                         },
                             React.createElement('h3', {
-                                className: 'font-medium text-sm mb-2 flex items-center justify-between'
+                                className: 'font-medium text-sm mb-3 flex items-center justify-between text-purple-700'
                             },
-                                React.createElement('span', null, '🛠️ Advanced'),
+                                React.createElement('span', null, '🛠️ Advanced Tools'),
                                 React.createElement('button', {
                                     className: 'text-xs text-gray-500 hover:text-gray-700',
                                     onClick: () => setAdvancedExpanded(!advancedExpanded)
@@ -1688,54 +1732,62 @@ function App() {
                             ),
                             
                             advancedExpanded && React.createElement('div', {
-                                className: 'space-y-2'
+                                className: 'space-y-3'
                             },
-                                React.createElement('button', {
-                                    className: 'w-full btn-sm btn-outline',
-                                    onClick: () => {
-                                        setLoading(true);
-                                        const gameData = {
-                                            moves: moveHistory.map((move, index) => ({
-                                                move: move,
-                                                player: index % 2,
-                                                position_before: 'initial'
-                                            })),
-                                            players: ['Player 1', 'Player 2'],
-                                            result: { winner: null, score: [0, 0] }
-                                        };
+                                React.createElement('div', {
+                                    className: 'space-y-2'
+                                },
+                                    React.createElement('button', {
+                                        className: `w-full btn-sm ${loading ? 'btn-secondary opacity-50' : 'btn-outline'}`,
+                                        onClick: () => {
+                                            setLoading(true);
+                                            const gameData = {
+                                                moves: moveHistory.map((move, index) => ({
+                                                    move: move,
+                                                    player: index % 2,
+                                                    position_before: 'initial'
+                                                })),
+                                                players: ['Player 1', 'Player 2'],
+                                                result: { winner: null, score: [0, 0] }
+                                            };
+                                            
+                                            analyzeGame(gameData, 3)
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        const blunderCount = data.summary.blunder_count;
+                                                        setStatusMessage(`Game analysis complete: ${blunderCount} blunders found`);
+                                                    } else {
+                                                        setStatusMessage('Game analysis failed');
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    setStatusMessage(`Game analysis failed: ${error.message}`);
+                                                })
+                                                .finally(() => setLoading(false));
+                                        },
+                                        disabled: loading || moveHistory.length === 0
+                                    }, loading ? '📊 Analyzing Game...' : '📊 Analyze Full Game'),
+                                    
+                                    React.createElement('div', {
+                                        className: 'grid grid-cols-2 gap-2'
+                                    },
+                                        React.createElement('button', {
+                                            className: 'w-full btn-sm btn-outline',
+                                            onClick: () => {
+                                                setStatusMessage('Position database feature coming soon...');
+                                            },
+                                            disabled: loading
+                                        }, '💾 Save Position'),
                                         
-                                        analyzeGame(gameData, 3)
-                                            .then(data => {
-                                                if (data.success) {
-                                                    const blunderCount = data.summary.blunder_count;
-                                                    setStatusMessage(`Game analysis complete: ${blunderCount} blunders found`);
-                                                } else {
-                                                    setStatusMessage('Game analysis failed');
-                                                }
-                                            })
-                                            .catch(error => {
-                                                setStatusMessage(`Game analysis failed: ${error.message}`);
-                                            })
-                                            .finally(() => setLoading(false));
-                                    },
-                                    disabled: loading || moveHistory.length === 0
-                                }, loading ? '📊 Analyzing...' : '📊 Analyze Game'),
-                                
-                                React.createElement('button', {
-                                    className: 'w-full btn-sm btn-outline',
-                                    onClick: () => {
-                                        setStatusMessage('Position database feature coming soon...');
-                                    },
-                                    disabled: loading
-                                }, '💾 Save to Database'),
-                                
-                                React.createElement('button', {
-                                    className: 'w-full btn-sm btn-outline',
-                                    onClick: () => {
-                                        setStatusMessage('Similar positions feature coming soon...');
-                                    },
-                                    disabled: loading
-                                }, '🔍 Find Similar')
+                                        React.createElement('button', {
+                                            className: 'w-full btn-sm btn-outline',
+                                            onClick: () => {
+                                                setStatusMessage('Similar positions feature coming soon...');
+                                            },
+                                            disabled: loading
+                                        }, '🔍 Find Similar')
+                                    )
+                                )
                             )
                         ),
                         

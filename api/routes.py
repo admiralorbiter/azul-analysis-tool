@@ -2031,14 +2031,27 @@ def execute_move():
 
 def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]:
     """Convert frontend move format to engine move format."""
-    # Frontend format: {source_id, tile_type, pattern_line_dest, num_to_pattern_line, num_to_floor_line}
+    # Frontend format: {sourceId, tileType, patternLineDest, numToPatternLine, numToFloorLine}
     # Engine format: FastMove(action_type, source_id, tile_type, pattern_line_dest, num_to_pattern_line, num_to_floor_line)
     
-    source_id = move_data.get('source_id', 0)
-    tile_type = move_data.get('tile_type', 0)
-    pattern_line_dest = move_data.get('pattern_line_dest', -1)
-    num_to_pattern_line = move_data.get('num_to_pattern_line', 0)
-    num_to_floor_line = move_data.get('num_to_floor_line', 0)
+    # Handle both snake_case and camelCase field names
+    source_id = move_data.get('source_id', move_data.get('sourceId', 0))
+    tile_type = move_data.get('tile_type', move_data.get('tileType', 0))
+    pattern_line_dest = move_data.get('pattern_line_dest', move_data.get('patternLineDest', -1))
+    num_to_pattern_line = move_data.get('num_to_pattern_line', move_data.get('numToPatternLine', 0))
+    num_to_floor_line = move_data.get('num_to_floor_line', move_data.get('numToFloorLine', 0))
+    
+    # Handle string tile types from frontend
+    if isinstance(tile_type, str):
+        # Map string tile types to integers
+        tile_color_map = {
+            'B': 0,  # Blue
+            'Y': 1,  # Yellow  
+            'R': 2,  # Red
+            'K': 3,  # Black
+            'W': 4   # White
+        }
+        tile_type = tile_color_map.get(tile_type.upper(), 0)
     
     # Ensure tile_type is an integer (convert from enum if needed)
     if hasattr(tile_type, 'value'):
@@ -2116,30 +2129,36 @@ def state_to_fen(state) -> str:
         # Generate a unique state identifier based on the state's content
         # This is a simple hash-based approach for now
         import hashlib
-        import pickle
+        import json
         
-        # Create a hash of the state's key components
-        state_data = {
-            'factories': [(i, dict(factory.tiles)) for i, factory in enumerate(state.factories)],
-            'center': dict(state.centre_pool.tiles),
-            'agents': [
-                {
-                    'lines_tile': agent.lines_tile,
-                    'lines_number': agent.lines_number,
-                    'grid_state': agent.grid_state,
-                    'floor_tiles': agent.floor_tiles,
-                    'score': agent.score
-                }
-                for agent in state.agents
-            ],
-            'current_player': getattr(state, 'current_player', state.first_agent)
-        }
-        
-        # Create a hash of the state data
-        state_bytes = pickle.dumps(state_data)
-        state_hash = hashlib.md5(state_bytes).hexdigest()[:8]
-        
-        return f"state_{state_hash}"
+        try:
+            # Create a hash of the state's key components using JSON instead of pickle
+            state_data = {
+                'factories': [(i, dict(factory.tiles)) for i, factory in enumerate(state.factories)],
+                'center': dict(state.centre_pool.tiles),
+                'agents': [
+                    {
+                        'lines_tile': agent.lines_tile,
+                        'lines_number': agent.lines_number,
+                        'grid_state': agent.grid_state,
+                        'floor_tiles': agent.floor_tiles,
+                        'score': agent.score
+                    }
+                    for agent in state.agents
+                ],
+                'current_player': getattr(state, 'current_player', state.first_agent)
+            }
+            
+            # Create a hash of the state data using JSON
+            state_json = json.dumps(state_data, sort_keys=True)
+            state_hash = hashlib.md5(state_json.encode('utf-8')).hexdigest()[:8]
+            
+            return f"state_{state_hash}"
+        except Exception as e:
+            # Fallback to a simple timestamp-based identifier if serialization fails
+            import time
+            timestamp = int(time.time() * 1000) % 1000000
+            return f"state_{timestamp}"
     
     # For other states, return "initial" for backward compatibility
     return "initial" 
