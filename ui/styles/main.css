@@ -10,7 +10,7 @@ body {
 
 /* Container and Grid Layouts */
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 16px;
 }
@@ -26,10 +26,49 @@ body {
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
 .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
 
+/* Enhanced responsive breakpoints for larger screens */
+@media (min-width: 640px) {
+    .sm\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .sm\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 768px) {
+    .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .md\:col-span-2 { grid-column: span 2; }
+    .md\:col-span-1 { grid-column: span 1; }
+}
+
 @media (min-width: 1024px) {
+    .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
     .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .lg\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
     .lg\:col-span-2 { grid-column: span 2; }
     .lg\:col-span-1 { grid-column: span 1; }
+    .lg\:col-span-3 { grid-column: span 3; }
+}
+
+@media (min-width: 1280px) {
+    .xl\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .xl\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .xl\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .xl\:grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+    .xl\:col-span-2 { grid-column: span 2; }
+    .xl\:col-span-1 { grid-column: span 1; }
+    .xl\:col-span-3 { grid-column: span 3; }
+    .xl\:col-span-4 { grid-column: span 4; }
+}
+
+@media (min-width: 1536px) {
+    .2xl\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .2xl\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .2xl\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .2xl\:grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+    .2xl\:col-span-2 { grid-column: span 2; }
+    .2xl\:col-span-1 { grid-column: span 1; }
+    .2xl\:col-span-3 { grid-column: span 3; }
+    .2xl\:col-span-4 { grid-column: span 4; }
 }
 
 /* Flexbox Utilities */
@@ -42,17 +81,36 @@ body {
 .space-x-4 > * + * { margin-left: 1rem; }
 .space-y-4 > * + * { margin-top: 1rem; }
 
-/* Spacing Utilities */
+/* Enhanced spacing utilities for larger screens */
 .p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
 .p-8 { padding: 2rem; }
 .px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.px-8 { padding-left: 2rem; padding-right: 2rem; }
 .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.py-8 { padding-top: 2rem; padding-bottom: 2rem; }
 .mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
 .mb-8 { margin-bottom: 2rem; }
 .mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
 .mt-8 { margin-top: 2rem; }
 .gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
 .gap-8 { gap: 2rem; }
+
+/* Enhanced container max-widths for larger screens */
+.max-w-7xl { max-width: 1400px; }
+.max-w-8xl { max-width: 1600px; }
+.max-w-9xl { max-width: 1800px; }
+
+@media (min-width: 1536px) {
+    .max-w-7xl { max-width: 1600px; }
+    .max-w-8xl { max-width: 1800px; }
+    .max-w-9xl { max-width: 2000px; }
+}
 
 /* Text Utilities */
 .text-2xl { font-size: 1.5rem; }
@@ -824,12 +882,74 @@ button:focus {
     box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
 }
 
+/* Enhanced spacing for larger screens */
+@media (min-width: 1280px) {
+    .player-board {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .factory {
+        padding: 1rem;
+        margin: 0.5rem;
+        min-height: 80px;
+    }
+    
+    .tile {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .wall-cell {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .empty-slot {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+@media (min-width: 1536px) {
+    .player-board {
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .factory {
+        padding: 1.25rem;
+        margin: 0.75rem;
+        min-height: 90px;
+    }
+    
+    .tile {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .wall-cell {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .empty-slot {
+        width: 50px;
+        height: 50px;
+    }
+}
+
 /* Enhanced Analysis Panel Styles */
 .analysis-panel {
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
 }
 
 .analysis-tools {
@@ -845,6 +965,45 @@ button:focus {
     border-bottom: 2px solid #e2e8f0;
     padding-bottom: 8px;
     margin-bottom: 12px;
+}
+
+/* Enhanced analysis panel for larger screens */
+@media (min-width: 1280px) {
+    .analysis-panel {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .analysis-tools {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+    }
+    
+    .analysis-tools h3 {
+        font-size: 1.1rem;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+}
+
+@media (min-width: 1536px) {
+    .analysis-panel {
+        padding: 2rem;
+        border-radius: 20px;
+    }
+    
+    .analysis-tools {
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+        border-radius: 16px;
+    }
+    
+    .analysis-tools h3 {
+        font-size: 1.2rem;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+    }
 }
 
 /* Enhanced Button Styles for Analysis */
@@ -971,6 +1130,8 @@ button:focus {
     
     .analysis-panel {
         margin-top: 1rem;
+        position: static;
+        max-height: none;
     }
     
     .grid-cols-1.md\:grid-cols-2 {
@@ -990,5 +1151,42 @@ button:focus {
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.65rem;
+    }
+}
+
+/* Enhanced spacing for larger screens */
+@media (min-width: 1280px) {
+    .space-y-6 > * + * {
+        margin-top: 2rem;
+    }
+    
+    .gap-6 {
+        gap: 2rem;
+    }
+    
+    .mb-6 {
+        margin-bottom: 2rem;
+    }
+    
+    .p-6 {
+        padding: 2rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    .space-y-6 > * + * {
+        margin-top: 2.5rem;
+    }
+    
+    .gap-6 {
+        gap: 2.5rem;
+    }
+    
+    .mb-6 {
+        margin-bottom: 2.5rem;
+    }
+    
+    .p-6 {
+        padding: 2.5rem;
     }
 } 

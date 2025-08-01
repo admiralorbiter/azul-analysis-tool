@@ -1408,7 +1408,7 @@ function App() {
             className: 'bg-white shadow-sm border-b'
         },
             React.createElement('div', {
-                className: 'max-w-7xl mx-auto px-4 py-4'
+                className: 'max-w-8xl mx-auto px-6 py-4'
             },
                 React.createElement('div', {
                     className: 'flex justify-between items-center'
@@ -1417,7 +1417,7 @@ function App() {
                         className: 'text-2xl font-bold text-gray-900'
                     }, 'Azul Solver & Analysis Toolkit'),
                     React.createElement('div', {
-                        className: 'flex space-x-4'
+                        className: 'flex space-x-4 xl:space-x-6'
                     },
                         React.createElement('button', {
                             className: `btn-edit ${editMode ? 'active' : ''}`,
@@ -1465,18 +1465,18 @@ function App() {
         
         // Main content
         React.createElement('div', {
-            className: 'max-w-7xl mx-auto px-6 py-6'
+            className: 'max-w-8xl mx-auto px-6 py-6'
         },
             // Status message and current player
             React.createElement('div', {
-                className: 'mb-4 space-y-2'
+                className: 'mb-6 space-y-2'
             },
             React.createElement(StatusMessage, {
                 type: sessionStatus === 'connected' ? 'success' : 'error',
                 message: statusMessage
             }),
                 React.createElement('div', {
-                    className: 'flex justify-between items-center p-3 bg-blue-50 rounded-lg'
+                    className: 'flex justify-between items-center p-4 bg-blue-50 rounded-lg'
                 },
                     React.createElement('div', {
                         className: 'flex items-center space-x-2'
@@ -1494,13 +1494,13 @@ function App() {
                 )
             ),
             
-            // Game board and player boards
+            // Game board and player boards - Enhanced layout for larger screens
             React.createElement('div', {
-                className: 'grid grid-cols-1 lg:grid-cols-3 gap-6'
+                className: 'grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6'
             },
-                // Game boards (factories + player boards) - takes 2 columns
+                // Game boards (factories + player boards) - takes more columns on larger screens
                 React.createElement('div', {
-                    className: 'lg:col-span-2 space-y-6'
+                    className: 'lg:col-span-3 xl:col-span-4 2xl:col-span-5 space-y-6'
                 },
                     // Factories
                     React.createElement('div', null,
@@ -1508,7 +1508,7 @@ function App() {
                         className: 'text-xl font-semibold mb-4'
                     }, 'Factories'),
                     React.createElement('div', {
-                        className: 'grid grid-cols-5 gap-4'
+                        className: 'grid grid-cols-5 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-4 xl:gap-6'
                     },
                         (gameState.factories || []).map((factory, index) => 
                             React.createElement(Factory, {
@@ -1536,7 +1536,7 @@ function App() {
                             className: 'text-xl font-semibold mb-3'
                         }, 'Player Boards'),
                         React.createElement('div', {
-                            className: 'grid grid-cols-1 md:grid-cols-2 gap-4'
+                            className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 xl:gap-6'
                         },
                             (gameState.players || []).map((player, index) => 
                                 React.createElement(PlayerBoard, {
@@ -1556,9 +1556,9 @@ function App() {
                     )
                 ),
                 
-                // Analysis panel - takes 1 column on the right
+                // Analysis panel - takes 1 column on the right, but more space on larger screens
                 React.createElement('div', {
-                    className: 'lg:col-span-1 analysis-panel'
+                    className: 'lg:col-span-1 xl:col-span-1 2xl:col-span-1 analysis-panel'
                 },
                     React.createElement('h2', {
                         className: 'analysis-title'
