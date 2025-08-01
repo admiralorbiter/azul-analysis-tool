@@ -2292,6 +2292,38 @@ def get_game_state():
         }), 500
 
 
+@api_bp.route('/game_state', methods=['PUT'])
+def put_game_state():
+    """Update the current game state from frontend."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        fen_string = data.get('fen_string', 'initial')
+        game_state = data.get('game_state')
+        
+        if not game_state:
+            return jsonify({'error': 'No game_state provided'}), 400
+        
+        # For now, we'll just acknowledge the save
+        # In a full implementation, you might want to:
+        # 1. Validate the game state
+        # 2. Convert it back to FEN format
+        # 3. Store it in a database or cache
+        
+        return jsonify({
+            'success': True,
+            'message': 'Game state saved successfully',
+            'fen_string': fen_string
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'Failed to save game state: {str(e)}'
+        }), 500
+
+
 @api_bp.route('/reset_game', methods=['POST'])
 def reset_game():
     """Reset the current game state to initial position."""

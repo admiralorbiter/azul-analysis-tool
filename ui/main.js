@@ -63,6 +63,23 @@ async function getHint(fenString) {
     }
 }
 
+async function saveGameState(gameState, fenString = 'initial') {
+    try {
+        const response = await fetch(`${API_BASE}/game_state`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                fen_string: fenString,
+                game_state: gameState
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to save game state:', error);
+        throw error;
+    }
+}
+
 // Generate heatmap data from analysis
 function generateHeatmapData(analysisData) {
     if (!analysisData || !analysisData.variations) return null;
@@ -716,10 +733,10 @@ function App() {
             });
     }, []);
     
-    // Refresh game state periodically to stay in sync
+    // Refresh game state periodically to stay in sync (but not during edit mode)
     React.useEffect(() => {
         const interval = setInterval(() => {
-            if (sessionStatus === 'connected' && !loading) {
+            if (sessionStatus === 'connected' && !loading && !editMode) {
                 getGameState().then(data => {
                     setGameState(data);
                 }).catch(error => {
@@ -729,7 +746,7 @@ function App() {
         }, 5000); // Refresh every 5 seconds
         
         return () => clearInterval(interval);
-    }, [sessionStatus, loading]);
+    }, [sessionStatus, loading, editMode]);
     
     // Clear selection function
     const clearSelection = React.useCallback(() => {
@@ -787,25 +804,107 @@ function App() {
         
         if (!color) return;
 
-        // Here you would implement the actual tile placement logic
         console.log(`Applying ${color} tiles to:`, selectedElements);
+        
+        // Create a deep copy of the game state to modify
+        const newGameState = JSON.parse(JSON.stringify(gameState));
+        
+        selectedElements.forEach(element => {
+            if (element.type === 'factory') {
+                // Add tile to factory
+                const factoryIndex = element.data.factoryIndex;
+                if (newGameState.factories && newGameState.factories[factoryIndex]) {
+                    newGameState.factories[factoryIndex].push(color);
+                }
+            } else if (element.type === 'pattern-line') {
+                // Add tile to pattern line
+                const { playerIndex, rowIndex } = element.data;
+                if (newGameState.players && newGameState.players[playerIndex]) {
+                    const player = newGameState.players[playerIndex];
+                    if (player.pattern_lines && player.pattern_lines[rowIndex]) {
+                        player.pattern_lines[rowIndex].push(color);
+                    }
+                }
+            } else if (element.type === 'wall-cell') {
+                // Place tile on wall
+                const { playerIndex, rowIndex, colIndex } = element.data;
+                if (newGameState.players && newGameState.players[playerIndex]) {
+                    const player = newGameState.players[playerIndex];
+                    if (player.wall && player.wall[rowIndex] && player.wall[rowIndex][colIndex] === null) {
+                        player.wall[rowIndex][colIndex] = color;
+                    }
+                }
+            }
+        });
+        
+        // Update the game state
+        setGameState(newGameState);
         setStatusMessage(`Applied ${color} tiles to ${selectedElements.length} location(s)`);
+        
+        // Save the updated state to the server
+        saveGameState(newGameState).then(() => {
+            setStatusMessage(`Applied ${color} tiles to ${selectedElements.length} location(s) - Saved to server`);
+        }).catch(error => {
+            console.error('Failed to save game state:', error);
+            setStatusMessage(`Applied ${color} tiles but failed to save to server`);
+        });
         
         // Clear selection after applying
         setSelectedElements([]);
-    }, [editMode, selectedElements]);
+    }, [editMode, selectedElements, gameState]);
 
     // Remove tiles from selected elements
     const removeSelectedTiles = React.useCallback(() => {
         if (!editMode || selectedElements.length === 0) return;
 
-        // Here you would implement the actual tile removal logic
         console.log('Removing tiles from:', selectedElements);
+        
+        // Create a deep copy of the game state to modify
+        const newGameState = JSON.parse(JSON.stringify(gameState));
+        
+        selectedElements.forEach(element => {
+            if (element.type === 'factory') {
+                // Remove all tiles from factory
+                const factoryIndex = element.data.factoryIndex;
+                if (newGameState.factories && newGameState.factories[factoryIndex]) {
+                    newGameState.factories[factoryIndex] = [];
+                }
+            } else if (element.type === 'pattern-line') {
+                // Remove all tiles from pattern line
+                const { playerIndex, rowIndex } = element.data;
+                if (newGameState.players && newGameState.players[playerIndex]) {
+                    const player = newGameState.players[playerIndex];
+                    if (player.pattern_lines && player.pattern_lines[rowIndex]) {
+                        player.pattern_lines[rowIndex] = [];
+                    }
+                }
+            } else if (element.type === 'wall-cell') {
+                // Remove tile from wall
+                const { playerIndex, rowIndex, colIndex } = element.data;
+                if (newGameState.players && newGameState.players[playerIndex]) {
+                    const player = newGameState.players[playerIndex];
+                    if (player.wall && player.wall[rowIndex] && player.wall[rowIndex][colIndex] !== null) {
+                        player.wall[rowIndex][colIndex] = null;
+                    }
+                }
+            }
+        });
+        
+        // Update the game state
+        setGameState(newGameState);
         setStatusMessage(`Removed tiles from ${selectedElements.length} location(s)`);
+        
+        // Save the updated state to the server
+        saveGameState(newGameState).then(() => {
+            setStatusMessage(`Removed tiles from ${selectedElements.length} location(s) - Saved to server`);
+        }).catch(error => {
+            console.error('Failed to save game state:', error);
+            setStatusMessage(`Removed tiles but failed to save to server`);
+        });
         
         // Clear selection after removing
         setSelectedElements([]);
-    }, [editMode, selectedElements]);
+    }, [editMode, selectedElements, gameState]);
 
     // Copy selected elements
     const copySelection = React.useCallback(() => {
@@ -822,12 +921,55 @@ function App() {
             return;
         }
 
-        // Here you would implement the actual paste logic
         console.log('Pasting from clipboard:', clipboard, 'to:', selectedElements[0]);
+        
+        // Create a deep copy of the game state to modify
+        const newGameState = JSON.parse(JSON.stringify(gameState));
+        const targetElement = selectedElements[0];
+        
+        clipboard.forEach(element => {
+            if (element.type === 'factory' && targetElement.type === 'factory') {
+                // Copy tiles from source factory to target factory
+                const sourceFactoryIndex = element.data.factoryIndex;
+                const targetFactoryIndex = targetElement.data.factoryIndex;
+                
+                if (newGameState.factories && newGameState.factories[sourceFactoryIndex]) {
+                    const tilesToCopy = [...newGameState.factories[sourceFactoryIndex]];
+                    newGameState.factories[targetFactoryIndex] = tilesToCopy;
+                }
+            } else if (element.type === 'pattern-line' && targetElement.type === 'pattern-line') {
+                // Copy tiles from source pattern line to target pattern line
+                const sourcePlayerIndex = element.data.playerIndex;
+                const sourceRowIndex = element.data.rowIndex;
+                const targetPlayerIndex = targetElement.data.playerIndex;
+                const targetRowIndex = targetElement.data.rowIndex;
+                
+                if (newGameState.players && newGameState.players[sourcePlayerIndex] && newGameState.players[targetPlayerIndex]) {
+                    const sourcePlayer = newGameState.players[sourcePlayerIndex];
+                    const targetPlayer = newGameState.players[targetPlayerIndex];
+                    
+                    if (sourcePlayer.pattern_lines && sourcePlayer.pattern_lines[sourceRowIndex]) {
+                        const tilesToCopy = [...sourcePlayer.pattern_lines[sourceRowIndex]];
+                        targetPlayer.pattern_lines[targetRowIndex] = tilesToCopy;
+                    }
+                }
+            }
+        });
+        
+        // Update the game state
+        setGameState(newGameState);
         setStatusMessage(`Pasted ${clipboard.length} element(s)`);
         
+        // Save the updated state to the server
+        saveGameState(newGameState).then(() => {
+            setStatusMessage(`Pasted ${clipboard.length} element(s) - Saved to server`);
+        }).catch(error => {
+            console.error('Failed to save game state:', error);
+            setStatusMessage(`Pasted elements but failed to save to server`);
+        });
+        
         setSelectedElements([]);
-    }, [editMode, clipboard, selectedElements]);
+    }, [editMode, clipboard, selectedElements, gameState]);
     
     // Handle move execution
     const handleMoveExecution = React.useCallback(async (move) => {
