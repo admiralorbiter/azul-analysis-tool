@@ -216,11 +216,16 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
     
     const handleFactoryClick = (e) => {
         if (editMode && onElementSelect) {
-            onElementSelect({
-                type: 'factory',
-                data: { factoryIndex, tiles },
-                timestamp: Date.now()
-            });
+            // In edit mode, handle edit actions
+            if (window.handleEditClick) {
+                window.handleEditClick('factory', { factoryIndex, tiles });
+            } else {
+                onElementSelect({
+                    type: 'factory',
+                    data: { factoryIndex, tiles },
+                    timestamp: Date.now()
+                });
+            }
         }
     };
     
@@ -401,11 +406,16 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
     
     const handlePatternLineClick = (e) => {
         if (editMode && onElementSelect) {
-            onElementSelect({
-                type: 'pattern-line',
-                data: { playerIndex, rowIndex, tiles, maxTiles },
-                timestamp: Date.now()
-            });
+            // In edit mode, handle edit actions
+            if (window.handleEditClick) {
+                window.handleEditClick('pattern-line', { playerIndex, rowIndex, tiles, maxTiles });
+            } else {
+                onElementSelect({
+                    type: 'pattern-line',
+                    data: { playerIndex, rowIndex, tiles, maxTiles },
+                    timestamp: Date.now()
+                });
+            }
         }
     };
     
@@ -489,7 +499,13 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
                     React.createElement('div', {
                         key: colIndex,
                         className: `wall-cell ${cell ? 'filled' : 'empty'}`,
-                        onClick: () => onWallClick ? onWallClick(rowIndex, colIndex, cell) : null,
+                        onClick: () => {
+                            if (editMode && window.handleEditClick) {
+                                window.handleEditClick('wall-cell', { playerIndex, rowIndex, colIndex, cell });
+                            } else if (onWallClick) {
+                                onWallClick(rowIndex, colIndex, cell);
+                            }
+                        },
                         onContextMenu: (e) => {
                             e.preventDefault();
                             if (editMode && window.showContextMenu) {
@@ -669,6 +685,8 @@ function App() {
     const [selectedTile, setSelectedTile] = React.useState(null);
     const [editMode, setEditMode] = React.useState(false);
     const [selectedElement, setSelectedElement] = React.useState(null);
+    const [editTarget, setEditTarget] = React.useState(null); // For tracking what we're editing
+    const [editAction, setEditAction] = React.useState(null); // 'add', 'remove', 'move'
     const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, options: [] });
     const [variations, setVariations] = React.useState([]);
     const [moveAnnotations, setMoveAnnotations] = React.useState({});
@@ -724,6 +742,66 @@ function App() {
         setSelectedElement(element);
         setStatusMessage(formatSelectedElement(element));
     }, []);
+
+    // Edit mode functions
+    const handleEditModeToggle = React.useCallback(() => {
+        const newEditMode = !editMode;
+        setEditMode(newEditMode);
+        
+        if (newEditMode) {
+            setStatusMessage('Edit mode enabled. Click on elements to select them.');
+        } else {
+            setStatusMessage('Edit mode disabled.');
+            setSelectedElement(null);
+            setEditTarget(null);
+            setEditAction(null);
+        }
+    }, [editMode]);
+
+    const handleEditAction = React.useCallback((action, target) => {
+        setEditAction(action);
+        setEditTarget(target);
+        
+        switch (action) {
+            case 'add':
+                setStatusMessage(`Click where you want to add a ${target} tile`);
+                break;
+            case 'remove':
+                setStatusMessage(`Click on a ${target} tile to remove it`);
+                break;
+            case 'move':
+                setStatusMessage(`Click on a tile to move it`);
+                break;
+            default:
+                setStatusMessage('Select an edit action');
+        }
+    }, []);
+
+    const handleEditClick = React.useCallback((elementType, elementData) => {
+        if (!editMode) return;
+
+        switch (editAction) {
+            case 'add':
+                // Add tile to the clicked location
+                console.log('Adding tile to:', elementType, elementData);
+                setStatusMessage(`Added tile to ${elementType}`);
+                break;
+            case 'remove':
+                // Remove tile from the clicked location
+                console.log('Removing tile from:', elementType, elementData);
+                setStatusMessage(`Removed tile from ${elementType}`);
+                break;
+            case 'move':
+                // Move tile to the clicked location
+                console.log('Moving tile to:', elementType, elementData);
+                setStatusMessage(`Moved tile to ${elementType}`);
+                break;
+            default:
+                // Just select the element
+                setSelectedElement({ type: elementType, data: elementData });
+                setStatusMessage(`Selected ${elementType}`);
+        }
+    }, [editMode, editAction]);
     
     // Handle move execution
     const handleMoveExecution = React.useCallback(async (move) => {
@@ -976,7 +1054,8 @@ function App() {
     React.useEffect(() => {
         window.showContextMenu = showContextMenu;
         window.hideContextMenu = hideContextMenu;
-    }, [showContextMenu, hideContextMenu]);
+        window.handleEditClick = handleEditClick;
+    }, [showContextMenu, hideContextMenu, handleEditClick]);
     
     // Handle clicks outside context menu
     React.useEffect(() => {
@@ -1064,15 +1143,15 @@ function App() {
                         className: 'flex space-x-4'
                     },
                         React.createElement('button', {
-                            className: `px-4 py-2 rounded ${editMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                            onClick: () => setEditMode(!editMode)
-                        }, editMode ? 'Exit Edit' : 'Edit Mode'),
+                            className: `btn-edit ${editMode ? 'active' : ''}`,
+                            onClick: handleEditModeToggle
+                        }, editMode ? '✏️ Exit Edit' : '✏️ Edit Mode'),
                         React.createElement('button', {
-                            className: 'px-4 py-2 bg-green-600 text-white rounded',
+                            className: 'btn-success',
                             onClick: () => getGameState().then(setGameState)
-                        }, 'Reset Game'),
+                        }, '🔄 Reset Game'),
                         React.createElement('button', {
-                            className: 'px-3 py-2 bg-blue-500 text-white rounded text-sm',
+                            className: 'btn-primary btn-sm',
                             onClick: () => {
                                 getGameState().then(data => {
                                     setGameState(data);
@@ -1083,15 +1162,15 @@ function App() {
                             }
                         }, '🔄 Refresh'),
                         React.createElement('div', {
-                            className: 'flex space-x-2'
+                            className: 'btn-group'
                         },
                             React.createElement('button', {
-                                className: 'px-3 py-2 bg-purple-600 text-white rounded text-sm',
+                                className: 'btn-info btn-sm',
                                 onClick: exportPosition,
                                 disabled: !gameState
                             }, '💾 Export'),
                             React.createElement('label', {
-                                className: 'px-3 py-2 bg-purple-600 text-white rounded text-sm cursor-pointer',
+                                className: 'btn-info btn-sm cursor-pointer',
                                 htmlFor: 'position-import'
                             }, '📁 Import'),
                             React.createElement('input', {
@@ -1184,26 +1263,26 @@ function App() {
                     },
                         // Action buttons
                         React.createElement('div', {
-                            className: 'grid grid-cols-2 gap-2'
+                            className: 'btn-group w-full'
                         },
                             React.createElement('button', {
-                                className: 'px-3 py-2 bg-orange-500 text-white rounded text-sm',
+                                className: 'btn-warning btn-sm flex-1',
                                 onClick: handleUndo,
                                 disabled: moveHistory.length === 0 || loading
-                            }, 'Undo (Ctrl+Z)'),
+                            }, '↶ Undo'),
                             React.createElement('button', {
-                                className: 'px-3 py-2 bg-gray-500 text-white rounded text-sm',
+                                className: 'btn-secondary btn-sm flex-1',
                                 onClick: handleRedo,
                                 disabled: loading
-                            }, 'Redo (Ctrl+Y)')
+                            }, '↷ Redo')
                         ),
                         
                         // Analysis and heatmap buttons
                         React.createElement('div', {
-                            className: 'space-y-2'
+                            className: 'space-y-3'
                         },
                             React.createElement('button', {
-                                className: `w-full px-4 py-2 text-white rounded ${loading ? 'bg-gray-400' : 'bg-blue-600'}`,
+                                className: `w-full btn-primary ${loading ? 'opacity-50' : ''}`,
                                 onClick: () => {
                                     setLoading(true);
                                     analyzePosition(gameState.fen_string || 'initial')
@@ -1219,10 +1298,10 @@ function App() {
                                         .finally(() => setLoading(false));
                                 },
                                 disabled: loading
-                            }, loading ? 'Analyzing...' : 'Analyze Position'),
+                            }, loading ? '🤖 Analyzing...' : '🔍 Analyze Position'),
                             
                             React.createElement('button', {
-                                className: `w-full px-3 py-2 text-sm rounded ${heatmapEnabled ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                className: `w-full btn-sm ${heatmapEnabled ? 'btn-success' : 'btn-secondary'}`,
                                 onClick: () => {
                                     setHeatmapEnabled(!heatmapEnabled);
                                     setStatusMessage(heatmapEnabled ? 'Heatmap disabled' : 'Heatmap enabled');
@@ -1245,6 +1324,76 @@ function App() {
                                     onClick: () => setStatusMessage(`Selected: ${variation.move}`),
                                     isSelected: false
                                 })
+                            )
+                        ),
+                        
+                        // Edit Controls Panel (only show when edit mode is active)
+                        editMode && React.createElement('div', {
+                            className: 'edit-controls mt-6 p-4'
+                        },
+                            React.createElement('h3', {
+                                className: 'font-medium mb-3'
+                            }, '✏️ Edit Controls'),
+                            React.createElement('div', {
+                                className: 'space-y-3'
+                            },
+                                // Edit Actions
+                                React.createElement('div', {
+                                    className: 'btn-group w-full'
+                                },
+                                    React.createElement('button', {
+                                        className: 'btn-warning btn-sm flex-1',
+                                        onClick: () => handleEditAction('add', 'blue')
+                                    }, '➕ Add'),
+                                    React.createElement('button', {
+                                        className: 'btn-danger btn-sm flex-1',
+                                        onClick: () => handleEditAction('remove', 'tile')
+                                    }, '➖ Remove'),
+                                    React.createElement('button', {
+                                        className: 'btn-info btn-sm flex-1',
+                                        onClick: () => handleEditAction('move', 'tile')
+                                    }, '↔️ Move')
+                                ),
+                                
+                                // Tile Color Selection (for add action)
+                                editAction === 'add' && React.createElement('div', {
+                                    className: 'space-y-2'
+                                },
+                                    React.createElement('p', {
+                                        className: 'text-sm text-orange-700'
+                                    }, 'Select tile color:'),
+                                    React.createElement('div', {
+                                        className: 'tile-color-grid'
+                                    },
+                                        ['B', 'Y', 'R', 'K', 'W'].map(color => 
+                                            React.createElement('button', {
+                                                key: color,
+                                                className: `tile-color-button ${getTileColor(color)} ${editTarget === color ? 'selected' : ''}`,
+                                                onClick: () => handleEditAction('add', color)
+                                            })
+                                        )
+                                    )
+                                ),
+                                
+                                // Current Action Status
+                                editAction && React.createElement('div', {
+                                    className: 'edit-action-status'
+                                },
+                                    React.createElement('strong', null, 'Current Action: '),
+                                    editAction === 'add' ? `Add ${editTarget} tiles` :
+                                    editAction === 'remove' ? 'Remove tiles' :
+                                    editAction === 'move' ? 'Move tiles' : 'Select action'
+                                ),
+                                
+                                // Clear Action Button
+                                editAction && React.createElement('button', {
+                                    className: 'w-full btn-secondary btn-sm',
+                                    onClick: () => {
+                                        setEditAction(null);
+                                        setEditTarget(null);
+                                        setStatusMessage('Edit action cleared');
+                                    }
+                                }, '❌ Clear Action')
                             )
                         ),
                         
