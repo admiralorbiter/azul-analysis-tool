@@ -20,6 +20,10 @@ from dataclasses import asdict
 
 from .auth import require_session
 from .rate_limiter import RateLimiter
+from core.azul_database import AzulDatabase
+
+# Initialize database connection
+db = AzulDatabase()
 
 
 class AnalysisRequest(BaseModel):
@@ -164,8 +168,8 @@ _current_game_state = None
 _initial_game_state = None  # Store the original initial state
 _current_editable_game_state = None  # Store the current editable game state from frontend
 
-# Global training sessions storage
-training_sessions = {}
+# Global training sessions storage (now database-backed)
+# training_sessions = {}  # Replaced with database storage
 
 # Global evaluation sessions storage
 evaluation_sessions = {}
@@ -3158,9 +3162,29 @@ def start_neural_training():
         # Generate session ID
         session_id = str(uuid.uuid4())
         
-        # Create enhanced training session
+        # Create enhanced training session and save to database
         session = TrainingSession(session_id, training_request.dict())
-        training_sessions[session_id] = session
+        
+        # Save initial session to database
+        from core.azul_database import NeuralTrainingSession
+        db_session = NeuralTrainingSession(
+            session_id=session_id,
+            status='starting',
+            progress=0,
+            config=json.dumps(training_request.dict()),
+            logs=json.dumps(['Training session created']),
+            error=None,
+            results=None,
+            metadata=json.dumps({
+                'device': training_request.device,
+                'config_size': training_request.config,
+                'epochs': training_request.epochs,
+                'samples': training_request.samples,
+                'batch_size': training_request.batch_size,
+                'learning_rate': training_request.learning_rate
+            })
+        )
+        db.save_neural_training_session(db_session)
         
         # Start training in background thread
         def train_in_background():
@@ -3251,15 +3275,79 @@ def start_neural_training():
                     'samples': training_request.samples
                 }
                 
+                # Update database with final results
+                db_session = NeuralTrainingSession(
+                    session_id=session_id,
+                    status='completed',
+                    progress=100,
+                    config=json.dumps(training_request.dict()),
+                    logs=json.dumps(session.logs),
+                    error=None,
+                    results=json.dumps(session.results),
+                    metadata=json.dumps({
+                        'device': training_request.device,
+                        'config_size': training_request.config,
+                        'epochs': training_request.epochs,
+                        'samples': training_request.samples,
+                        'batch_size': training_request.batch_size,
+                        'learning_rate': training_request.learning_rate,
+                        'final_loss': losses[-1] if losses else 0.0,
+                        'evaluation_error': eval_results.get('avg_value_error', 0.0),
+                        'model_path': model_path
+                    })
+                )
+                db.save_neural_training_session(db_session)
+                
             except InterruptedError:
                 session.status = 'stopped'
                 session.logs.append('Training stopped by user')
                 session.end_time = datetime.now()
+                
+                # Update database with stopped status
+                db_session = NeuralTrainingSession(
+                    session_id=session_id,
+                    status='stopped',
+                    progress=session.progress,
+                    config=json.dumps(training_request.dict()),
+                    logs=json.dumps(session.logs),
+                    error=None,
+                    results=None,
+                    metadata=json.dumps({
+                        'device': training_request.device,
+                        'config_size': training_request.config,
+                        'epochs': training_request.epochs,
+                        'samples': training_request.samples,
+                        'batch_size': training_request.batch_size,
+                        'learning_rate': training_request.learning_rate
+                    })
+                )
+                db.save_neural_training_session(db_session)
+                
             except Exception as e:
                 session.status = 'failed'
                 session.error = str(e)
                 session.logs.append(f'Error: {str(e)}')
                 session.end_time = datetime.now()
+                
+                # Update database with failed status
+                db_session = NeuralTrainingSession(
+                    session_id=session_id,
+                    status='failed',
+                    progress=session.progress,
+                    config=json.dumps(training_request.dict()),
+                    logs=json.dumps(session.logs),
+                    error=str(e),
+                    results=None,
+                    metadata=json.dumps({
+                        'device': training_request.device,
+                        'config_size': training_request.config,
+                        'epochs': training_request.epochs,
+                        'samples': training_request.samples,
+                        'batch_size': training_request.batch_size,
+                        'learning_rate': training_request.learning_rate
+                    })
+                )
+                db.save_neural_training_session(db_session)
         
         # Start background thread
         thread = threading.Thread(target=train_in_background)
@@ -3283,49 +3371,64 @@ def start_neural_training():
 @api_bp.route('/neural/status/<session_id>', methods=['GET'])
 def get_training_status(session_id):
     """Get enhanced training status for a session with loss history and resource monitoring."""
-    if session_id not in training_sessions:
-        return jsonify({'error': 'Session not found'}), 404
-    
-    session = training_sessions[session_id]
-    
-    # Convert session object to dictionary
-    if hasattr(session, 'to_dict'):
-        return jsonify(session.to_dict())
-    else:
-        # Fallback for old session format
+    try:
+        # Get session from database
+        db_session = db.get_neural_training_session(session_id)
+        if not db_session:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        # Convert database session to API response format
+        response_data = {
+            'session_id': db_session.session_id,
+            'status': db_session.status,
+            'progress': db_session.progress,
+            'start_time': db_session.created_at.isoformat() if db_session.created_at else None,
+            'end_time': db_session.updated_at.isoformat() if db_session.updated_at else None,
+            'config': json.loads(db_session.config) if db_session.config else {},
+            'logs': json.loads(db_session.logs) if db_session.logs else [],
+            'error': db_session.error,
+            'results': json.loads(db_session.results) if db_session.results else None,
+            'metadata': json.loads(db_session.metadata) if db_session.metadata else {}
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
         return jsonify({
-            'session_id': session_id,
-            'status': session['status'],
-            'progress': session['progress'],
-            'start_time': session['start_time'],
-            'logs': session['logs'],
-            'error': session['error'],
-            'results': session['results']
-        })
+            'error': 'Failed to get session status',
+            'message': str(e)
+        }), 500
 
 
 @api_bp.route('/neural/stop/<session_id>', methods=['POST'])
 def stop_training(session_id):
     """Stop training for a session."""
-    if session_id not in training_sessions:
-        return jsonify({'error': 'Session not found'}), 404
-    
-    session = training_sessions[session_id]
-    
-    # Set stop flag for graceful termination
-    if hasattr(session, 'stop_requested'):
-        session.stop_requested = True
-        session.logs.append('Stop requested - training will terminate gracefully')
-    else:
-        # Fallback for old session format
-        session['status'] = 'stopped'
-        session['logs'].append('Training stopped by user')
-    
-    return jsonify({
-        'success': True,
-        'message': 'Training stop requested',
-        'session_id': session_id
-    })
+    try:
+        # Get session from database
+        db_session = db.get_neural_training_session(session_id)
+        if not db_session:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        # Update session status to stopped
+        db_session.status = 'stopped'
+        logs = json.loads(db_session.logs) if db_session.logs else []
+        logs.append('Stop requested - training will terminate gracefully')
+        db_session.logs = json.dumps(logs)
+        
+        # Save updated session to database
+        db.save_neural_training_session(db_session)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Training stop requested',
+            'session_id': session_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to stop training',
+            'message': str(e)
+        }), 500
 
 
 @api_bp.route('/neural/evaluate', methods=['POST'])
@@ -3700,28 +3803,49 @@ def get_process_resources():
 
 @api_bp.route('/neural/sessions', methods=['GET'])
 def get_all_training_sessions():
-    """Get all active training sessions."""
+    """Get all training sessions from database."""
     try:
+        # Get query parameters for filtering
+        status = request.args.get('status')
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        # Get sessions from database
+        db_sessions = db.get_all_neural_training_sessions(
+            status=status,
+            limit=limit,
+            offset=offset
+        )
+        
+        # Convert database sessions to API response format
         sessions = []
-        for session_id, session in training_sessions.items():
-            if hasattr(session, 'to_dict'):
-                sessions.append(session.to_dict())
-            else:
-                # Fallback for old session format
-                sessions.append({
-                    'session_id': session_id,
-                    'status': session['status'],
-                    'progress': session['progress'],
-                    'start_time': session['start_time'],
-                    'logs': session['logs'],
-                    'error': session['error'],
-                    'results': session['results']
-                })
+        for db_session in db_sessions:
+            session_data = {
+                'session_id': db_session.session_id,
+                'status': db_session.status,
+                'progress': db_session.progress,
+                'start_time': db_session.created_at.isoformat() if db_session.created_at else None,
+                'end_time': db_session.updated_at.isoformat() if db_session.updated_at else None,
+                'config': json.loads(db_session.config) if db_session.config else {},
+                'logs': json.loads(db_session.logs) if db_session.logs else [],
+                'error': db_session.error,
+                'results': json.loads(db_session.results) if db_session.results else None,
+                'metadata': json.loads(db_session.metadata) if db_session.metadata else {}
+            }
+            sessions.append(session_data)
+        
+        # Get total count for pagination
+        all_sessions = db.get_all_neural_training_sessions()
+        total_count = len(all_sessions)
+        active_count = len([s for s in all_sessions if s.status in ['starting', 'running']])
         
         return jsonify({
             'sessions': sessions,
             'count': len(sessions),
-            'active_count': len([s for s in sessions if s['status'] in ['starting', 'running']])
+            'total_count': total_count,
+            'active_count': active_count,
+            'limit': limit,
+            'offset': offset
         })
         
     except Exception as e:
@@ -3733,17 +3857,29 @@ def get_all_training_sessions():
 
 @api_bp.route('/neural/sessions/<session_id>', methods=['DELETE'])
 def delete_training_session(session_id):
-    """Delete a training session."""
-    if session_id not in training_sessions:
-        return jsonify({'error': 'Session not found'}), 404
-    
-    del training_sessions[session_id]
-    
-    return jsonify({
-        'success': True,
-        'message': 'Session deleted',
-        'session_id': session_id
-    })
+    """Delete a training session from database."""
+    try:
+        # Check if session exists
+        db_session = db.get_neural_training_session(session_id)
+        if not db_session:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        # Delete session from database
+        success = db.delete_neural_training_session(session_id)
+        if not success:
+            return jsonify({'error': 'Failed to delete session'}), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Session deleted',
+            'session_id': session_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to delete session',
+            'message': str(e)
+        }), 500
 
 
 @api_bp.route('/neural/evaluation-sessions', methods=['GET'])
@@ -3806,3 +3942,324 @@ def delete_evaluation_session(session_id):
         'message': 'Evaluation session deleted',
         'session_id': session_id
     })
+
+
+# New API endpoints for Part 2.1.4: Historical Data and Configuration Management
+
+@api_bp.route('/neural/history', methods=['GET'])
+def get_training_history():
+    """Get historical training data with advanced filtering and sorting."""
+    try:
+        # Get query parameters
+        status = request.args.get('status')
+        config_size = request.args.get('config_size')  # small, medium, large
+        device = request.args.get('device')  # cpu, cuda
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        sort_by = request.args.get('sort_by', 'created_at')  # created_at, progress, status
+        sort_order = request.args.get('sort_order', 'desc')  # asc, desc
+        
+        # Get sessions from database with filtering
+        db_sessions = db.get_all_neural_training_sessions(
+            status=status,
+            limit=limit,
+            offset=offset
+        )
+        
+        # Apply additional filtering
+        filtered_sessions = []
+        for session in db_sessions:
+            # Parse metadata for additional filtering
+            metadata = json.loads(session.metadata) if session.metadata else {}
+            
+            # Filter by config size
+            if config_size and metadata.get('config_size') != config_size:
+                continue
+                
+            # Filter by device
+            if device and metadata.get('device') != device:
+                continue
+                
+            # Filter by date range
+            if date_from and session.created_at:
+                from datetime import datetime
+                try:
+                    date_from_dt = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+                    if session.created_at < date_from_dt:
+                        continue
+                except:
+                    pass
+                    
+            if date_to and session.created_at:
+                from datetime import datetime
+                try:
+                    date_to_dt = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+                    if session.created_at > date_to_dt:
+                        continue
+                except:
+                    pass
+            
+            filtered_sessions.append(session)
+        
+        # Sort sessions
+        if sort_by == 'created_at':
+            filtered_sessions.sort(key=lambda x: x.created_at or datetime.min, reverse=(sort_order == 'desc'))
+        elif sort_by == 'progress':
+            filtered_sessions.sort(key=lambda x: x.progress or 0, reverse=(sort_order == 'desc'))
+        elif sort_by == 'status':
+            filtered_sessions.sort(key=lambda x: x.status or '', reverse=(sort_order == 'desc'))
+        
+        # Convert to API response format
+        sessions = []
+        for db_session in filtered_sessions:
+            session_data = {
+                'session_id': db_session.session_id,
+                'status': db_session.status,
+                'progress': db_session.progress,
+                'start_time': db_session.created_at.isoformat() if db_session.created_at else None,
+                'end_time': db_session.updated_at.isoformat() if db_session.updated_at else None,
+                'config': json.loads(db_session.config) if db_session.config else {},
+                'logs': json.loads(db_session.logs) if db_session.logs else [],
+                'error': db_session.error,
+                'results': json.loads(db_session.results) if db_session.results else None,
+                'metadata': json.loads(db_session.metadata) if db_session.metadata else {}
+            }
+            sessions.append(session_data)
+        
+        return jsonify({
+            'sessions': sessions,
+            'count': len(sessions),
+            'total_count': len(filtered_sessions),
+            'filters': {
+                'status': status,
+                'config_size': config_size,
+                'device': device,
+                'date_from': date_from,
+                'date_to': date_to
+            },
+            'sorting': {
+                'sort_by': sort_by,
+                'sort_order': sort_order
+            },
+            'pagination': {
+                'limit': limit,
+                'offset': offset
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get training history',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/configurations', methods=['GET'])
+def get_neural_configurations():
+    """Get all saved neural training configurations."""
+    try:
+        # Get query parameters
+        is_default = request.args.get('is_default', type=bool)
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        # Get configurations from database
+        db_configs = db.get_neural_configurations(
+            is_default=is_default
+        )
+        
+        # Convert to API response format
+        configurations = []
+        for db_config in db_configs:
+            config_data = {
+                'config_id': db_config.config_id,
+                'name': db_config.name,
+                'description': db_config.description,
+                'is_default': db_config.is_default,
+                'config': json.loads(db_config.config) if db_config.config else {},
+                'metadata': json.loads(db_config.metadata) if db_config.metadata else {},
+                'created_at': db_config.created_at.isoformat() if db_config.created_at else None,
+                'updated_at': db_config.updated_at.isoformat() if db_config.updated_at else None
+            }
+            configurations.append(config_data)
+        
+        return jsonify({
+            'configurations': configurations,
+            'count': len(configurations),
+            'filters': {
+                'is_default': is_default
+            },
+            'pagination': {
+                'limit': limit,
+                'offset': offset
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get configurations',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/configurations', methods=['POST'])
+def save_neural_configuration():
+    """Save a new neural training configuration."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields
+        required_fields = ['name', 'config']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Create configuration object
+        from core.azul_database import NeuralConfiguration
+        db_config = NeuralConfiguration(
+            config_id=str(uuid.uuid4()),
+            name=data['name'],
+            description=data.get('description', ''),
+            is_default=data.get('is_default', False),
+            config=json.dumps(data['config']),
+            metadata=json.dumps(data.get('metadata', {}))
+        )
+        
+        # Save to database
+        success = db.save_neural_configuration(db_config)
+        if not success:
+            return jsonify({'error': 'Failed to save configuration'}), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Configuration saved',
+            'config_id': db_config.config_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to save configuration',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/configurations/<config_id>', methods=['PUT'])
+def update_neural_configuration(config_id):
+    """Update an existing neural training configuration."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Get existing configuration
+        db_config = db.get_neural_configuration(config_id)
+        if not db_config:
+            return jsonify({'error': 'Configuration not found'}), 404
+        
+        # Update fields
+        if 'name' in data:
+            db_config.name = data['name']
+        if 'description' in data:
+            db_config.description = data['description']
+        if 'is_default' in data:
+            db_config.is_default = data['is_default']
+        if 'config' in data:
+            db_config.config = json.dumps(data['config'])
+        if 'metadata' in data:
+            db_config.metadata = json.dumps(data['metadata'])
+        
+        # Save updated configuration
+        success = db.save_neural_configuration(db_config)
+        if not success:
+            return jsonify({'error': 'Failed to update configuration'}), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Configuration updated',
+            'config_id': config_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to update configuration',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/configurations/<config_id>', methods=['DELETE'])
+def delete_neural_configuration(config_id):
+    """Delete a neural training configuration."""
+    try:
+        # Check if configuration exists
+        db_config = db.get_neural_configuration(config_id)
+        if not db_config:
+            return jsonify({'error': 'Configuration not found'}), 404
+        
+        # Delete configuration
+        success = db.delete_neural_configuration(config_id)
+        if not success:
+            return jsonify({'error': 'Failed to delete configuration'}), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Configuration deleted',
+            'config_id': config_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to delete configuration',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/models', methods=['GET'])
+def get_neural_models():
+    """Get all saved neural models with metadata."""
+    try:
+        # Get query parameters
+        architecture = request.args.get('architecture')
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        # Get models from database
+        db_models = db.get_neural_models(
+            architecture=architecture
+        )
+        
+        # Convert to API response format
+        models = []
+        for db_model in db_models:
+            model_data = {
+                'model_id': db_model.model_id,
+                'name': db_model.name,
+                'architecture': db_model.architecture,
+                'file_path': db_model.file_path,
+                'training_session_id': db_model.training_session_id,
+                'metadata': json.loads(db_model.metadata) if db_model.metadata else {},
+                'created_at': db_model.created_at.isoformat() if db_model.created_at else None,
+                'updated_at': db_model.updated_at.isoformat() if db_model.updated_at else None
+            }
+            models.append(model_data)
+        
+        return jsonify({
+            'models': models,
+            'count': len(models),
+            'filters': {
+                'architecture': architecture
+            },
+            'pagination': {
+                'limit': limit,
+                'offset': offset
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get models',
+            'message': str(e)
+        }), 500

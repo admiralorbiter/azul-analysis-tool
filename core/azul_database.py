@@ -44,6 +44,80 @@ class QueryPerformance:
     timestamp: datetime
 
 
+@dataclass
+class NeuralTrainingSession:
+    """Represents a neural training session."""
+    session_id: str
+    status: str  # 'starting', 'running', 'completed', 'failed', 'stopped'
+    progress: int = 0
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    config: Optional[Dict[str, Any]] = None
+    logs: Optional[List[str]] = None
+    results: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    loss_history: Optional[List[float]] = None
+    epoch_history: Optional[List[int]] = None
+    timestamp_history: Optional[List[str]] = None
+    cpu_usage: Optional[List[float]] = None
+    memory_usage: Optional[List[float]] = None
+    gpu_usage: Optional[List[float]] = None
+    estimated_total_time: Optional[float] = None
+    current_epoch: int = 0
+    total_epochs: int = 0
+    created_at: Optional[datetime] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class NeuralTrainingProgress:
+    """Represents neural training progress for a specific epoch."""
+    session_id: str
+    epoch: int
+    loss: float
+    timestamp: datetime
+
+
+@dataclass
+class NeuralModel:
+    """Represents a trained neural model."""
+    model_id: str
+    model_path: str
+    config: Optional[Dict[str, Any]] = None
+    training_session_id: Optional[str] = None
+    created_at: Optional[datetime] = None
+    performance_metrics: Optional[Dict[str, Any]] = None
+    model_size_bytes: Optional[int] = None
+    architecture: Optional[str] = None  # 'small', 'medium', 'large'
+    device_used: Optional[str] = None  # 'cpu', 'cuda'
+
+
+@dataclass
+class NeuralConfiguration:
+    """Represents a neural training configuration template."""
+    config_id: str
+    name: str
+    config: Dict[str, Any]
+    created_at: Optional[datetime] = None
+    is_default: bool = False
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+@dataclass
+class NeuralEvaluationSession:
+    """Represents a neural evaluation session."""
+    session_id: str
+    status: str  # 'starting', 'running', 'completed', 'failed', 'stopped'
+    progress: int = 0
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    config: Optional[Dict[str, Any]] = None
+    results: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+
 class AzulDatabase:
     """
     SQLite database interface for caching Azul positions and analysis results.
@@ -98,8 +172,10 @@ class AzulDatabase:
         # Query performance tracking
         self.query_performance_log: List[QueryPerformance] = []
         
-        # Ensure data directory exists
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        # Ensure data directory exists (only if path has a directory component)
+        db_dir = os.path.dirname(db_path)
+        if db_dir:  # Only create directory if there's a path component
+            os.makedirs(db_dir, exist_ok=True)
         
         self._init_db()
     
@@ -318,6 +394,98 @@ class AzulDatabase:
                 CREATE INDEX IF NOT EXISTS idx_position_continuations_position ON position_continuations(position_id);
                 CREATE INDEX IF NOT EXISTS idx_position_continuations_frequency ON position_continuations(frequency DESC);
                 CREATE INDEX IF NOT EXISTS idx_position_continuations_win_rate ON position_continuations(win_rate DESC);
+                
+                -- Neural training sessions table
+                CREATE TABLE IF NOT EXISTS neural_training_sessions (
+                    session_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL, -- 'starting', 'running', 'completed', 'failed', 'stopped'
+                    progress INTEGER DEFAULT 0,
+                    start_time TIMESTAMP,
+                    end_time TIMESTAMP,
+                    config TEXT, -- JSON configuration
+                    logs TEXT, -- JSON logs array
+                    results TEXT, -- JSON results
+                    error TEXT,
+                    loss_history TEXT, -- JSON array of loss values
+                    epoch_history TEXT, -- JSON array of epoch numbers
+                    timestamp_history TEXT, -- JSON array of timestamps
+                    cpu_usage TEXT, -- JSON array of CPU usage values
+                    memory_usage TEXT, -- JSON array of memory usage values
+                    gpu_usage TEXT, -- JSON array of GPU usage values
+                    estimated_total_time REAL,
+                    current_epoch INTEGER DEFAULT 0,
+                    total_epochs INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    metadata TEXT -- JSON metadata
+                );
+                
+                -- Neural training progress table for detailed epoch tracking
+                CREATE TABLE IF NOT EXISTS neural_training_progress (
+                    id INTEGER PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    epoch INTEGER NOT NULL,
+                    loss REAL NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (session_id) REFERENCES neural_training_sessions(session_id) ON DELETE CASCADE
+                );
+                
+                -- Neural models table for model versioning
+                CREATE TABLE IF NOT EXISTS neural_models (
+                    model_id TEXT PRIMARY KEY,
+                    model_path TEXT NOT NULL,
+                    config TEXT, -- JSON configuration
+                    training_session_id TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    performance_metrics TEXT, -- JSON performance metrics
+                    model_size_bytes INTEGER,
+                    architecture TEXT, -- 'small', 'medium', 'large'
+                    device_used TEXT, -- 'cpu', 'cuda'
+                    FOREIGN KEY (training_session_id) REFERENCES neural_training_sessions(session_id) ON DELETE SET NULL
+                );
+                
+                -- Neural configurations table for template management
+                CREATE TABLE IF NOT EXISTS neural_configurations (
+                    config_id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    config TEXT NOT NULL, -- JSON configuration
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_default BOOLEAN DEFAULT FALSE,
+                    description TEXT,
+                    tags TEXT -- JSON array of tags
+                );
+                
+                -- Neural evaluation sessions table
+                CREATE TABLE IF NOT EXISTS neural_evaluation_sessions (
+                    session_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL, -- 'starting', 'running', 'completed', 'failed', 'stopped'
+                    progress INTEGER DEFAULT 0,
+                    start_time TIMESTAMP,
+                    end_time TIMESTAMP,
+                    config TEXT, -- JSON evaluation configuration
+                    results TEXT, -- JSON evaluation results
+                    error TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
+                -- Indexes for neural training tables
+                CREATE INDEX IF NOT EXISTS idx_neural_sessions_status ON neural_training_sessions(status);
+                CREATE INDEX IF NOT EXISTS idx_neural_sessions_created ON neural_training_sessions(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_neural_sessions_progress ON neural_training_sessions(progress DESC);
+                CREATE INDEX IF NOT EXISTS idx_neural_progress_session ON neural_training_progress(session_id);
+                CREATE INDEX IF NOT EXISTS idx_neural_progress_epoch ON neural_training_progress(epoch);
+                CREATE INDEX IF NOT EXISTS idx_neural_models_session ON neural_models(training_session_id);
+                CREATE INDEX IF NOT EXISTS idx_neural_models_created ON neural_models(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_neural_models_architecture ON neural_models(architecture);
+                CREATE INDEX IF NOT EXISTS idx_neural_configs_default ON neural_configurations(is_default);
+                CREATE INDEX IF NOT EXISTS idx_neural_configs_created ON neural_configurations(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_neural_eval_sessions_status ON neural_evaluation_sessions(status);
+                CREATE INDEX IF NOT EXISTS idx_neural_eval_sessions_created ON neural_evaluation_sessions(created_at DESC);
+                
+                -- Composite indexes for common neural training queries
+                CREATE INDEX IF NOT EXISTS idx_neural_sessions_status_created ON neural_training_sessions(status, created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_neural_sessions_progress_status ON neural_training_sessions(progress DESC, status);
+                CREATE INDEX IF NOT EXISTS idx_neural_models_session_created ON neural_models(training_session_id, created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_neural_configs_default_created ON neural_configurations(is_default, created_at DESC);
                 
                 -- Enable foreign key constraints
                 PRAGMA foreign_keys = ON;
@@ -924,4 +1092,529 @@ class AzulDatabase:
                 'indexes': indexes,
                 'analysis_indexes': analysis_indexes,
                 'position_indexes': position_indexes
-            } 
+            }
+
+    # ============================================================================
+    # Neural Training Database Methods
+    # ============================================================================
+
+    def save_neural_training_session(self, session: NeuralTrainingSession) -> bool:
+        """
+        Save a neural training session to the database.
+        
+        Args:
+            session: NeuralTrainingSession object to save
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with self.get_connection() as conn:
+                # Convert lists to JSON strings for storage
+                config_json = json.dumps(session.config) if session.config else None
+                logs_json = json.dumps(session.logs) if session.logs else None
+                results_json = json.dumps(session.results) if session.results else None
+                loss_history_json = json.dumps(session.loss_history) if session.loss_history else None
+                epoch_history_json = json.dumps(session.epoch_history) if session.epoch_history else None
+                timestamp_history_json = json.dumps(session.timestamp_history) if session.timestamp_history else None
+                cpu_usage_json = json.dumps(session.cpu_usage) if session.cpu_usage else None
+                memory_usage_json = json.dumps(session.memory_usage) if session.memory_usage else None
+                gpu_usage_json = json.dumps(session.gpu_usage) if session.gpu_usage else None
+                
+                metadata_json = json.dumps(session.metadata) if session.metadata else None
+                
+                cursor = self._execute_with_monitoring(conn, """
+                    INSERT OR REPLACE INTO neural_training_sessions (
+                        session_id, status, progress, start_time, end_time,
+                        config, logs, results, error, loss_history, epoch_history,
+                        timestamp_history, cpu_usage, memory_usage, gpu_usage,
+                        estimated_total_time, current_epoch, total_epochs, created_at, metadata
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    session.session_id, session.status, session.progress,
+                    session.start_time.isoformat() if session.start_time else None,
+                    session.end_time.isoformat() if session.end_time else None,
+                    config_json, logs_json, results_json, session.error,
+                    loss_history_json, epoch_history_json, timestamp_history_json,
+                    cpu_usage_json, memory_usage_json, gpu_usage_json,
+                    session.estimated_total_time, session.current_epoch, session.total_epochs,
+                    session.created_at.isoformat() if session.created_at else datetime.now().isoformat(),
+                    metadata_json
+                ), "save_neural_training_session")
+                
+                # Explicitly commit the transaction
+                conn.commit()
+                
+                return True
+        except Exception as e:
+            print(f"Error saving neural training session: {e}")
+            return False
+
+    def get_neural_training_session(self, session_id: str) -> Optional[NeuralTrainingSession]:
+        """
+        Get a neural training session from the database.
+        
+        Args:
+            session_id: Session ID to retrieve
+            
+        Returns:
+            NeuralTrainingSession object or None if not found
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = self._execute_with_monitoring(conn, """
+                    SELECT * FROM neural_training_sessions WHERE session_id = ?
+                """, (session_id,), "get_neural_training_session")
+                
+                row = cursor.fetchone()
+                if not row:
+                    return None
+                
+                # Parse JSON fields
+                config = json.loads(row['config']) if row['config'] else None
+                logs = json.loads(row['logs']) if row['logs'] else None
+                results = json.loads(row['results']) if row['results'] else None
+                loss_history = json.loads(row['loss_history']) if row['loss_history'] else None
+                epoch_history = json.loads(row['epoch_history']) if row['epoch_history'] else None
+                timestamp_history = json.loads(row['timestamp_history']) if row['timestamp_history'] else None
+                cpu_usage = json.loads(row['cpu_usage']) if row['cpu_usage'] else None
+                memory_usage = json.loads(row['memory_usage']) if row['memory_usage'] else None
+                gpu_usage = json.loads(row['gpu_usage']) if row['gpu_usage'] else None
+                
+                metadata = json.loads(row['metadata']) if row['metadata'] else None
+                
+                return NeuralTrainingSession(
+                    session_id=row['session_id'],
+                    status=row['status'],
+                    progress=row['progress'],
+                    start_time=datetime.fromisoformat(row['start_time']) if row['start_time'] else None,
+                    end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
+                    config=config,
+                    logs=logs,
+                    results=results,
+                    error=row['error'],
+                    loss_history=loss_history,
+                    epoch_history=epoch_history,
+                    timestamp_history=timestamp_history,
+                    cpu_usage=cpu_usage,
+                    memory_usage=memory_usage,
+                    gpu_usage=gpu_usage,
+                    estimated_total_time=row['estimated_total_time'],
+                    current_epoch=row['current_epoch'],
+                    total_epochs=row['total_epochs'],
+                    metadata=metadata,
+                    created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None
+                )
+        except Exception as e:
+            print(f"Error getting neural training session: {e}")
+            return None
+
+    def get_all_neural_training_sessions(self, status: Optional[str] = None, 
+                                       limit: int = 50) -> List[NeuralTrainingSession]:
+        """
+        Get all neural training sessions with optional filtering.
+        
+        Args:
+            status: Optional status filter
+            limit: Maximum number of sessions to return
+            
+        Returns:
+            List of NeuralTrainingSession objects
+        """
+        try:
+            with self.get_connection() as conn:
+                query = """
+                    SELECT * FROM neural_training_sessions 
+                    WHERE 1=1
+                """
+                params = []
+                
+                if status:
+                    query += " AND status = ?"
+                    params.append(status)
+                
+                query += " ORDER BY created_at DESC LIMIT ?"
+                params.append(limit)
+                
+                cursor = self._execute_with_monitoring(conn, query, tuple(params), 
+                                                    "get_all_neural_training_sessions")
+                
+                sessions = []
+                for row in cursor.fetchall():
+                    # Parse JSON fields
+                    config = json.loads(row['config']) if row['config'] else None
+                    logs = json.loads(row['logs']) if row['logs'] else None
+                    results = json.loads(row['results']) if row['results'] else None
+                    loss_history = json.loads(row['loss_history']) if row['loss_history'] else None
+                    epoch_history = json.loads(row['epoch_history']) if row['epoch_history'] else None
+                    timestamp_history = json.loads(row['timestamp_history']) if row['timestamp_history'] else None
+                    cpu_usage = json.loads(row['cpu_usage']) if row['cpu_usage'] else None
+                    memory_usage = json.loads(row['memory_usage']) if row['memory_usage'] else None
+                    gpu_usage = json.loads(row['gpu_usage']) if row['gpu_usage'] else None
+                    metadata = json.loads(row['metadata']) if row['metadata'] else None
+                    
+                    session = NeuralTrainingSession(
+                        session_id=row['session_id'],
+                        status=row['status'],
+                        progress=row['progress'],
+                        start_time=datetime.fromisoformat(row['start_time']) if row['start_time'] else None,
+                        end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
+                        config=config,
+                        logs=logs,
+                        results=results,
+                        error=row['error'],
+                        loss_history=loss_history,
+                        epoch_history=epoch_history,
+                        timestamp_history=timestamp_history,
+                        cpu_usage=cpu_usage,
+                        memory_usage=memory_usage,
+                        gpu_usage=gpu_usage,
+                        estimated_total_time=row['estimated_total_time'],
+                        current_epoch=row['current_epoch'],
+                        total_epochs=row['total_epochs'],
+                        created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
+                        metadata=metadata
+                    )
+                    sessions.append(session)
+                
+                return sessions
+        except Exception as e:
+            print(f"Error getting neural training sessions: {e}")
+            return []
+
+    def delete_neural_training_session(self, session_id: str) -> bool:
+        """
+        Delete a neural training session from the database.
+        
+        Args:
+            session_id: Session ID to delete
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = self._execute_with_monitoring(conn, """
+                    DELETE FROM neural_training_sessions WHERE session_id = ?
+                """, (session_id,), "delete_neural_training_session")
+                
+                # Explicitly commit the transaction
+                conn.commit()
+                
+                return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error deleting neural training session: {e}")
+            return False
+
+    def save_neural_model(self, model: NeuralModel) -> bool:
+        """
+        Save a neural model to the database.
+        
+        Args:
+            model: NeuralModel object to save
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with self.get_connection() as conn:
+                config_json = json.dumps(model.config) if model.config else None
+                performance_metrics_json = json.dumps(model.performance_metrics) if model.performance_metrics else None
+                
+                cursor = self._execute_with_monitoring(conn, """
+                    INSERT OR REPLACE INTO neural_models (
+                        model_id, model_path, config, training_session_id,
+                        created_at, performance_metrics, model_size_bytes,
+                        architecture, device_used
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    model.model_id, model.model_path, config_json, model.training_session_id,
+                    model.created_at.isoformat() if model.created_at else datetime.now().isoformat(),
+                    performance_metrics_json, model.model_size_bytes, model.architecture, model.device_used
+                ), "save_neural_model")
+                
+                # Explicitly commit the transaction
+                conn.commit()
+                
+                return True
+        except Exception as e:
+            print(f"Error saving neural model: {e}")
+            return False
+
+    def get_neural_models(self, architecture: Optional[str] = None) -> List[NeuralModel]:
+        """
+        Get neural models from the database.
+        
+        Args:
+            architecture: Optional architecture filter
+            
+        Returns:
+            List of NeuralModel objects
+        """
+        try:
+            with self.get_connection() as conn:
+                query = """
+                    SELECT * FROM neural_models 
+                    WHERE 1=1
+                """
+                params = []
+                
+                if architecture:
+                    query += " AND architecture = ?"
+                    params.append(architecture)
+                
+                query += " ORDER BY created_at DESC"
+                
+                cursor = self._execute_with_monitoring(conn, query, tuple(params), "get_neural_models")
+                
+                models = []
+                for row in cursor.fetchall():
+                    config = json.loads(row['config']) if row['config'] else None
+                    performance_metrics = json.loads(row['performance_metrics']) if row['performance_metrics'] else None
+                    
+                    model = NeuralModel(
+                        model_id=row['model_id'],
+                        model_path=row['model_path'],
+                        config=config,
+                        training_session_id=row['training_session_id'],
+                        created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
+                        performance_metrics=performance_metrics,
+                        model_size_bytes=row['model_size_bytes'],
+                        architecture=row['architecture'],
+                        device_used=row['device_used']
+                    )
+                    models.append(model)
+                
+                return models
+        except Exception as e:
+            print(f"Error getting neural models: {e}")
+            return []
+
+    def save_neural_configuration(self, config: NeuralConfiguration) -> bool:
+        """
+        Save a neural configuration template to the database.
+        
+        Args:
+            config: NeuralConfiguration object to save
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with self.get_connection() as conn:
+                config_json = json.dumps(config.config)
+                tags_json = json.dumps(config.tags) if config.tags else None
+                
+                cursor = self._execute_with_monitoring(conn, """
+                    INSERT OR REPLACE INTO neural_configurations (
+                        config_id, name, config, created_at, is_default,
+                        description, tags
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    config.config_id, config.name, config_json,
+                    config.created_at.isoformat() if config.created_at else datetime.now().isoformat(),
+                    config.is_default, config.description, tags_json
+                ), "save_neural_configuration")
+                
+                # Explicitly commit the transaction
+                conn.commit()
+                
+                return True
+        except Exception as e:
+            print(f"Error saving neural configuration: {e}")
+            return False
+
+    def get_neural_configurations(self, is_default: Optional[bool] = None) -> List[NeuralConfiguration]:
+        """
+        Get neural configuration templates from the database.
+        
+        Args:
+            is_default: Optional filter for default configurations
+            
+        Returns:
+            List of NeuralConfiguration objects
+        """
+        try:
+            with self.get_connection() as conn:
+                query = """
+                    SELECT * FROM neural_configurations 
+                    WHERE 1=1
+                """
+                params = []
+                
+                if is_default is not None:
+                    query += " AND is_default = ?"
+                    params.append(is_default)
+                
+                query += " ORDER BY created_at DESC"
+                
+                cursor = self._execute_with_monitoring(conn, query, tuple(params), "get_neural_configurations")
+                
+                configs = []
+                for row in cursor.fetchall():
+                    config_data = json.loads(row['config'])
+                    tags = json.loads(row['tags']) if row['tags'] else None
+                    
+                    config = NeuralConfiguration(
+                        config_id=row['config_id'],
+                        name=row['name'],
+                        config=config_data,
+                        created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
+                        is_default=bool(row['is_default']),
+                        description=row['description'],
+                        tags=tags
+                    )
+                    configs.append(config)
+                
+                return configs
+        except Exception as e:
+            print(f"Error getting neural configurations: {e}")
+            return []
+
+    def get_neural_configuration(self, config_id: str) -> Optional[NeuralConfiguration]:
+        """
+        Get a specific neural configuration by ID.
+        
+        Args:
+            config_id: Configuration ID to retrieve
+            
+        Returns:
+            NeuralConfiguration object or None if not found
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = self._execute_with_monitoring(conn, """
+                    SELECT * FROM neural_configurations WHERE config_id = ?
+                """, (config_id,), "get_neural_configuration")
+                
+                row = cursor.fetchone()
+                if row:
+                    config_data = json.loads(row['config'])
+                    tags = json.loads(row['tags']) if row['tags'] else None
+                    
+                    return NeuralConfiguration(
+                        config_id=row['config_id'],
+                        name=row['name'],
+                        config=config_data,
+                        created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
+                        is_default=bool(row['is_default']),
+                        description=row['description'],
+                        tags=tags
+                    )
+                return None
+        except Exception as e:
+            print(f"Error getting neural configuration: {e}")
+            return None
+
+    def delete_neural_configuration(self, config_id: str) -> bool:
+        """
+        Delete a neural configuration from the database.
+        
+        Args:
+            config_id: Configuration ID to delete
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = self._execute_with_monitoring(conn, """
+                    DELETE FROM neural_configurations WHERE config_id = ?
+                """, (config_id,), "delete_neural_configuration")
+                
+                # Explicitly commit the transaction
+                conn.commit()
+                
+                return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error deleting neural configuration: {e}")
+            return False
+
+    def save_neural_evaluation_session(self, session: NeuralEvaluationSession) -> bool:
+        """
+        Save a neural evaluation session to the database.
+        
+        Args:
+            session: NeuralEvaluationSession object to save
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with self.get_connection() as conn:
+                config_json = json.dumps(session.config) if session.config else None
+                results_json = json.dumps(session.results) if session.results else None
+                
+                cursor = self._execute_with_monitoring(conn, """
+                    INSERT OR REPLACE INTO neural_evaluation_sessions (
+                        session_id, status, progress, start_time, end_time,
+                        config, results, error, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    session.session_id, session.status, session.progress,
+                    session.start_time.isoformat() if session.start_time else None,
+                    session.end_time.isoformat() if session.end_time else None,
+                    config_json, results_json, session.error,
+                    session.created_at.isoformat() if session.created_at else datetime.now().isoformat()
+                ), "save_neural_evaluation_session")
+                
+                # Explicitly commit the transaction
+                conn.commit()
+                
+                return True
+        except Exception as e:
+            print(f"Error saving neural evaluation session: {e}")
+            return False
+
+    def get_neural_evaluation_sessions(self, status: Optional[str] = None, 
+                                     limit: int = 50) -> List[NeuralEvaluationSession]:
+        """
+        Get neural evaluation sessions from the database.
+        
+        Args:
+            status: Optional status filter
+            limit: Maximum number of sessions to return
+            
+        Returns:
+            List of NeuralEvaluationSession objects
+        """
+        try:
+            with self.get_connection() as conn:
+                query = """
+                    SELECT * FROM neural_evaluation_sessions 
+                    WHERE 1=1
+                """
+                params = []
+                
+                if status:
+                    query += " AND status = ?"
+                    params.append(status)
+                
+                query += " ORDER BY created_at DESC LIMIT ?"
+                params.append(limit)
+                
+                cursor = self._execute_with_monitoring(conn, query, tuple(params), 
+                                                    "get_neural_evaluation_sessions")
+                
+                sessions = []
+                for row in cursor.fetchall():
+                    config = json.loads(row['config']) if row['config'] else None
+                    results = json.loads(row['results']) if row['results'] else None
+                    
+                    session = NeuralEvaluationSession(
+                        session_id=row['session_id'],
+                        status=row['status'],
+                        progress=row['progress'],
+                        start_time=datetime.fromisoformat(row['start_time']) if row['start_time'] else None,
+                        end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
+                        config=config,
+                        results=results,
+                        error=row['error'],
+                        created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None
+                    )
+                    sessions.append(session)
+                
+                return sessions
+        except Exception as e:
+            print(f"Error getting neural evaluation sessions: {e}")
+            return [] 
