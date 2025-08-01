@@ -16,6 +16,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from flask import Blueprint, request, jsonify, current_app
 from pydantic import BaseModel, ValidationError, ConfigDict
+from dataclasses import asdict
 
 from .auth import require_session
 from .rate_limiter import RateLimiter
@@ -165,6 +166,9 @@ _current_editable_game_state = None  # Store the current editable game state fro
 
 # Global training sessions storage
 training_sessions = {}
+
+# Global evaluation sessions storage
+evaluation_sessions = {}
 
 # Enhanced session tracking for live loss visualization
 class TrainingSession:
@@ -3367,26 +3371,102 @@ def evaluate_neural_model():
             compare_random=True
         )
         
-        # Run evaluation
-        try:
-            evaluator = AzulModelEvaluator(config)
-            results = evaluator.evaluate()
-            
-            return jsonify({
-                'success': True,
-                'message': 'Evaluation completed successfully',
-                'results': results
-            })
-            
-        except Exception as e:
-            return jsonify({
-                'error': 'Evaluation failed',
-                'message': str(e)
-            }), 500
+        # Generate session ID for this evaluation
+        import uuid
+        session_id = f"eval_{uuid.uuid4().hex[:8]}"
+        
+        # Create evaluation session
+        # Convert config to dict and remove non-serializable fields
+        config_dict = asdict(config)
+        if 'progress_callback' in config_dict:
+            del config_dict['progress_callback']
+        evaluation_sessions[session_id] = {
+            'status': 'running',
+            'progress': 0,
+            'start_time': time.time(),
+            'config': config_dict,
+            'results': None,
+            'error': None
+        }
+        
+        # Run evaluation in background
+        def evaluate_in_background():
+            try:
+                def progress_callback(percent):
+                    evaluation_sessions[session_id]['progress'] = percent
+                config.progress_callback = progress_callback
+                evaluator = AzulModelEvaluator(config)
+                results = evaluator.evaluate_model()
+                evaluation_sessions[session_id].update({
+                    'status': 'completed',
+                    'progress': 100,
+                    'results': results,
+                    'end_time': time.time()
+                })
+            except Exception as e:
+                evaluation_sessions[session_id].update({
+                    'status': 'failed',
+                    'error': str(e),
+                    'end_time': time.time()
+                })
+        
+        # Start background thread
+        import threading
+        thread = threading.Thread(target=evaluate_in_background)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Evaluation started in background',
+            'session_id': session_id,
+            'status_url': f'/api/v1/neural/evaluate/status/{session_id}'
+        })
             
     except Exception as e:
         return jsonify({
             'error': 'Internal server error',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/evaluate/status/<session_id>', methods=['GET'])
+def get_evaluation_status(session_id):
+    """Get evaluation status for a specific session."""
+    try:
+        if session_id not in evaluation_sessions:
+            return jsonify({
+                'error': 'Session not found',
+                'message': f'Evaluation session {session_id} does not exist'
+            }), 404
+        
+        session = evaluation_sessions[session_id]
+        
+        # Calculate elapsed time
+        elapsed_time = time.time() - session['start_time']
+        
+        response = {
+            'session_id': session_id,
+            'status': session['status'],
+            'progress': session['progress'],
+            'elapsed_time': round(elapsed_time, 2),
+            'start_time': session['start_time']
+        }
+        
+        if session['status'] == 'completed':
+            response['results'] = session['results']
+            response['end_time'] = session['end_time']
+            response['total_time'] = round(session['end_time'] - session['start_time'], 2)
+        elif session['status'] == 'failed':
+            response['error'] = session['error']
+            response['end_time'] = session['end_time']
+            response['total_time'] = round(session['end_time'] - session['start_time'], 2)
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get evaluation status',
             'message': str(e)
         }), 500
 
@@ -3489,11 +3569,34 @@ def get_neural_status():
     """Get neural training status."""
     try:
         # Check if neural components are available
+        neural_available = False
+        pytorch_version = None
+        cuda_available = False
+        
         try:
             import torch
-            from neural.train import TrainingConfig, AzulNetTrainer
-            neural_available = True
-        except ImportError:
+            pytorch_version = torch.__version__
+            
+            # Try to import neural modules
+            try:
+                from neural.train import TrainingConfig, AzulNetTrainer
+                neural_available = True
+            except ImportError as e:
+                print(f"Warning: Neural modules not available: {e}")
+                neural_available = False
+            
+            # Check CUDA availability (this can sometimes cause issues)
+            try:
+                cuda_available = torch.cuda.is_available()
+            except Exception as e:
+                print(f"Warning: CUDA check failed: {e}")
+                cuda_available = False
+                
+        except ImportError as e:
+            print(f"Warning: PyTorch not available: {e}")
+            neural_available = False
+        except Exception as e:
+            print(f"Warning: PyTorch initialization failed: {e}")
             neural_available = False
         
         # Check available models
@@ -3501,25 +3604,25 @@ def get_neural_status():
         import glob
         models_dir = "models"
         model_count = 0
-        if os.path.exists(models_dir):
-            model_files = glob.glob(os.path.join(models_dir, "*.pth"))
-            model_count = len(model_files)
+        try:
+            if os.path.exists(models_dir):
+                model_files = glob.glob(os.path.join(models_dir, "*.pth"))
+                model_count = len(model_files)
+        except Exception as e:
+            print(f"Warning: Model directory check failed: {e}")
+            model_count = 0
         
         status = {
             'neural_available': neural_available,
             'model_count': model_count,
-            'pytorch_version': None,
-            'cuda_available': False
+            'pytorch_version': pytorch_version,
+            'cuda_available': cuda_available
         }
-        
-        if neural_available:
-            import torch
-            status['pytorch_version'] = torch.__version__
-            status['cuda_available'] = torch.cuda.is_available()
         
         return jsonify(status)
         
     except Exception as e:
+        print(f"Error in get_neural_status: {e}")
         return jsonify({
             'error': 'Failed to get status',
             'message': str(e)
@@ -3639,5 +3742,67 @@ def delete_training_session(session_id):
     return jsonify({
         'success': True,
         'message': 'Session deleted',
+        'session_id': session_id
+    })
+
+
+@api_bp.route('/neural/evaluation-sessions', methods=['GET'])
+def get_all_evaluation_sessions():
+    """Get all active evaluation sessions."""
+    try:
+        sessions = []
+        for session_id, session in evaluation_sessions.items():
+            # Calculate elapsed time
+            elapsed_time = None
+            if 'start_time' in session:
+                start_time = session['start_time']
+                if isinstance(start_time, (int, float)):
+                    elapsed_time = time.time() - start_time
+                else:
+                    # Handle string timestamps
+                    try:
+                        import datetime
+                        start_dt = datetime.datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                        elapsed_time = (datetime.datetime.now() - start_dt).total_seconds()
+                    except:
+                        elapsed_time = 0
+            
+            session_data = {
+                'session_id': session_id,
+                'status': session.get('status', 'unknown'),
+                'progress': session.get('progress', 0),
+                'start_time': session.get('start_time'),
+                'end_time': session.get('end_time'),
+                'elapsed_time': elapsed_time,
+                'config': session.get('config'),
+                'error': session.get('error'),
+                'results': session.get('results')
+            }
+            sessions.append(session_data)
+        
+        return jsonify({
+            'sessions': sessions,
+            'count': len(sessions),
+            'active_count': len([s for s in sessions if s['status'] in ['starting', 'running']])
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to get evaluation sessions',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/neural/evaluation-sessions/<session_id>', methods=['DELETE'])
+def delete_evaluation_session(session_id):
+    """Delete an evaluation session."""
+    if session_id not in evaluation_sessions:
+        return jsonify({'error': 'Session not found'}), 404
+    
+    del evaluation_sessions[session_id]
+    
+    return jsonify({
+        'success': True,
+        'message': 'Evaluation session deleted',
         'session_id': session_id
     })

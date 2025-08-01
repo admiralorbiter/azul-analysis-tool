@@ -34,8 +34,11 @@ function Navigation({ currentPage, onPageChange }) {
 // Enhanced Training Monitor Component
 function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading }) {
     const [allSessions, setAllSessions] = React.useState([]);
+    const [allEvaluationSessions, setAllEvaluationSessions] = React.useState([]);
     const [selectedSession, setSelectedSession] = React.useState(null);
+    const [selectedEvaluationSession, setSelectedEvaluationSession] = React.useState(null);
     const [refreshInterval, setRefreshInterval] = React.useState(null);
+    const [activeTab, setActiveTab] = React.useState('training'); // 'training' or 'evaluation'
 
     // Load all sessions on mount
     React.useEffect(() => {
@@ -50,14 +53,27 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
 
     const loadAllSessions = async () => {
         try {
-            const result = await getAllTrainingSessions();
-            setAllSessions(result.sessions || []);
+            // Load training sessions
+            const trainingResult = await getAllTrainingSessions();
+            setAllSessions(trainingResult.sessions || []);
             
-            // Auto-select active session if none selected
-            if (!selectedSession && result.sessions) {
-                const activeSession = result.sessions.find(s => s.status === 'running');
+            // Auto-select active training session if none selected
+            if (!selectedSession && trainingResult.sessions) {
+                const activeSession = trainingResult.sessions.find(s => s.status === 'running');
                 if (activeSession) {
                     setSelectedSession(activeSession);
+                }
+            }
+            
+            // Load evaluation sessions
+            const evaluationResult = await getAllEvaluationSessions();
+            setAllEvaluationSessions(evaluationResult.sessions || []);
+            
+            // Auto-select active evaluation session if none selected
+            if (!selectedEvaluationSession && evaluationResult.sessions) {
+                const activeEvaluationSession = evaluationResult.sessions.find(s => s.status === 'running');
+                if (activeEvaluationSession) {
+                    setSelectedEvaluationSession(activeEvaluationSession);
                 }
             }
         } catch (error) {
@@ -84,6 +100,16 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
         }
     };
 
+    const handleDeleteEvaluationSession = async (sessionId) => {
+        try {
+            await deleteEvaluationSession(sessionId);
+            setStatusMessage('success', 'Evaluation session deleted');
+            loadAllSessions();
+        } catch (error) {
+            setStatusMessage('error', 'Failed to delete evaluation session');
+        }
+    };
+
     const formatDuration = (startTime, endTime) => {
         const start = new Date(startTime);
         const end = endTime ? new Date(endTime) : new Date();
@@ -100,12 +126,39 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
         return `${minutes}m ${seconds}s`;
     };
 
+    const formatElapsedTime = (elapsedTime) => {
+        if (!elapsedTime) return '0s';
+        const minutes = Math.floor(elapsedTime / 60);
+        const seconds = Math.floor(elapsedTime % 60);
+        return `${minutes}m ${seconds}s`;
+    };
+
     return React.createElement('div', { className: 'training-monitor p-4' },
-        React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Live Training Monitor'),
+        React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Live Training & Evaluation Monitor'),
         
-        // Session List
-        React.createElement('div', { className: 'mb-6' },
-            React.createElement('h3', { className: 'text-lg font-medium mb-3 text-gray-700' }, 'Active Sessions'),
+        // Tab Navigation
+        React.createElement('div', { className: 'flex space-x-1 mb-6' },
+            React.createElement('button', {
+                className: `px-4 py-2 rounded-t-lg font-medium ${
+                    activeTab === 'training' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`,
+                onClick: () => setActiveTab('training')
+            }, `Training Sessions (${allSessions.length})`),
+            React.createElement('button', {
+                className: `px-4 py-2 rounded-t-lg font-medium ${
+                    activeTab === 'evaluation' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`,
+                onClick: () => setActiveTab('evaluation')
+            }, `Evaluation Sessions (${allEvaluationSessions.length})`)
+        ),
+        
+        // Training Sessions Tab
+        activeTab === 'training' && React.createElement('div', { className: 'mb-6' },
+            React.createElement('h3', { className: 'text-lg font-medium mb-3 text-gray-700' }, 'Training Sessions'),
             allSessions.length === 0 ? 
                 React.createElement('div', { className: 'text-gray-500 text-center py-8' }, 'No training sessions found') :
                 React.createElement('div', { className: 'space-y-3' },
@@ -116,7 +169,8 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
                                 selectedSession?.session_id === session.session_id 
                                     ? 'border-purple-500 bg-purple-50' 
                                     : 'border-gray-200 hover:border-purple-300'
-                            }`
+                            }`,
+                            onClick: () => setSelectedSession(session)
                         },
                             React.createElement('div', { className: 'flex justify-between items-start' },
                                 React.createElement('div', { className: 'flex-1' },
@@ -176,9 +230,76 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
                 )
         ),
 
-        // Selected Session Details
-        selectedSession && React.createElement('div', { className: 'border-t pt-6' },
-            React.createElement('h3', { className: 'text-lg font-medium mb-4 text-gray-700' }, 'Session Details'),
+        // Evaluation Sessions Tab
+        activeTab === 'evaluation' && React.createElement('div', { className: 'mb-6' },
+            React.createElement('h3', { className: 'text-lg font-medium mb-3 text-gray-700' }, 'Evaluation Sessions'),
+            allEvaluationSessions.length === 0 ? 
+                React.createElement('div', { className: 'text-gray-500 text-center py-8' }, 'No evaluation sessions found') :
+                React.createElement('div', { className: 'space-y-3' },
+                    allEvaluationSessions.map(session => 
+                        React.createElement('div', { 
+                            key: session.session_id,
+                            className: `p-4 border rounded-lg cursor-pointer transition-colors ${
+                                selectedEvaluationSession?.session_id === session.session_id 
+                                    ? 'border-purple-500 bg-purple-50' 
+                                    : 'border-gray-200 hover:border-purple-300'
+                            }`,
+                            onClick: () => setSelectedEvaluationSession(session)
+                        },
+                            React.createElement('div', { className: 'flex justify-between items-start' },
+                                React.createElement('div', { className: 'flex-1' },
+                                    React.createElement('div', { className: 'flex items-center space-x-2 mb-2' },
+                                        React.createElement('span', { 
+                                            className: `px-2 py-1 text-xs rounded-full ${
+                                                session.status === 'running' ? 'bg-green-100 text-green-800' :
+                                                session.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                                session.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`
+                                        }, session.status),
+                                        React.createElement('span', { className: 'text-sm text-gray-600' }, 
+                                            `Session: ${session.session_id.slice(0, 8)}...`
+                                        )
+                                    ),
+                                    React.createElement('div', { className: 'text-sm text-gray-600' },
+                                        React.createElement('p', null, `Started: ${new Date(session.start_time).toLocaleString()}`),
+                                        session.elapsed_time && React.createElement('p', null, 
+                                            `Elapsed: ${formatElapsedTime(session.elapsed_time)}`
+                                        ),
+                                        session.config && React.createElement('p', null,
+                                            `Model: ${session.config.model_path || 'Unknown'}`
+                                        )
+                                    )
+                                ),
+                                React.createElement('div', { className: 'flex space-x-2' },
+                                    React.createElement('button', {
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            handleDeleteEvaluationSession(session.session_id);
+                                        },
+                                        className: 'px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700'
+                                    }, 'Delete')
+                                )
+                            ),
+                            React.createElement('div', { className: 'mt-3' },
+                                React.createElement('div', { className: 'w-full bg-gray-200 rounded-full h-2' },
+                                    React.createElement('div', { 
+                                        className: 'bg-purple-600 h-2 rounded-full transition-all duration-300',
+                                        style: { width: `${session.progress || 0}%` }
+                                    })
+                                ),
+                                React.createElement('p', { className: 'text-xs text-gray-600 mt-1' }, 
+                                    `${session.progress || 0}% complete`
+                                )
+                            )
+                        )
+                    )
+                )
+        ),
+
+        // Selected Training Session Details
+        activeTab === 'training' && selectedSession && React.createElement('div', { className: 'border-t pt-6' },
+            React.createElement('h3', { className: 'text-lg font-medium mb-4 text-gray-700' }, 'Training Session Details'),
             
             // Loss Visualization
             selectedSession.loss_history && selectedSession.loss_history.length > 0 && 
@@ -279,6 +400,85 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
                     )
                 )
             )
+        ),
+
+        // Selected Evaluation Session Details
+        activeTab === 'evaluation' && selectedEvaluationSession && React.createElement('div', { className: 'border-t pt-6' },
+            React.createElement('h3', { className: 'text-lg font-medium mb-4 text-gray-700' }, 'Evaluation Session Details'),
+            
+            // Evaluation Configuration
+            selectedEvaluationSession.config && 
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Evaluation Configuration'),
+                React.createElement('div', { className: 'bg-blue-50 border border-blue-200 rounded-lg p-4' },
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Model: ${selectedEvaluationSession.config.model_path || 'N/A'}`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Device: ${selectedEvaluationSession.config.device || 'N/A'}`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Positions: ${selectedEvaluationSession.config.num_positions || 'N/A'}`
+                            )
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Games: ${selectedEvaluationSession.config.num_games || 'N/A'}`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Search Time: ${selectedEvaluationSession.config.search_time || 'N/A'}s`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-blue-700' },
+                                `Max Rollouts: ${selectedEvaluationSession.config.max_rollouts || 'N/A'}`
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // Evaluation Results
+            selectedEvaluationSession.results && 
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Evaluation Results'),
+                React.createElement('div', { className: 'bg-green-50 border border-green-200 rounded-lg p-4' },
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm text-green-700' },
+                                `Win Rate: ${(selectedEvaluationSession.results.win_rate * 100).toFixed(1)}%`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-green-700' },
+                                `Position Accuracy: ${(selectedEvaluationSession.results.position_accuracy * 100).toFixed(1)}%`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-green-700' },
+                                `Move Agreement: ${(selectedEvaluationSession.results.move_agreement * 100).toFixed(1)}%`
+                            )
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('p', { className: 'text-sm text-green-700' },
+                                `Inference Time: ${selectedEvaluationSession.results.inference_time?.toFixed(3) || 'N/A'}ms`
+                            ),
+                            React.createElement('p', { className: 'text-sm text-green-700' },
+                                `Model Parameters: ${selectedEvaluationSession.results.model_parameters?.toLocaleString() || 'N/A'}`
+                            ),
+                            selectedEvaluationSession.results.comparison_results && 
+                            React.createElement('p', { className: 'text-sm text-green-700' },
+                                `vs Heuristic: ${(selectedEvaluationSession.results.comparison_results.heuristic_win_rate * 100).toFixed(1)}%`
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // Error Information
+            selectedEvaluationSession.error && 
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('h4', { className: 'text-md font-medium mb-3 text-gray-600' }, 'Error Information'),
+                React.createElement('div', { className: 'bg-red-50 border border-red-200 rounded-lg p-4' },
+                    React.createElement('p', { className: 'text-sm text-red-700' }, selectedEvaluationSession.error)
+                )
+            )
         )
     );
 }
@@ -294,6 +494,15 @@ function NeuralTrainingPage({
     const [trainingProgress, setTrainingProgress] = React.useState(null);
     const [availableModels, setAvailableModels] = React.useState([]);
     const [evaluationResults, setEvaluationResults] = React.useState(null);
+    const [evaluationConfig, setEvaluationConfig] = React.useState({
+        model: '',
+        device: 'cpu',
+        positions: 50,
+        games: 20,
+        searchTime: 0.5,
+        maxRollouts: 50
+    });
+    const [comparisonResults, setComparisonResults] = React.useState(null);
 
     // Load available models on component mount
     React.useEffect(() => {
@@ -366,13 +575,110 @@ function NeuralTrainingPage({
         setLoading(true);
         try {
             const result = await evaluateNeuralModel(modelConfig);
-            setEvaluationResults(result);
-            setStatusMessage('success', 'Model evaluation completed');
+            
+            // Check if evaluation is running in background
+            if (result.background && result.session_id) {
+                setStatusMessage('info', 'Evaluation started in background. Monitoring progress...');
+                
+                // Poll for status updates
+                const pollStatus = async () => {
+                    try {
+                        const status = await getEvaluationStatus(result.session_id);
+                        
+                        if (status.status === 'completed') {
+                            setEvaluationResults(status.results);
+                            setStatusMessage('success', 'Model evaluation completed');
+                            setLoading(false);
+                        } else if (status.status === 'failed') {
+                            setStatusMessage('error', `Evaluation failed: ${status.error}`);
+                            setLoading(false);
+                        } else {
+                            // Still running, continue polling
+                            setTimeout(pollStatus, 2000); // Poll every 2 seconds
+                        }
+                    } catch (error) {
+                        console.error('Failed to get evaluation status:', error);
+                        setStatusMessage('error', 'Failed to monitor evaluation progress');
+                        setLoading(false);
+                    }
+                };
+                
+                // Start polling
+                pollStatus();
+            } else {
+                // Immediate result (shouldn't happen with current implementation)
+                setEvaluationResults(result);
+                setStatusMessage('success', 'Model evaluation completed');
+                setLoading(false);
+            }
         } catch (error) {
             console.error('Failed to evaluate model:', error);
             setStatusMessage('error', 'Failed to evaluate model');
+            setLoading(false);
+        }
+    };
+
+    const handleCompareModels = async () => {
+        setLoading(true);
+        try {
+            const results = [];
+            for (const model of availableModels) {
+                try {
+                    const config = {
+                        model: model.path,
+                        device: evaluationConfig.device,
+                        positions: evaluationConfig.positions,
+                        games: evaluationConfig.games,
+                        searchTime: evaluationConfig.searchTime,
+                        maxRollouts: evaluationConfig.maxRollouts
+                    };
+                    const result = await evaluateNeuralModel(config);
+                    results.push({
+                        model_name: model.name,
+                        ...result
+                    });
+                } catch (error) {
+                    console.error(`Failed to evaluate model ${model.name}:`, error);
+                }
+            }
+            setComparisonResults(results);
+            setStatusMessage('success', `Comparison completed for ${results.length} models`);
+        } catch (error) {
+            console.error('Failed to compare models:', error);
+            setStatusMessage('error', 'Failed to compare models');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleExportResults = () => {
+        if (!evaluationResults) {
+            setStatusMessage('error', 'No evaluation results to export');
+            return;
+        }
+
+        try {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                model: evaluationConfig.model,
+                config: evaluationConfig,
+                results: evaluationResults
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `azul_evaluation_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            setStatusMessage('success', 'Evaluation results exported successfully');
+        } catch (error) {
+            console.error('Failed to export results:', error);
+            setStatusMessage('error', 'Failed to export results');
         }
     };
 
@@ -575,8 +881,281 @@ function NeuralTrainingPage({
 
         activeTab === 'evaluation' && React.createElement('div', { className: 'model-evaluator' },
             React.createElement('h2', { className: 'text-xl font-semibold mb-4 text-purple-700' }, 'Model Evaluation'),
-            React.createElement('div', { className: 'bg-yellow-50 border border-yellow-200 rounded-md p-4' },
-                React.createElement('p', { className: 'text-yellow-800' }, 'Model evaluation features will be implemented in Part 2.1.3')
+            
+            // Model Selection and Configuration
+            React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6' },
+                // Model Selection Panel
+                React.createElement('div', { className: 'bg-white rounded-lg shadow-md p-6' },
+                    React.createElement('h3', { className: 'text-lg font-semibold mb-4 text-gray-800' }, '📋 Model Selection'),
+                    React.createElement('div', { className: 'space-y-4' },
+                        React.createElement('div', { className: 'space-y-2' },
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Select Model'),
+                            React.createElement('select', {
+                                value: evaluationConfig.model || '',
+                                onChange: (e) => setEvaluationConfig({...evaluationConfig, model: e.target.value}),
+                                className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                            },
+                                React.createElement('option', { value: '' }, 'Choose a model...'),
+                                availableModels.map(model => 
+                                    React.createElement('option', { 
+                                        key: model.name, 
+                                        value: model.path 
+                                    }, `${model.name} (${model.size_mb}MB)`)
+                                )
+                            )
+                        ),
+                        React.createElement('div', { className: 'space-y-2' },
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Device'),
+                            React.createElement('select', {
+                                value: evaluationConfig.device || 'cpu',
+                                onChange: (e) => setEvaluationConfig({...evaluationConfig, device: e.target.value}),
+                                className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                            },
+                                React.createElement('option', { value: 'cpu' }, 'CPU'),
+                                React.createElement('option', { value: 'gpu' }, 'GPU (if available)')
+                            )
+                        )
+                    )
+                ),
+
+                // Evaluation Parameters Panel
+                React.createElement('div', { className: 'bg-white rounded-lg shadow-md p-6' },
+                    React.createElement('h3', { className: 'text-lg font-semibold mb-4 text-gray-800' }, '⚙️ Evaluation Parameters'),
+                    React.createElement('div', { className: 'space-y-4' },
+                        React.createElement('div', { className: 'space-y-2' },
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Test Positions'),
+                            React.createElement('input', {
+                                type: 'number',
+                                value: evaluationConfig.positions || 50,
+                                onChange: (e) => setEvaluationConfig({...evaluationConfig, positions: parseInt(e.target.value)}),
+                                min: 10,
+                                max: 1000,
+                                className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                            })
+                        ),
+                        React.createElement('div', { className: 'space-y-2' },
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Test Games'),
+                            React.createElement('input', {
+                                type: 'number',
+                                value: evaluationConfig.games || 20,
+                                onChange: (e) => setEvaluationConfig({...evaluationConfig, games: parseInt(e.target.value)}),
+                                min: 5,
+                                max: 200,
+                                className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                            })
+                        ),
+                        React.createElement('div', { className: 'space-y-2' },
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Search Time (seconds)'),
+                            React.createElement('input', {
+                                type: 'number',
+                                value: evaluationConfig.searchTime || 0.5,
+                                onChange: (e) => setEvaluationConfig({...evaluationConfig, searchTime: parseFloat(e.target.value)}),
+                                min: 0.1,
+                                max: 5.0,
+                                step: 0.1,
+                                className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                            })
+                        ),
+                        React.createElement('div', { className: 'space-y-2' },
+                            React.createElement('label', { className: 'block text-sm font-medium text-gray-700' }, 'Max Rollouts'),
+                            React.createElement('input', {
+                                type: 'number',
+                                value: evaluationConfig.maxRollouts || 50,
+                                onChange: (e) => setEvaluationConfig({...evaluationConfig, maxRollouts: parseInt(e.target.value)}),
+                                min: 10,
+                                max: 500,
+                                className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                            })
+                        )
+                    )
+                )
+            ),
+
+            // Evaluation Controls
+            React.createElement('div', { className: 'mb-6' },
+                React.createElement('div', { className: 'flex flex-wrap gap-4' },
+                    React.createElement('button', {
+                        onClick: () => handleEvaluateModel(evaluationConfig),
+                        disabled: loading || !evaluationConfig.model,
+                        className: `px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
+                            loading || !evaluationConfig.model 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-purple-600 hover:bg-purple-700'
+                        }`
+                    }, loading ? '🔄 Evaluating...' : '🚀 Start Evaluation'),
+                    
+                    React.createElement('button', {
+                        onClick: () => handleCompareModels(),
+                        disabled: loading || availableModels.length < 2,
+                        className: `px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
+                            loading || availableModels.length < 2
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-600 hover:bg-blue-700'
+                        }`
+                    }, '📊 Compare Models'),
+                    
+                    React.createElement('button', {
+                        onClick: () => handleExportResults(),
+                        disabled: !evaluationResults,
+                        className: `px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
+                            !evaluationResults
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-green-600 hover:bg-green-700'
+                        }`
+                    }, '💾 Export Results')
+                )
+            ),
+
+            // Evaluation Results Display
+            evaluationResults && React.createElement('div', { className: 'bg-white rounded-lg shadow-md p-6 mb-6' },
+                React.createElement('h3', { className: 'text-lg font-semibold mb-4 text-gray-800' }, '📊 Evaluation Results'),
+                
+                // Performance Metrics Grid
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6' },
+                    // Model Info
+                    React.createElement('div', { className: 'bg-blue-50 rounded-lg p-4' },
+                        React.createElement('h4', { className: 'font-semibold text-blue-800 mb-2' }, 'Model Information'),
+                        React.createElement('div', { className: 'space-y-1 text-sm' },
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Parameters:'),
+                                React.createElement('span', { className: 'font-medium' }, `${evaluationResults.model_parameters?.toLocaleString() || 'N/A'}`)
+                            ),
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Inference Time:'),
+                                React.createElement('span', { className: 'font-medium' }, `${evaluationResults.inference_time_ms?.toFixed(2) || 'N/A'} ms`)
+                            )
+                        )
+                    ),
+
+                    // Performance Metrics
+                    React.createElement('div', { className: 'bg-green-50 rounded-lg p-4' },
+                        React.createElement('h4', { className: 'font-semibold text-green-800 mb-2' }, 'Performance'),
+                        React.createElement('div', { className: 'space-y-1 text-sm' },
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Win Rate:'),
+                                React.createElement('span', { className: 'font-medium' }, `${(evaluationResults.win_rate * 100)?.toFixed(1) || 'N/A'}%`)
+                            ),
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Avg Score:'),
+                                React.createElement('span', { className: 'font-medium' }, `${evaluationResults.avg_score?.toFixed(2) || 'N/A'}`)
+                            ),
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Avg Search Time:'),
+                                React.createElement('span', { className: 'font-medium' }, `${evaluationResults.avg_search_time?.toFixed(3) || 'N/A'}s`)
+                            )
+                        )
+                    ),
+
+                    // Accuracy Metrics
+                    React.createElement('div', { className: 'bg-purple-50 rounded-lg p-4' },
+                        React.createElement('h4', { className: 'font-semibold text-purple-800 mb-2' }, 'Accuracy'),
+                        React.createElement('div', { className: 'space-y-1 text-sm' },
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Position Accuracy:'),
+                                React.createElement('span', { className: 'font-medium' }, `${(evaluationResults.position_accuracy * 100)?.toFixed(1) || 'N/A'}%`)
+                            ),
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Move Agreement:'),
+                                React.createElement('span', { className: 'font-medium' }, `${(evaluationResults.move_agreement * 100)?.toFixed(1) || 'N/A'}%`)
+                            ),
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'Avg Rollouts:'),
+                                React.createElement('span', { className: 'font-medium' }, `${evaluationResults.avg_rollouts?.toFixed(1) || 'N/A'}`)
+                            )
+                        )
+                    )
+                ),
+
+                // Comparison Results
+                (evaluationResults.vs_heuristic_win_rate !== null || evaluationResults.vs_random_win_rate !== null) && 
+                React.createElement('div', { className: 'bg-yellow-50 rounded-lg p-4 mb-4' },
+                    React.createElement('h4', { className: 'font-semibold text-yellow-800 mb-2' }, 'Comparison Results'),
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        evaluationResults.vs_heuristic_win_rate !== null && 
+                        React.createElement('div', { className: 'text-sm' },
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'vs Heuristic:'),
+                                React.createElement('span', { className: 'font-medium' }, `${(evaluationResults.vs_heuristic_win_rate * 100).toFixed(1)}%`)
+                            )
+                        ),
+                        evaluationResults.vs_random_win_rate !== null && 
+                        React.createElement('div', { className: 'text-sm' },
+                            React.createElement('div', { className: 'flex justify-between' },
+                                React.createElement('span', { className: 'text-gray-600' }, 'vs Random:'),
+                                React.createElement('span', { className: 'font-medium' }, `${(evaluationResults.vs_random_win_rate * 100).toFixed(1)}%`)
+                            )
+                        )
+                    )
+                ),
+
+                // Detailed Results Table
+                React.createElement('div', { className: 'overflow-x-auto' },
+                    React.createElement('table', { className: 'min-w-full bg-white border border-gray-200 rounded-lg' },
+                        React.createElement('thead', { className: 'bg-gray-50' },
+                            React.createElement('tr', {},
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Metric'),
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Value'),
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Description')
+                            )
+                        ),
+                        React.createElement('tbody', { className: 'divide-y divide-gray-200' },
+                            React.createElement('tr', {},
+                                React.createElement('td', { className: 'px-4 py-2 text-sm font-medium text-gray-900' }, 'Model Parameters'),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, evaluationResults.model_parameters?.toLocaleString() || 'N/A'),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, 'Total trainable parameters in the model')
+                            ),
+                            React.createElement('tr', {},
+                                React.createElement('td', { className: 'px-4 py-2 text-sm font-medium text-gray-900' }, 'Inference Time'),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${evaluationResults.inference_time_ms?.toFixed(2) || 'N/A'} ms`),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, 'Average time for single position evaluation')
+                            ),
+                            React.createElement('tr', {},
+                                React.createElement('td', { className: 'px-4 py-2 text-sm font-medium text-gray-900' }, 'Win Rate'),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${(evaluationResults.win_rate * 100)?.toFixed(1) || 'N/A'}%`),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, 'Self-play win rate in test games')
+                            ),
+                            React.createElement('tr', {},
+                                React.createElement('td', { className: 'px-4 py-2 text-sm font-medium text-gray-900' }, 'Position Accuracy'),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${(evaluationResults.position_accuracy * 100)?.toFixed(1) || 'N/A'}%`),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, 'Agreement with heuristic evaluation')
+                            ),
+                            React.createElement('tr', {},
+                                React.createElement('td', { className: 'px-4 py-2 text-sm font-medium text-gray-900' }, 'Move Agreement'),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${(evaluationResults.move_agreement * 100)?.toFixed(1) || 'N/A'}%`),
+                                React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, 'Agreement with heuristic move selection')
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // Model Comparison Results
+            comparisonResults && comparisonResults.length > 0 && React.createElement('div', { className: 'bg-white rounded-lg shadow-md p-6' },
+                React.createElement('h3', { className: 'text-lg font-semibold mb-4 text-gray-800' }, '📊 Model Comparison'),
+                React.createElement('div', { className: 'overflow-x-auto' },
+                    React.createElement('table', { className: 'min-w-full bg-white border border-gray-200 rounded-lg' },
+                        React.createElement('thead', { className: 'bg-gray-50' },
+                            React.createElement('tr', {},
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Model'),
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Parameters'),
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Win Rate'),
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Accuracy'),
+                                React.createElement('th', { className: 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' }, 'Inference Time')
+                            )
+                        ),
+                        React.createElement('tbody', { className: 'divide-y divide-gray-200' },
+                            comparisonResults.map((result, index) => 
+                                React.createElement('tr', { key: index },
+                                    React.createElement('td', { className: 'px-4 py-2 text-sm font-medium text-gray-900' }, result.model_name || 'Unknown'),
+                                    React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, result.model_parameters?.toLocaleString() || 'N/A'),
+                                    React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${(result.win_rate * 100)?.toFixed(1) || 'N/A'}%`),
+                                    React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${(result.position_accuracy * 100)?.toFixed(1) || 'N/A'}%`),
+                                    React.createElement('td', { className: 'px-4 py-2 text-sm text-gray-500' }, `${result.inference_time_ms?.toFixed(2) || 'N/A'} ms`)
+                                )
+                            )
+                        )
+                    )
+                )
             )
         ),
 
@@ -758,9 +1337,52 @@ async function evaluateNeuralModel(config) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         });
-        return await response.json();
+        const result = await response.json();
+        
+        // If evaluation started in background, return session info
+        if (result.success && result.session_id) {
+            return {
+                ...result,
+                background: true
+            };
+        }
+        
+        return result;
     } catch (error) {
         console.error('Failed to evaluate model:', error);
+        throw error;
+    }
+}
+
+async function getEvaluationStatus(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/evaluate/status/${sessionId}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get evaluation status:', error);
+        throw error;
+    }
+}
+
+async function getAllEvaluationSessions() {
+    try {
+        const response = await fetch(`${API_BASE}/neural/evaluation-sessions`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get evaluation sessions:', error);
+        throw error;
+    }
+}
+
+async function deleteEvaluationSession(sessionId) {
+    try {
+        const response = await fetch(`${API_BASE}/neural/evaluation-sessions/${sessionId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to delete evaluation session:', error);
         throw error;
     }
 }

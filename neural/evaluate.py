@@ -11,7 +11,7 @@ This module provides:
 import torch
 import numpy as np
 import time
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Callable
 from dataclasses import dataclass
 import random
 
@@ -50,6 +50,9 @@ class EvaluationConfig:
     compare_heuristic: bool = True
     compare_random: bool = True
     test_known_positions: bool = True
+    
+    # Progress callback
+    progress_callback: Optional[Callable[[int], None]] = None
 
 
 @dataclass
@@ -80,6 +83,13 @@ class AzulModelEvaluator:
     def __init__(self, config: EvaluationConfig):
         self.config = config
         self.device = torch.device(config.device)
+        self.progress_callback = config.progress_callback
+        self._progress = 0
+        self._progress_max = 5  # inference, accuracy, move agreement, win rate, comparisons
+        if config.compare_heuristic:
+            self._progress_max += 1
+        if config.compare_random:
+            self._progress_max += 1
         
         # Load model if path provided
         if config.model_path:
@@ -112,9 +122,25 @@ class AzulModelEvaluator:
                 max_rollouts=config.max_rollouts
             )
     
+    def _update_progress(self, step=1):
+        self._progress += step
+        percent = int(100 * self._progress / self._progress_max)
+        if self.progress_callback:
+            self.progress_callback(percent)
+    
     def _load_model(self, model_path: str) -> Tuple[AzulNet, AzulTensorEncoder]:
         """Load a trained model."""
-        checkpoint = torch.load(model_path, map_location=self.device)
+        try:
+            # Try loading with weights_only=False for PyTorch 2.6 compatibility
+            checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
+        except Exception as e:
+            print(f"Warning: Failed to load with weights_only=False: {e}")
+            try:
+                # Fallback to weights_only=True
+                checkpoint = torch.load(model_path, map_location=self.device, weights_only=True)
+            except Exception as e2:
+                print(f"Error: Failed to load model: {e2}")
+                raise Exception(f"Could not load model from {model_path}: {e2}")
         
         # Create model with same config
         config = checkpoint.get('encoder_config', AzulNetConfig())
@@ -136,15 +162,19 @@ class AzulModelEvaluator:
         
         # Test inference speed
         inference_time = self._test_inference_speed()
+        self._update_progress()
         
         # Test position evaluation accuracy
         position_accuracy = self._test_position_accuracy()
+        self._update_progress()
         
         # Test move agreement with heuristic
         move_agreement = self._test_move_agreement()
+        self._update_progress()
         
         # Test win rate against other methods
         win_rate, avg_score, avg_search_time, avg_rollouts = self._test_win_rate()
+        self._update_progress()
         
         # Compare against other methods
         vs_heuristic_win_rate = None
@@ -152,9 +182,11 @@ class AzulModelEvaluator:
         
         if self.config.compare_heuristic:
             vs_heuristic_win_rate = self._compare_against_method("heuristic")
+            self._update_progress()
         
         if self.config.compare_random:
             vs_random_win_rate = self._compare_against_method("random")
+            self._update_progress()
         
         return EvaluationResult(
             win_rate=win_rate,
