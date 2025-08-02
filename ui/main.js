@@ -19,7 +19,12 @@ const {
     TrainingConfigPanel,
     TrainingMonitor,
     TrainingHistoryComponent,
-    NeuralTrainingPage
+    NeuralTrainingPage,
+    Router,
+    Navigation,
+    Tile,
+    Factory,
+    PatternLine
 } = {
     AdvancedAnalysisControls: window.AdvancedAnalysisControls || (() => React.createElement('div', null, 'AdvancedAnalysisControls not loaded')),
     ConfigurationPanel: window.ConfigurationPanel || (() => React.createElement('div', null, 'ConfigurationPanel not loaded')),
@@ -27,36 +32,19 @@ const {
     TrainingConfigPanel: window.TrainingConfigPanel || (() => React.createElement('div', null, 'TrainingConfigPanel not loaded')),
     TrainingMonitor: window.TrainingMonitor || (() => React.createElement('div', null, 'TrainingMonitor not loaded')),
     TrainingHistoryComponent: window.TrainingHistoryComponent || (() => React.createElement('div', null, 'TrainingHistoryComponent not loaded')),
-    NeuralTrainingPage: window.NeuralTrainingPage || (() => React.createElement('div', null, 'NeuralTrainingPage not loaded'))
+    NeuralTrainingPage: window.NeuralTrainingPage || (() => React.createElement('div', null, 'NeuralTrainingPage not loaded')),
+    Router: window.Router || (() => React.createElement('div', null, 'Router not loaded')),
+    Navigation: window.Navigation || (() => React.createElement('div', null, 'Navigation not loaded')),
+    Tile: window.Tile || (() => React.createElement('div', null, 'Tile not loaded')),
+    Factory: window.Factory || (() => React.createElement('div', null, 'Factory not loaded')),
+    PatternLine: window.PatternLine || (() => React.createElement('div', null, 'PatternLine not loaded'))
 };
 
 // Import utility functions (these will be defined inline)
 // Use shared API constants - no need to redeclare since we're importing from modules
 let sessionId = null;
 
-// Simple Router Component
-function Router({ currentPage, onPageChange, children }) {
-    return React.createElement('div', { className: 'router' }, children);
-}
-
-// Navigation Component
-function Navigation({ currentPage, onPageChange }) {
-    return React.createElement('nav', { className: 'navigation bg-white shadow-md p-4 mb-4' },
-        React.createElement('div', { className: 'flex justify-between items-center' },
-            React.createElement('h1', { className: 'text-xl font-bold text-gray-800' }, 'Azul Solver & Analysis Toolkit'),
-            React.createElement('div', { className: 'flex space-x-4' },
-                React.createElement('button', {
-                    className: `px-4 py-2 rounded ${currentPage === 'main' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('main')
-                }, 'Main Interface'),
-                React.createElement('button', {
-                    className: `px-4 py-2 rounded ${currentPage === 'neural' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('neural')
-                }, '🧠 Neural Training')
-            )
-        )
-    );
-}
+// Router and Navigation components extracted to separate files
 
 
 
@@ -121,282 +109,14 @@ const {
 } = window.formatUtils || {};
 
 // Tile Component
-function Tile({ color, onClick, className = "", draggable = false, onDragStart, onDragEnd, dataAttributes = {}, isSelected = false }) {
-    const tileRef = React.useRef(null);
-    
-    React.useEffect(() => {
-        const tile = tileRef.current;
-        if (!tile) return;
-        
-        const handleDragStart = (e) => {
-            if (onDragStart) onDragStart(e);
-            e.dataTransfer.effectAllowed = 'move';
-        };
-        
-        const handleDragEnd = (e) => {
-            if (onDragEnd) onDragEnd(e);
-        };
-        
-        if (draggable) {
-            tile.addEventListener('dragstart', handleDragStart);
-            tile.addEventListener('dragend', handleDragEnd);
-        }
-        
-        return () => {
-            if (draggable) {
-                tile.removeEventListener('dragstart', handleDragStart);
-                tile.removeEventListener('dragend', handleDragEnd);
-            }
-        };
-    }, [draggable, onDragStart, onDragEnd]);
-    
-    const selectedClass = isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : '';
-    
-    return React.createElement('div', {
-        ref: tileRef,
-        className: `tile ${className} ${selectedClass}`,
-        style: { backgroundColor: getTileColor(color) },
-        onClick: onClick,
-        draggable: draggable,
-        ...dataAttributes
-    });
-}
+// Tile component extracted to separate file
 
-// Factory Component
-function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTile = null, onTileSelection = null, editMode = false, onElementSelect = null, selectedElements = [], heatmapEnabled = false, heatmapData = null }) {
-    const factoryRef = React.useRef(null);
-    
-    React.useEffect(() => {
-        const factory = factoryRef.current;
-        if (!factory) return;
-        
-        const handleDragOver = (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        };
-        
-        const handleDragLeave = (e) => {
-            e.currentTarget.classList.remove('drag-over');
-        };
-        
-        const handleDrop = (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-        };
-        
-        factory.addEventListener('dragover', handleDragOver);
-        factory.addEventListener('dragleave', handleDragLeave);
-        factory.addEventListener('drop', handleDrop);
-        
-        return () => {
-            factory.removeEventListener('dragover', handleDragOver);
-            factory.removeEventListener('dragleave', handleDragLeave);
-            factory.removeEventListener('drop', handleDrop);
-        };
-    }, []);
-    
-    const handleFactoryClick = (e) => {
-        if (editMode && onElementSelect) {
-            const isCtrlClick = e.ctrlKey;
-            onElementSelect({
-                type: 'factory',
-                data: { factoryIndex, tiles }
-            }, isCtrlClick);
-        }
-    };
-    
-    const handleFactoryRightClick = (e) => {
-        e.preventDefault();
-        if (editMode && window.showContextMenu) {
-            window.showContextMenu(e, 'factory', { factoryIndex, tiles });
-        }
-    };
-    
-    const isSelected = editMode && selectedElements.some(el => el.type === 'factory' && el.data.factoryIndex === factoryIndex);
-    const isEditSelected = editMode && isSelected;
-    
-    // Get heatmap overlay style for this factory
-    const getHeatmapOverlay = (tileType) => {
-        if (!heatmapEnabled || !heatmapData) return {};
-        
-        const tileTypeMapping = { 'B': 0, 'Y': 1, 'R': 2, 'K': 3, 'W': 4 };
-        const key = `${factoryIndex}_${tileTypeMapping[tileType] || 0}`;
-        const heatmapInfo = heatmapData[key];
-        
-        if (heatmapInfo) {
-            return {
-                position: 'relative',
-                '::after': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: heatmapInfo.color,
-                    borderRadius: '4px',
-                    pointerEvents: 'none'
-                }
-            };
-        }
-        return {};
-    };
-    
-    return React.createElement('div', {
-        ref: factoryRef,
-        className: `factory ${isEditSelected ? 'selected' : ''} ${heatmapEnabled ? 'heatmap-enabled' : ''}`,
-        onClick: handleFactoryClick,
-        onContextMenu: handleFactoryRightClick,
-        style: { position: 'relative' }
-    },
-        // Factory label
-        React.createElement('div', {
-            className: 'text-xs text-gray-600 mb-1 text-center font-medium'
-        }, `Factory ${factoryIndex + 1}`),
-        React.createElement('div', {
-            className: 'flex flex-wrap gap-1'
-        },
-            tiles.map((tile, index) => {
-                const heatmapKey = `${factoryIndex}_${tile === 'B' ? 0 : tile === 'Y' ? 1 : tile === 'R' ? 2 : tile === 'K' ? 3 : 4}`;
-                const heatmapInfo = heatmapEnabled && heatmapData ? heatmapData[heatmapKey] : null;
-                
-                return React.createElement('div', {
-                    key: index,
-                    style: { position: 'relative' }
-                },
-                    React.createElement(Tile, {
-                        color: tile,
-                        onClick: () => onTileClick ? onTileClick(factoryIndex, index, tile) : null,
-                        draggable: true,
-                        onDragStart: (e) => {
-                            e.dataTransfer.setData('application/json', JSON.stringify({
-                                sourceType: 'factory',
-                                sourceId: factoryIndex,
-                                tileIndex: index,
-                                tile: tile
-                            }));
-                        },
-                        isSelected: selectedTile && selectedTile.sourceId === factoryIndex && selectedTile.tileIndex === index
-                    }),
-                    // Heatmap overlay
-                    heatmapInfo && React.createElement('div', {
-                        className: 'heatmap-overlay',
-                        style: {
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: heatmapInfo.color,
-                            borderRadius: '4px',
-                            pointerEvents: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '10px',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            textShadow: '1px 1px 1px rgba(0,0,0,0.8)'
-                        }
-                    }, heatmapInfo.delta > 0 ? `+${heatmapInfo.delta.toFixed(1)}` : heatmapInfo.delta.toFixed(1))
-                );
-            })
-        )
-    );
-}
+// Factory component extracted to separate file
 
 // Import executeMove function from game API
 const { executeMove } = window.gameAPI || {};
 
-// PatternLine Component
-function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
-    const patternLineRef = React.useRef(null);
-    
-    React.useEffect(() => {
-        const patternLine = patternLineRef.current;
-        if (!patternLine) return;
-        
-        const handleDragOver = (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        };
-        
-        const handleDragLeave = (e) => {
-            e.currentTarget.classList.remove('drag-over');
-        };
-        
-        const handleDrop = (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-            if (onDrop) onDrop(e, rowIndex);
-        };
-        
-        patternLine.addEventListener('dragover', handleDragOver);
-        patternLine.addEventListener('dragleave', handleDragLeave);
-        patternLine.addEventListener('drop', handleDrop);
-        
-        return () => {
-            patternLine.removeEventListener('dragover', handleDragOver);
-            patternLine.removeEventListener('dragleave', handleDragLeave);
-            patternLine.removeEventListener('drop', handleDrop);
-        };
-    }, [onDrop, rowIndex]);
-    
-    const handlePatternLineClick = (e) => {
-        if (editMode && onElementSelect) {
-            const isCtrlClick = e.ctrlKey;
-            onElementSelect({
-                type: 'pattern-line',
-                data: { playerIndex, rowIndex, tiles, maxTiles }
-            }, isCtrlClick);
-        }
-    };
-    
-    const handlePatternLineRightClick = (e) => {
-        e.preventDefault();
-        if (editMode && window.showContextMenu) {
-            window.showContextMenu(e, 'pattern-line', { playerIndex, rowIndex, tiles });
-        }
-    };
-    
-    const isSelected = editMode && selectedElements.some(el => el.type === 'pattern-line' && el.data.rowIndex === rowIndex && el.data.playerIndex === playerIndex);
-    const isEditSelected = editMode && isSelected;
-    
-    return React.createElement('div', {
-        ref: patternLineRef,
-        className: `pattern-line ${isEditSelected ? 'selected' : ''}`,
-        onClick: handlePatternLineClick,
-        onContextMenu: handlePatternLineRightClick
-    },
-        React.createElement('div', {
-            className: 'flex items-center gap-2'
-        },
-            // Row label - more compact
-            React.createElement('div', {
-                className: 'text-xs text-gray-600 font-medium w-8 flex-shrink-0'
-            }, `R${rowIndex + 1}`),
-            React.createElement('div', {
-                className: 'flex gap-1 flex-wrap'
-            },
-                tiles.map((tile, index) => 
-                    React.createElement(Tile, {
-                        key: index,
-                        color: tile,
-                        className: 'w-6 h-6',
-                        onClick: () => onTileClick ? onTileClick(rowIndex, index, tile) : null
-                    })
-                ),
-                Array.from({ length: maxTiles - tiles.length }, (_, index) => 
-                    React.createElement('div', {
-                        key: `empty-${index}`,
-                        className: 'w-6 h-6 border border-gray-300 rounded bg-gray-50',
-                        onClick: () => onDestinationClick ? onDestinationClick(rowIndex, tiles.length + index) : null
-                    })
-                )
-            )
-        )
-    );
-}
+// PatternLine component extracted to separate file
 
 // Wall Component
 function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
