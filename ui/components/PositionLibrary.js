@@ -15,63 +15,56 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const [selectedTags, setSelectedTags] = useState([]);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [customPositions, setCustomPositions] = useState([]);
+        const [modulesLoaded, setModulesLoaded] = useState(false);
     
-    // Expanded position categories for R1.2
+    // Check if modules are loaded
+    React.useEffect(() => {
+        const checkModulesLoaded = () => {
+            const hasOpening = window.openingPositions && Object.keys(window.openingPositions).length > 0;
+            const hasMidgame = window.midgamePositions && Object.keys(window.midgamePositions).length > 0;
+            const hasEndgame = window.endgamePositions && Object.keys(window.endgamePositions).length > 0;
+            const hasEducational = window.educationalPositions && Object.keys(window.educationalPositions).length > 0;
+            const hasCustom = window.customPositions && Object.keys(window.customPositions).length > 0;
+            
+            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom) {
+                setModulesLoaded(true);
+            } else {
+                // Check again in 100ms if modules aren't loaded yet
+                setTimeout(checkModulesLoaded, 100);
+            }
+        };
+        
+        checkModulesLoaded();
+    }, []);
+    
+    // Import position modules with proper fallbacks
+    const openingPositions = window.openingPositions || {};
+    const midgamePositions = window.midgamePositions || {};
+    const endgamePositions = window.endgamePositions || {};
+    const educationalPositions = window.educationalPositions || {};
+    const customPositionsModule = window.customPositions || {};
+
+    // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
         opening: {
             name: "Opening Positions",
             description: "Game start scenarios and early tactical decisions",
             icon: "🎯",
-            subcategories: {
-                "2-player": {
-                    name: "2-Player Openings",
-                    description: "Duel scenarios with focused strategies",
-                    positions: [
-                        {
-                            name: "Balanced Start",
-                            description: "Standard opening with mixed factory colors",
-                            difficulty: "beginner",
-                            tags: ["opening", "balanced", "2-player"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'B', 'Y', 'R'],
-                                     ['B', 'Y', 'R', 'K'],
-                                     ['Y', 'R', 'K', 'W'],
-                                     ['R', 'K', 'W', 'B'],
-                                     ['K', 'W', 'B', 'Y']
-                                 ],
-                                 center: [],
-                                 players: Array(2).fill().map(() => ({
-                                     pattern_lines: [[], [], [], [], []],
-                                     wall: Array(5).fill().map(() => Array(5).fill(null)),
-                                     floor_line: [],
-                                     score: 0
-                                 }))
-                             })
-                        },
-                        {
-                            name: "Color-Focused Start",
-                            description: "Factories with concentrated colors for aggressive play",
-                            difficulty: "intermediate",
-                            tags: ["opening", "aggressive", "color-focus", "2-player"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'B', 'B', 'B'],
-                                     ['B', 'B', 'B', 'B'],
-                                     ['B', 'B', 'B', 'B'],
-                                     ['B', 'B', 'B', 'B'],
-                                     ['B', 'B', 'B', 'B']
-                                 ],
-                                 center: [],
-                                 players: Array(2).fill().map(() => ({
-                                     pattern_lines: [[], [], [], [], []],
-                                     wall: Array(5).fill().map(() => Array(5).fill(null)),
-                                     floor_line: [],
-                                     score: 0
-                                 }))
-                             })
-                        }
-                    ]
+            subcategories: openingPositions || {
+                "balanced": {
+                    name: "Balanced Openings",
+                    description: "Standard and balanced starting positions",
+                    positions: []
+                },
+                "aggressive": {
+                    name: "Aggressive Openings", 
+                    description: "High-risk, high-reward starting positions",
+                    positions: []
+                },
+                "defensive": {
+                    name: "Defensive Openings",
+                    description: "Conservative and safe starting positions", 
+                    positions: []
                 }
             }
         },
@@ -79,96 +72,21 @@ const PositionLibrary = React.memo(function PositionLibrary({
             name: "Mid-Game Scenarios",
             description: "Tactical positions with developing patterns",
             icon: "⚔️",
-            subcategories: {
+            subcategories: midgamePositions || {
                 "scoring": {
                     name: "Scoring Opportunities",
                     description: "Positions with clear scoring potential",
-                    positions: [
-                        {
-                            name: "Multiplier Setup",
-                            description: "Positioning for row/column bonuses",
-                            difficulty: "intermediate",
-                            tags: ["midgame", "scoring", "multiplier"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'Y'],
-                                     ['Y', 'R'],
-                                     ['R', 'K'],
-                                     ['K', 'W'],
-                                     ['W', 'B']
-                                 ],
-                                 center: ['B', 'Y'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [['B', 'B'], ['Y', 'Y', 'Y'], [], [], []],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => 
-                                             row < 2 && col < 2 ? 'B' : null
-                                         )
-                                     ),
-                                     floor_line: [],
-                                     score: 12 + playerIdx * 3
-                                 }))
-                             })
-                        },
-                        {
-                            name: "Color Completion Race",
-                            description: "Competing for color completion bonuses",
-                            difficulty: "advanced",
-                            tags: ["midgame", "scoring", "color-race"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'R', 'W'],
-                                     ['Y', 'K', 'B'],
-                                     ['R', 'W', 'Y'],
-                                     ['K', 'B', 'R'],
-                                     ['W', 'Y', 'K']
-                                 ],
-                                 center: ['B', 'B', 'R', 'W'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [['B', 'B', 'B'], [], ['R', 'R'], [], ['W']],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => 
-                                             (row + col) % 2 === playerIdx ? 'B' : null
-                                         )
-                                     ),
-                                     floor_line: [],
-                                     score: 18 + playerIdx * 6
-                                 }))
-                             })
-                        }
-                    ]
+                    positions: []
                 },
                 "blocking": {
                     name: "Blocking Tactics",
                     description: "Positions requiring defensive play",
-                    positions: [
-                        {
-                            name: "Floor Line Crisis",
-                            description: "Managing negative points while scoring",
-                            difficulty: "expert",
-                            tags: ["midgame", "blocking", "floor-line"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'Y'],
-                                     ['B', 'Y'],
-                                     ['B', 'Y'],
-                                     ['B', 'Y'],
-                                     ['B', 'Y']
-                                 ],
-                                 center: ['B', 'B', 'B', 'Y', 'Y'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [['B', 'B', 'B', 'B'], ['Y', 'Y', 'Y', 'Y'], [], [], []],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => 
-                                             row < 2 ? 'B' : null
-                                         )
-                                     ),
-                                     floor_line: ['B', 'Y', 'B'],
-                                     score: 8 + playerIdx * 4
-                                 }))
-                             })
-                        }
-                    ]
+                    positions: []
+                },
+                "efficiency": {
+                    name: "Efficiency Scenarios",
+                    description: "Positions requiring optimal tile usage",
+                    positions: []
                 }
             }
         },
@@ -176,94 +94,21 @@ const PositionLibrary = React.memo(function PositionLibrary({
             name: "Endgame Positions",
             description: "Final round optimization and counting",
             icon: "🏁",
-            subcategories: {
+            subcategories: endgamePositions || {
                 "optimization": {
                     name: "Final Optimization",
                     description: "Maximizing endgame scoring",
-                    positions: [
-                        {
-                            name: "Last Round Efficiency",
-                            description: "Final moves for maximum points",
-                            difficulty: "expert",
-                            tags: ["endgame", "optimization", "final-round"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['R'],
-                                     ['R'],
-                                     ['R'],
-                                     ['R'],
-                                     ['R']
-                                 ],
-                                 center: ['R', 'R', 'R', 'W'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [[], [], ['R', 'R', 'R'], [], ['W']],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => row < 3 ? 'B' : null)
-                                     ),
-                                     floor_line: ['R', 'W'],
-                                     score: 45 + playerIdx * 8
-                                 }))
-                             })
-                        },
-                        {
-                            name: "Tie-Breaker Scenario",
-                            description: "Close game with precise counting needed",
-                            difficulty: "expert",
-                            tags: ["endgame", "optimization", "tie-breaker"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['K'],
-                                     ['K'],
-                                     ['K'],
-                                     ['K'],
-                                     ['K']
-                                 ],
-                                 center: ['K', 'K'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [[], [], [], ['K', 'K'], []],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => 
-                                             row === 3 ? 'B' : (row < 3 ? 'B' : null)
-                                         )
-                                     ),
-                                     floor_line: [],
-                                     score: 52 + playerIdx * 2
-                                 }))
-                             })
-                        }
-                    ]
+                    positions: []
                 },
                 "counting": {
                     name: "Precise Counting",
                     description: "Positions requiring exact tile counting",
-                    positions: [
-                        {
-                            name: "Tile Conservation Puzzle",
-                            description: "Ensuring all tiles are accounted for",
-                            difficulty: "expert",
-                            tags: ["endgame", "counting", "conservation"],
-                                                         generate: () => ({
-                                 factories: [
-                                     [],
-                                     [],
-                                     [],
-                                     [],
-                                     []
-                                 ],
-                                 center: ['B', 'Y', 'R'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [[], [], [], [], []],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => 
-                                             row < 4 ? 'B' : null
-                                         )
-                                     ),
-                                     floor_line: ['B', 'Y', 'R'],
-                                     score: 48 + playerIdx * 1
-                                 }))
-                             })
-                        }
-                    ]
+                    positions: []
+                },
+                "completion": {
+                    name: "Wall Completion",
+                    description: "Positions focusing on wall completion",
+                    positions: []
                 }
             }
         },
@@ -271,66 +116,33 @@ const PositionLibrary = React.memo(function PositionLibrary({
             name: "Educational Puzzles",
             description: "Learning scenarios for skill development",
             icon: "🎓",
-            subcategories: {
+            subcategories: educationalPositions || {
                 "beginner": {
                     name: "Beginner Lessons",
                     description: "Basic concepts and simple tactics",
-                    positions: [
-                        {
-                            name: "Pattern Line Basics",
-                            description: "Understanding pattern line mechanics",
-                            difficulty: "beginner",
-                            tags: ["educational", "beginner", "pattern-lines"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'B'],
-                                     ['B', 'B'],
-                                     ['B', 'B'],
-                                     ['B', 'B'],
-                                     ['B', 'B']
-                                 ],
-                                 center: [],
-                                 players: Array(2).fill().map(() => ({
-                                     pattern_lines: [[], [], [], [], []],
-                                     wall: Array(5).fill().map(() => Array(5).fill(null)),
-                                     floor_line: [],
-                                     score: 0
-                                 }))
-                             })
-                        }
-                    ]
+                    positions: []
                 },
                 "intermediate": {
                     name: "Intermediate Challenges",
                     description: "Advanced tactics and strategic thinking",
-                    positions: [
-                        {
-                            name: "Wall Completion Strategy",
-                            description: "Planning for wall completion bonuses",
-                            difficulty: "intermediate",
-                            tags: ["educational", "intermediate", "wall-strategy"],
-                                                         generate: () => ({
-                                 factories: [
-                                     ['B', 'Y'],
-                                     ['B', 'Y'],
-                                     ['B', 'Y'],
-                                     ['B', 'Y'],
-                                     ['B', 'Y']
-                                 ],
-                                 center: ['B', 'Y'],
-                                 players: Array(2).fill().map((_, playerIdx) => ({
-                                     pattern_lines: [['B', 'B'], ['Y', 'Y', 'Y'], [], [], []],
-                                     wall: Array(5).fill().map((_, row) => 
-                                         Array(5).fill().map((_, col) => 
-                                             row < 2 ? 'B' : null
-                                         )
-                                     ),
-                                     floor_line: [],
-                                     score: 6 + playerIdx * 3
-                                 }))
-                             })
-                        }
-                    ]
+                    positions: []
+                },
+                "advanced": {
+                    name: "Advanced Concepts",
+                    description: "Expert-level strategic concepts",
+                    positions: []
+                }
+            }
+        },
+        custom: {
+            name: "Custom Positions",
+            description: "User-created positions",
+            icon: "💾",
+            subcategories: customPositionsModule || {
+                "user-created": {
+                    name: "User-Created Positions",
+                    description: "Custom positions created by users",
+                    positions: []
                 }
             }
         }
@@ -355,7 +167,13 @@ const PositionLibrary = React.memo(function PositionLibrary({
             // For local development, skip validation if no session token
             if (!sessionToken) {
                 setGameState(newState);
-                setStatusMessage(`✅ Loaded position: ${position.name} (local mode)`);
+                setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
+                
+                // Set flag to prevent automatic refresh from overwriting the loaded position
+                if (window.setPositionJustLoaded) {
+                    window.setPositionJustLoaded(true);
+                }
+                
                 onClose();
                 return;
             }
@@ -377,7 +195,13 @@ const PositionLibrary = React.memo(function PositionLibrary({
                 if (response.status === 401) {
                     // Unauthorized - load position without validation for local development
                     setGameState(newState);
-                    setStatusMessage(`✅ Loaded position: ${position.name} (local mode)`);
+                    setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
+                    
+                    // Set flag to prevent automatic refresh from overwriting the loaded position
+                    if (window.setPositionJustLoaded) {
+                        window.setPositionJustLoaded(true);
+                    }
+                    
                     onClose();
                     return;
                 }
@@ -394,15 +218,12 @@ const PositionLibrary = React.memo(function PositionLibrary({
             }
             
             setGameState(newState);
-            setStatusMessage(`✅ Loaded position: ${position.name}`);
+            setStatusMessage(`✅ Loaded position: ${position.name} (auto-refresh disabled - use 🔄 Refresh to resume)`);
             
             // Set flag to prevent automatic refresh from overwriting the loaded position
             if (window.setPositionJustLoaded) {
                 window.setPositionJustLoaded(true);
-                // Reset the flag after 10 seconds to allow normal refresh to resume
-                setTimeout(() => {
-                    window.setPositionJustLoaded(false);
-                }, 10000);
+                // Don't reset the flag automatically - let user manually refresh when needed
             }
             
             onClose();
@@ -413,7 +234,13 @@ const PositionLibrary = React.memo(function PositionLibrary({
             try {
                 const newState = position.generate();
                 setGameState(newState);
-                setStatusMessage(`✅ Loaded position: ${position.name} (local mode)`);
+                setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
+                
+                // Set flag to prevent automatic refresh from overwriting the loaded position
+                if (window.setPositionJustLoaded) {
+                    window.setPositionJustLoaded(true);
+                }
+                
                 onClose();
             } catch (fallbackError) {
                 setStatusMessage(`⚠️ Failed to load position: ${error.message}`);
@@ -488,8 +315,18 @@ const PositionLibrary = React.memo(function PositionLibrary({
             }, '×')
         ),
         
+        // Loading state
+        !modulesLoaded && React.createElement('div', {
+            className: 'loading-state'
+        },
+            React.createElement('div', {
+                className: 'loading-spinner'
+            }),
+            React.createElement('p', null, 'Loading position library...')
+        ),
+        
         // Search and filters
-        React.createElement('div', {
+        modulesLoaded && React.createElement('div', {
             className: 'library-controls'
         },
             React.createElement('div', {
@@ -538,7 +375,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
         ),
         
         // Position grid
-        React.createElement('div', {
+        modulesLoaded && React.createElement('div', {
             className: 'position-grid'
         },
             ...filteredPositions.map((position, index) =>

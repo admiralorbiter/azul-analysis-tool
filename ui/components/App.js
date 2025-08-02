@@ -53,6 +53,12 @@ function App() {
     const [statusMessage, setStatusMessage] = useState('Initializing...');
     const [loading, setLoading] = useState(false);
     const [gameState, setGameState] = useState(null);
+    
+    // Debug setGameState calls
+    const debugSetGameState = useCallback((newState) => {
+        console.log('App: setGameState called with:', newState);
+        setGameState(newState);
+    }, []);
     const [selectedTile, setSelectedTile] = useState(null);
     const [editMode, setEditMode] = useState(false);
     const [selectedElements, setSelectedElements] = useState([]);
@@ -90,6 +96,10 @@ function App() {
     const [showPositionLibrary, setShowPositionLibrary] = useState(false);
     const [positionJustLoaded, setPositionJustLoaded] = useState(false);
     
+
+    
+
+    
     // Neural Training State
     const [neuralExpanded, setNeuralExpanded] = useState(false);
     const [trainingConfig, setTrainingConfig] = useState({
@@ -111,7 +121,7 @@ function App() {
             })
             .then(data => {
                 console.log('Initial game state:', data);
-                setGameState(data);
+                debugSetGameState(data);
                 setStatusMessage('Game loaded');
             })
             .catch(error => {
@@ -125,7 +135,7 @@ function App() {
         const interval = setInterval(() => {
             if (sessionStatus === 'connected' && !loading && !editMode && !positionJustLoaded) {
                 getGameState().then(data => {
-                    setGameState(data);
+                    debugSetGameState(data);
                 }).catch(error => {
                     console.error('Failed to refresh game state:', error);
                 });
@@ -217,7 +227,7 @@ function App() {
             }
         });
         
-        setGameState(newGameState);
+        debugSetGameState(newGameState);
         setStatusMessage(`Applied ${color} tiles to ${selectedElements.length} location(s)`);
         
         saveGameState(newGameState).then(() => {
@@ -263,7 +273,7 @@ function App() {
             }
         });
         
-        setGameState(newGameState);
+        debugSetGameState(newGameState);
         setStatusMessage(`Removed tiles from ${selectedElements.length} location(s)`);
         
         saveGameState(newGameState).then(() => {
@@ -323,7 +333,7 @@ function App() {
             }
         });
         
-        setGameState(newGameState);
+        debugSetGameState(newGameState);
         setStatusMessage(`Pasted ${clipboard.length} element(s)`);
         
         saveGameState(newGameState).then(() => {
@@ -348,7 +358,7 @@ function App() {
             
             if (result.success) {
                 const newGameState = await getGameState(result.new_fen);
-                setGameState(newGameState);
+                debugSetGameState(newGameState);
                 
                 setMoveHistory(prev => [...prev, {
                     move: move,
@@ -379,7 +389,7 @@ function App() {
                 setStatusMessage(`Move failed: ${result.error || 'Unknown error'}`);
                 
                 getGameState().then(freshState => {
-                    setGameState(freshState);
+                    debugSetGameState(freshState);
                     console.log('Game state refreshed after failed move');
                 });
             }
@@ -514,7 +524,7 @@ function App() {
                 const data = JSON.parse(e.target.result);
                 
                 getGameState(data.fen).then(newGameState => {
-                    setGameState(newGameState);
+                    debugSetGameState(newGameState);
                     
                     if (data.moveHistory) {
                         setMoveHistory(data.moveHistory);
@@ -702,8 +712,10 @@ function App() {
                             React.createElement('button', {
                                 className: 'btn-primary btn-sm',
                                 onClick: () => {
+                                    // Reset the position loaded flag to allow automatic refresh to resume
+                                    setPositionJustLoaded(false);
                                     getGameState().then(data => {
-                                        setGameState(data);
+                                        debugSetGameState(data);
                                         setStatusMessage('Game state refreshed');
                                     }).catch(error => {
                                         setStatusMessage(`Refresh failed: ${error.message}`);
@@ -758,7 +770,10 @@ function App() {
                             }, `Player: ${currentPlayer + 1}`),
                             engineThinking && React.createElement('span', {
                                 className: 'text-blue-600'
-                            }, '🤖 Thinking...')
+                            }, '🤖 Thinking...'),
+                            positionJustLoaded && React.createElement('span', {
+                                className: 'text-green-600 font-medium'
+                            }, '📚 Position Loaded')
                         ),
                         React.createElement('div', {
                             className: 'text-gray-600'
@@ -769,7 +784,7 @@ function App() {
                 // Enhanced Board Editor (R1.1) - appears when edit mode is enabled
                 editMode && BoardEditor && React.createElement(BoardEditor, {
                     gameState: gameState,
-                    setGameState: setGameState,
+                    setGameState: debugSetGameState,
                     editMode: editMode,
                     selectedElements: selectedElements,
                     onElementSelect: handleElementSelect,
@@ -780,7 +795,7 @@ function App() {
                 // Position Library (R1.2) - appears when library is opened
                 showPositionLibrary && PositionLibrary && React.createElement(PositionLibrary, {
                     gameState: gameState,
-                    setGameState: setGameState,
+                    setGameState: debugSetGameState,
                     setStatusMessage: setStatusMessage,
                     sessionToken: window.sessionStorage?.getItem('sessionToken') || null,
                     onClose: () => setShowPositionLibrary(false)

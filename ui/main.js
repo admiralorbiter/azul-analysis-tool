@@ -60,6 +60,51 @@ const {
 // Import App component from window with fallback
 const App = window.App || (() => React.createElement('div', null, 'App component not loaded'));
 
-// Render the app
-const root = createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
+// Load position modules by creating script tags
+const loadPositionModules = () => {
+    return new Promise((resolve) => {
+        const modules = [
+            'components/positions/opening-positions.js',
+            'components/positions/midgame-positions.js',
+            'components/positions/endgame-positions.js',
+            'components/positions/educational-positions.js',
+            'components/positions/custom-positions.js'
+        ];
+        
+        let loadedCount = 0;
+        
+        modules.forEach((modulePath) => {
+            const script = document.createElement('script');
+            script.src = modulePath;
+            script.onload = () => {
+                loadedCount++;
+                console.log(`Loaded: ${modulePath}`);
+                if (loadedCount === modules.length) {
+                    console.log('All position modules loaded');
+                    resolve();
+                }
+            };
+            script.onerror = (error) => {
+                console.warn(`Failed to load ${modulePath}:`, error);
+                loadedCount++;
+                if (loadedCount === modules.length) {
+                    console.log('All position modules attempted to load');
+                    resolve();
+                }
+            };
+            document.head.appendChild(script);
+        });
+    });
+};
+
+// Load position modules and then render the app
+loadPositionModules().then(() => {
+    console.log('All position modules loaded, rendering app');
+    const root = createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+}).catch(error => {
+    console.error('Failed to load position modules:', error);
+    // Render app anyway with fallback positions
+    const root = createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+});
