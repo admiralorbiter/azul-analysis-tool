@@ -723,52 +723,157 @@ function App() {
                 )
             ),
             
-            // Main content
+            // Main content - Condensed single-screen layout
             React.createElement('div', {
-                className: 'max-w-8xl mx-auto px-6 py-6'
+                className: 'max-w-full mx-auto px-4 py-2'
             },
-                // Status message and current player
+                // Compact status bar
                 React.createElement('div', {
-                    className: 'mb-6 space-y-2'
+                    className: 'mb-3'
                 },
                     React.createElement(StatusMessage, {
                         type: sessionStatus === 'connected' ? 'success' : 'error',
                         message: statusMessage
                     }),
                     React.createElement('div', {
-                        className: 'flex justify-between items-center p-4 bg-blue-50 rounded-lg'
+                        className: 'flex justify-between items-center p-2 bg-blue-50 rounded text-sm'
                     },
                         React.createElement('div', {
                             className: 'flex items-center space-x-2'
                         },
                             React.createElement('span', {
                                 className: 'font-medium'
-                            }, `Current Player: ${currentPlayer + 1}`),
+                            }, `Player: ${currentPlayer + 1}`),
                             engineThinking && React.createElement('span', {
-                                className: 'text-sm text-blue-600'
-                            }, '🤖 Engine thinking...')
+                                className: 'text-blue-600'
+                            }, '🤖 Thinking...')
                         ),
                         React.createElement('div', {
-                            className: 'text-sm text-gray-600'
+                            className: 'text-gray-600'
                         }, `Moves: ${moveHistory.length}`)
                     )
                 ),
                 
-                // Game board and player boards
+                // Main game layout - 3 columns: Sidebar | Game Board | Analysis
                 React.createElement('div', {
-                    className: 'grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6'
+                    className: 'grid grid-cols-12 gap-4 h-[calc(100vh-200px)]'
                 },
-                    // Game boards (factories + player boards)
+                    // Left Sidebar - Analysis Tools (3 columns)
                     React.createElement('div', {
-                        className: 'lg:col-span-3 xl:col-span-4 2xl:col-span-5 space-y-6'
+                        className: 'col-span-12 lg:col-span-3 space-y-3 overflow-y-auto'
                     },
-                        // Factories
-                        React.createElement('div', null,
-                            React.createElement('h2', {
-                                className: 'text-xl font-semibold mb-4'
-                            }, 'Factories'),
+                        // Compact Analysis Results
+                        React.createElement('div', {
+                            className: 'bg-white rounded p-3 shadow-sm'
+                        },
+                            React.createElement(AnalysisResults, {
+                                variations: variations,
+                                loading: loading,
+                                engineThinking: engineThinking
+                            })
+                        ),
+                        
+                        // Compact Analysis Controls
+                        React.createElement('div', {
+                            className: 'bg-white rounded p-3 shadow-sm'
+                        },
+                            React.createElement('h3', {
+                                className: 'font-medium text-sm mb-2 text-blue-700'
+                            }, '🔍 Analysis & Controls'),
+                            
+                            // Compact action buttons
                             React.createElement('div', {
-                                className: 'grid grid-cols-5 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-4 xl:gap-6'
+                                className: 'grid grid-cols-2 gap-2 mb-3'
+                            },
+                                React.createElement('button', {
+                                    className: 'btn-warning btn-xs',
+                                    onClick: handleUndo,
+                                    disabled: moveHistory.length === 0 || loading
+                                }, '↶ Undo'),
+                                React.createElement('button', {
+                                    className: 'btn-secondary btn-xs',
+                                    onClick: handleRedo,
+                                    disabled: loading
+                                }, '↷ Redo')
+                            ),
+                            
+                            // Compact Analysis Tools
+                            React.createElement('div', {
+                                className: 'space-y-2'
+                            },
+                                React.createElement(AdvancedAnalysisControls, {
+                                    loading: loading,
+                                    setLoading: setLoading,
+                                    analyzePosition: analyzePosition,
+                                    getHint: getHint,
+                                    analyzeNeural: analyzeNeural,
+                                    gameState: gameState,
+                                    setVariations: setVariations,
+                                    setHeatmapData: setHeatmapData,
+                                    setStatusMessage: setStatusMessage,
+                                    moveHistory: moveHistory,
+                                    analyzeGame: analyzeGame,
+                                    depth: depth,
+                                    setDepth: setDepth,
+                                    timeBudget: timeBudget,
+                                    setTimeBudget: setTimeBudget,
+                                    rollouts: rollouts,
+                                    setRollouts: setRollouts,
+                                    agentId: agentId,
+                                    setAgentId: setAgentId
+                                })
+                            )
+                        ),
+                        
+                        // Collapsible panels - more compact
+                        configExpanded && React.createElement('div', {
+                            className: 'bg-white rounded p-3 shadow-sm'
+                        },
+                            React.createElement(ConfigurationPanel, {
+                                loading: loading,
+                                setLoading: setLoading,
+                                setStatusMessage: setStatusMessage,
+                                databasePath: databasePath,
+                                setDatabasePath: setDatabasePath,
+                                modelPath: modelPath,
+                                setModelPath: setModelPath,
+                                defaultTimeout: defaultTimeout,
+                                setDefaultTimeout: setDefaultTimeout,
+                                defaultDepth: defaultDepth,
+                                setDefaultDepth: setDefaultDepth,
+                                defaultRollouts: defaultRollouts,
+                                setDefaultRollouts: setDefaultRollouts,
+                                configExpanded: configExpanded,
+                                setConfigExpanded: setConfigExpanded
+                            })
+                        ),
+                        
+                        devToolsExpanded && React.createElement('div', {
+                            className: 'bg-white rounded p-3 shadow-sm'
+                        },
+                            React.createElement(DevelopmentToolsPanel, {
+                                loading: loading,
+                                setLoading: setLoading,
+                                setStatusMessage: setStatusMessage,
+                                devToolsExpanded: devToolsExpanded,
+                                setDevToolsExpanded: setDevToolsExpanded
+                            })
+                        )
+                    ),
+                    
+                    // Center - Game Board (6 columns)
+                    React.createElement('div', {
+                        className: 'col-span-12 lg:col-span-6 space-y-3'
+                    },
+                        // Compact Factories at top
+                        React.createElement('div', {
+                            className: 'bg-white rounded p-3 shadow-sm'
+                        },
+                            React.createElement('h3', {
+                                className: 'font-medium text-sm mb-2'
+                            }, '🏢 Factories'),
+                            React.createElement('div', {
+                                className: 'grid grid-cols-5 gap-2'
                             },
                                 (gameState.factories || []).map((factory, index) => 
                                     React.createElement(Factory, {
@@ -790,13 +895,15 @@ function App() {
                             )
                         ),
                         
-                        // Player boards
-                        React.createElement('div', null,
-                            React.createElement('h2', {
-                                className: 'text-xl font-semibold mb-3'
-                            }, 'Player Boards'),
+                        // Player boards - more compact, side by side
+                        React.createElement('div', {
+                            className: 'bg-white rounded p-3 shadow-sm flex-1'
+                        },
+                            React.createElement('h3', {
+                                className: 'font-medium text-sm mb-2'
+                            }, '👥 Player Boards'),
                             React.createElement('div', {
-                                className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 xl:gap-6'
+                                className: 'grid grid-cols-1 xl:grid-cols-2 gap-3 h-full'
                             },
                                 (gameState.players || []).map((player, index) => 
                                     React.createElement(PlayerBoard, {
@@ -816,115 +923,48 @@ function App() {
                         )
                     ),
                     
-                    // Analysis panel
+                    // Right Sidebar - Quick Actions & Settings (3 columns)
                     React.createElement('div', {
-                        className: 'lg:col-span-1 xl:col-span-1 2xl:col-span-1 analysis-panel'
+                        className: 'col-span-12 lg:col-span-3 space-y-3'
                     },
-                        React.createElement('h2', {
-                            className: 'analysis-title'
-                        }, '🔍 Analysis & Controls'),
+                        // Quick action panel
                         React.createElement('div', {
-                            className: 'space-y-3'
+                            className: 'bg-white rounded p-3 shadow-sm'
                         },
-                            // Action buttons
+                            React.createElement('h3', {
+                                className: 'font-medium text-sm mb-2 text-blue-700'
+                            }, '⚡ Quick Actions'),
                             React.createElement('div', {
-                                className: 'btn-group w-full'
+                                className: 'space-y-2'
                             },
                                 React.createElement('button', {
-                                    className: 'btn-warning btn-sm flex-1',
-                                    onClick: handleUndo,
-                                    disabled: moveHistory.length === 0 || loading
-                                }, '↶ Undo'),
+                                    className: 'btn-primary btn-xs w-full',
+                                    onClick: () => setConfigExpanded(!configExpanded)
+                                }, configExpanded ? '⚙️ Hide Config' : '⚙️ Show Config'),
                                 React.createElement('button', {
-                                    className: 'btn-secondary btn-sm flex-1',
-                                    onClick: handleRedo,
-                                    disabled: loading
-                                }, '↷ Redo')
-                            ),
-                            
-                            // Analysis Tools
-                            React.createElement('div', {
-                                className: 'analysis-tools'
-                            },
-                                React.createElement('h3', {
-                                    className: 'font-medium text-sm mb-3 flex items-center justify-between text-blue-700'
-                                },
-                                    React.createElement('span', null, '🔍 Position Analysis'),
-                                    React.createElement('button', {
-                                        className: 'text-xs text-gray-500 hover:text-gray-700',
-                                        onClick: () => setAnalysisExpanded(!analysisExpanded)
-                                    }, analysisExpanded ? '−' : '+')
-                                ),
-                                
-                                analysisExpanded && React.createElement('div', {
-                                    className: 'space-y-3'
-                                },
-                                    React.createElement(AdvancedAnalysisControls, {
-                                        loading: loading,
-                                        setLoading: setLoading,
-                                        analyzePosition: analyzePosition,
-                                        getHint: getHint,
-                                        analyzeNeural: analyzeNeural,
-                                        gameState: gameState,
-                                        setVariations: setVariations,
-                                        setHeatmapData: setHeatmapData,
-                                        setStatusMessage: setStatusMessage,
-                                        moveHistory: moveHistory,
-                                        analyzeGame: analyzeGame,
-                                        depth: depth,
-                                        setDepth: setDepth,
-                                        timeBudget: timeBudget,
-                                        setTimeBudget: setTimeBudget,
-                                        rollouts: rollouts,
-                                        setRollouts: setRollouts,
-                                        agentId: agentId,
-                                        setAgentId: setAgentId
-                                    })
-                                )
-                            ),
-                            
-                            // Configuration Panel
-                            React.createElement(ConfigurationPanel, {
-                                loading: loading,
-                                setLoading: setLoading,
-                                setStatusMessage: setStatusMessage,
-                                databasePath: databasePath,
-                                setDatabasePath: setDatabasePath,
-                                modelPath: modelPath,
-                                setModelPath: setModelPath,
-                                defaultTimeout: defaultTimeout,
-                                setDefaultTimeout: setDefaultTimeout,
-                                defaultDepth: defaultDepth,
-                                setDefaultDepth: setDefaultDepth,
-                                defaultRollouts: defaultRollouts,
-                                setDefaultRollouts: setDefaultRollouts,
-                                configExpanded: configExpanded,
-                                setConfigExpanded: setConfigExpanded
-                            }),
-                            
-                            // Development Tools Panel
-                            React.createElement(DevelopmentToolsPanel, {
-                                loading: loading,
-                                setLoading: setLoading,
-                                setStatusMessage: setStatusMessage,
-                                devToolsExpanded: devToolsExpanded,
-                                setDevToolsExpanded: setDevToolsExpanded
-                            })
+                                    className: 'btn-secondary btn-xs w-full',
+                                    onClick: () => setDevToolsExpanded(!devToolsExpanded)
+                                }, devToolsExpanded ? '🔧 Hide Dev Tools' : '🔧 Show Dev Tools'),
+                                React.createElement('button', {
+                                    className: 'btn-info btn-xs w-full',
+                                    onClick: () => setHeatmapEnabled(!heatmapEnabled)
+                                }, heatmapEnabled ? '🔥 Hide Heatmap' : '🔥 Show Heatmap')
+                            )
                         )
                     )
                 )
-            ),
-            
-            // Context menu
-            React.createElement(ContextMenu, {
-                visible: contextMenu.visible,
-                x: contextMenu.x,
-                y: contextMenu.y,
-                options: contextMenu.options,
-                onAction: handleContextMenuAction,
-                onClose: hideContextMenu
-            })
-        )
+            )
+        ),
+        
+        // Context menu - moved to correct level
+        React.createElement(ContextMenu, {
+            visible: contextMenu.visible,
+            x: contextMenu.x,
+            y: contextMenu.y,
+            options: contextMenu.options,
+            onAction: handleContextMenuAction,
+            onClose: hideContextMenu
+        })
     );
 }
 
