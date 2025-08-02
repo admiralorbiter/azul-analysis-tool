@@ -16,6 +16,7 @@ console.log('Component loading status:', {
 const {
     ValidationFeedback,
     BoardEditor,
+    PositionLibrary,
     AdvancedAnalysisControls,
     ConfigurationPanel,
     DevelopmentToolsPanel,
@@ -36,6 +37,7 @@ const {
 } = {
     ValidationFeedback: window.ValidationFeedback || (() => React.createElement('div', null, 'ValidationFeedback not loaded')),
     BoardEditor: window.BoardEditor || (() => React.createElement('div', null, 'BoardEditor not loaded')),
+    PositionLibrary: window.PositionLibrary || (() => React.createElement('div', null, 'PositionLibrary not loaded')),
     AdvancedAnalysisControls: window.AdvancedAnalysisControls || (() => React.createElement('div', null, 'AdvancedAnalysisControls not loaded')),
     ConfigurationPanel: window.ConfigurationPanel || (() => React.createElement('div', null, 'ConfigurationPanel not loaded')),
     DevelopmentToolsPanel: window.DevelopmentToolsPanel || (() => React.createElement('div', null, 'DevelopmentToolsPanel not loaded')),

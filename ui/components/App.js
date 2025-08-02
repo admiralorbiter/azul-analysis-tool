@@ -12,6 +12,7 @@ const ConfigurationPanel = window.ConfigurationPanel;
 const DevelopmentToolsPanel = window.DevelopmentToolsPanel;
 const BoardEditor = window.BoardEditor;
 const ValidationFeedback = window.ValidationFeedback;
+const PositionLibrary = window.PositionLibrary;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -85,6 +86,10 @@ function App() {
     // Development Tools Panel State
     const [devToolsExpanded, setDevToolsExpanded] = useState(false);
     
+    // Position Library State (R1.2)
+    const [showPositionLibrary, setShowPositionLibrary] = useState(false);
+    const [positionJustLoaded, setPositionJustLoaded] = useState(false);
+    
     // Neural Training State
     const [neuralExpanded, setNeuralExpanded] = useState(false);
     const [trainingConfig, setTrainingConfig] = useState({
@@ -118,7 +123,7 @@ function App() {
     // Refresh game state periodically
     useEffect(() => {
         const interval = setInterval(() => {
-            if (sessionStatus === 'connected' && !loading && !editMode) {
+            if (sessionStatus === 'connected' && !loading && !editMode && !positionJustLoaded) {
                 getGameState().then(data => {
                     setGameState(data);
                 }).catch(error => {
@@ -127,7 +132,7 @@ function App() {
             }
         }, 5000);
         return () => clearInterval(interval);
-    }, [sessionStatus, loading, editMode]);
+    }, [sessionStatus, loading, editMode, positionJustLoaded]);
 
     // Clear selection function
     const clearSelection = useCallback(() => {
@@ -564,7 +569,8 @@ function App() {
     useEffect(() => {
         window.showContextMenu = showContextMenu;
         window.hideContextMenu = hideContextMenu;
-    }, [showContextMenu, hideContextMenu]);
+        window.setPositionJustLoaded = setPositionJustLoaded;
+    }, [showContextMenu, hideContextMenu, setPositionJustLoaded]);
     
     // Handle clicks outside context menu
     useEffect(() => {
@@ -686,6 +692,10 @@ function App() {
                                 onClick: handleEditModeToggle
                             }, editMode ? '✏️ Exit Edit' : '✏️ Edit Mode'),
                             React.createElement('button', {
+                                className: 'btn-info',
+                                onClick: () => setShowPositionLibrary(true)
+                            }, '📚 Position Library'),
+                            React.createElement('button', {
                                 className: 'btn-success',
                                 onClick: () => getGameState().then(setGameState)
                             }, '🔄 Reset Game'),
@@ -765,6 +775,15 @@ function App() {
                     onElementSelect: handleElementSelect,
                     setStatusMessage: setStatusMessage,
                     sessionToken: window.sessionStorage?.getItem('sessionToken') || null
+                }),
+                
+                // Position Library (R1.2) - appears when library is opened
+                showPositionLibrary && PositionLibrary && React.createElement(PositionLibrary, {
+                    gameState: gameState,
+                    setGameState: setGameState,
+                    setStatusMessage: setStatusMessage,
+                    sessionToken: window.sessionStorage?.getItem('sessionToken') || null,
+                    onClose: () => setShowPositionLibrary(false)
                 }),
                 
                 // Main game layout - 3 columns: Sidebar | Game Board | Analysis
@@ -888,10 +907,28 @@ function App() {
                             React.createElement('div', {
                                 className: 'grid grid-cols-5 gap-2'
                             },
-                                (gameState.factories || []).map((factory, index) => 
-                                    React.createElement(Factory, {
+                                (gameState.factories || []).map((factory, index) => {
+                                    // Handle both old format (object with tiles) and new format (array)
+                                    let tilesArray = [];
+                                    if (Array.isArray(factory)) {
+                                        // New format: factory is already an array of tile strings
+                                        tilesArray = factory;
+                                    } else if (factory.tiles) {
+                                        // Old format: convert tiles object to array
+                                        const colorMap = { 0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W' };
+                                        Object.entries(factory.tiles).forEach(([colorIndex, count]) => {
+                                            const color = colorMap[parseInt(colorIndex)];
+                                            if (color && count > 0) {
+                                                for (let i = 0; i < count; i++) {
+                                                    tilesArray.push(color);
+                                                }
+                                            }
+                                        });
+                                    }
+                                    
+                                    return React.createElement(Factory, {
                                         key: index,
-                                        tiles: factory,
+                                        tiles: tilesArray,
                                         factoryIndex: index,
                                         onTileClick: (factoryIndex, tileIndex, tile) => {
                                             setSelectedTile({ sourceId: factoryIndex, tileIndex, tile });
@@ -903,8 +940,8 @@ function App() {
                                         selectedElements: selectedElements,
                                         heatmapEnabled: heatmapEnabled,
                                         heatmapData: heatmapData
-                                    })
-                                )
+                                    });
+                                })
                             )
                         ),
                         
