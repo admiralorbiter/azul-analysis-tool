@@ -19,9 +19,14 @@ class TestNeuralAPIIntegration:
     
     def setup_method(self):
         """Set up test environment."""
-        self.db = AzulDatabase(":memory:")
-        # Initialize the database tables
-        self.db._init_db()
+        import os
+        import tempfile
+        
+        # Create a temporary database file
+        self.temp_db_path = tempfile.mktemp(suffix='.db')
+        self.db = AzulDatabase(self.temp_db_path)
+        
+        # Create test data
         
         # Create test data
         self.test_session_id = str(uuid.uuid4())
@@ -63,6 +68,12 @@ class TestNeuralAPIIntegration:
             architecture='small',
             training_session_id=self.test_session_id
         )
+    
+    def teardown_method(self):
+        """Clean up test environment."""
+        import os
+        if hasattr(self, 'temp_db_path') and os.path.exists(self.temp_db_path):
+            os.remove(self.temp_db_path)
     
     def test_get_training_history_endpoint(self):
         """Test the /neural/history endpoint."""
@@ -117,6 +128,9 @@ class TestNeuralAPIIntegration:
     
     def test_get_neural_models_endpoint(self):
         """Test the /neural/models endpoint."""
+        # Save the training session first (required for foreign key constraint)
+        self.db.save_neural_training_session(self.test_session)
+        
         # Save test model to database
         self.db.save_neural_model(self.test_model)
         

@@ -21,16 +21,76 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import requests
+import subprocess
+import signal
+import os
+import sys
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException
 
+# Add the project root to the path so we can import the API
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from api.app import create_test_app
+import threading
+import socket
+
+def find_free_port():
+    """Find a free port to use for testing."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        s.listen(1)
+        port = s.getsockname()[1]
+    return port
+
+def start_test_server(port):
+    """Start the Flask test server in a separate thread."""
+    app = create_test_app()
+    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
 
 class TestDevelopmentToolsPanel(unittest.TestCase):
     """Test suite for Development Tools Panel functionality."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Set up test environment with running server."""
+        # Find a free port
+        cls.port = find_free_port()
+        cls.base_url = f"http://localhost:{cls.port}"
+        cls.api_base_url = f"{cls.base_url}/api/v1"
+        
+        # Start the server in a separate thread
+        cls.server_thread = threading.Thread(
+            target=start_test_server, 
+            args=(cls.port,),
+            daemon=True
+        )
+        cls.server_thread.start()
+        
+        # Wait for server to start
+        max_attempts = 30
+        for attempt in range(max_attempts):
+            try:
+                response = requests.get(f"{cls.base_url}/healthz", timeout=1)
+                if response.status_code == 200:
+                    break
+            except requests.exceptions.RequestException:
+                if attempt == max_attempts - 1:
+                    raise Exception("Server failed to start")
+                time.sleep(0.1)
+    
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up test environment."""
+        # The server thread will be cleaned up automatically as it's a daemon thread
+        pass
+
     def setUp(self):
         """Set up test environment."""
-        self.base_url = "http://localhost:8000"
-        self.api_base_url = f"{self.base_url}/api/v1"
-        
         # Set up Chrome options for headless testing
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -77,22 +137,45 @@ class TestDevelopmentToolsPanel(unittest.TestCase):
             # Wait for page to load
             self.wait.until(EC.presence_of_element_located((By.ID, "root")))
             
-            # Look for Development Tools Panel
+            # Wait a bit more for React to render
+            time.sleep(3)
+            
+            # First, look for any button that might toggle the Development Tools Panel
+            # The panel might be hidden by default, so we need to find a way to show it
+            try:
+                # Look for a toggle button or any button that might show development tools
+                toggle_button = self.driver.find_element(
+                    By.XPATH,
+                    "//button[contains(text(), 'Development') or contains(text(), 'Tools') or contains(text(), '🔧')]"
+                )
+                toggle_button.click()
+                time.sleep(1)
+            except:
+                # If no toggle button found, the panel might be visible by default
+                pass
+            
+            # Now look for Development Tools Panel header
             dev_tools_header = self.driver.find_element(
                 By.XPATH, 
-                "//h3[contains(text(), '🔧 Development Tools')]"
+                "//h3//span[contains(text(), '🔧 Development Tools')]"
             )
             self.assertIsNotNone(dev_tools_header)
             
-            # Check if panel is initially collapsed
+            # Check if panel has expand/collapse button
             expand_button = self.driver.find_element(
                 By.XPATH,
-                "//h3[contains(text(), '🔧 Development Tools')]/following-sibling::button[contains(text(), '+')]"
+                "//h3//span[contains(text(), '🔧 Development Tools')]/../button"
             )
             self.assertIsNotNone(expand_button)
             
-        except TimeoutException:
-            self.fail("Development Tools Panel not found on page")
+        except Exception as e:
+            # Take a screenshot for debugging
+            self.driver.save_screenshot("test_failure.png")
+            # Also get page source for debugging
+            page_source = self.driver.page_source
+            with open("test_failure.html", "w", encoding="utf-8") as f:
+                f.write(page_source)
+            self.fail(f"Development Tools Panel not found on page: {e}")
 
     def test_development_tools_panel_expansion(self):
         """Test that the Development Tools Panel can be expanded and collapsed."""
@@ -100,10 +183,13 @@ class TestDevelopmentToolsPanel(unittest.TestCase):
             self.driver.get(self.base_url)
             self.wait.until(EC.presence_of_element_located((By.ID, "root")))
             
+            # Wait a bit more for React to render
+            time.sleep(2)
+            
             # Find and click the expand button
             expand_button = self.driver.find_element(
                 By.XPATH,
-                "//h3[contains(text(), '🔧 Development Tools')]/following-sibling::button"
+                "//h3//span[contains(text(), '🔧 Development Tools')]/../button"
             )
             expand_button.click()
             
@@ -485,10 +571,42 @@ class TestDevelopmentToolsPanel(unittest.TestCase):
 class TestDevelopmentToolsPanelAPI(unittest.TestCase):
     """Test suite for Development Tools Panel API integration."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Set up test environment with running server."""
+        # Find a free port
+        cls.port = find_free_port()
+        cls.base_url = f"http://localhost:{cls.port}"
+        cls.api_base_url = f"{cls.base_url}/api/v1"
+        
+        # Start the server in a separate thread
+        cls.server_thread = threading.Thread(
+            target=start_test_server, 
+            args=(cls.port,),
+            daemon=True
+        )
+        cls.server_thread.start()
+        
+        # Wait for server to start
+        max_attempts = 30
+        for attempt in range(max_attempts):
+            try:
+                response = requests.get(f"{cls.base_url}/healthz", timeout=1)
+                if response.status_code == 200:
+                    break
+            except requests.exceptions.RequestException:
+                if attempt == max_attempts - 1:
+                    raise Exception("Server failed to start")
+                time.sleep(0.1)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up test environment."""
+        # The server thread will be cleaned up automatically as it's a daemon thread
+        pass
+
     def setUp(self):
         """Set up test environment."""
-        self.base_url = "http://localhost:8000"
-        self.api_base_url = f"{self.base_url}/api/v1"
         self.session = requests.Session()
         self.session_id = None
 

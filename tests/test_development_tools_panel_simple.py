@@ -9,15 +9,69 @@ import unittest
 import requests
 import json
 import time
+import sys
+import os
+import threading
+import socket
+
+# Add the project root to the path so we can import the API
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from api.app import create_test_app
+
+def find_free_port():
+    """Find a free port to use for testing."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        s.listen(1)
+        port = s.getsockname()[1]
+    return port
+
+def start_test_server(port):
+    """Start the Flask test server in a separate thread."""
+    app = create_test_app()
+    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
 
 
 class TestDevelopmentToolsPanelAPI(unittest.TestCase):
     """Test suite for Development Tools Panel API functionality."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Set up test environment with running server."""
+        # Find a free port
+        cls.port = find_free_port()
+        cls.base_url = f"http://localhost:{cls.port}"
+        cls.api_base_url = f"{cls.base_url}/api/v1"
+        
+        # Start the server in a separate thread
+        cls.server_thread = threading.Thread(
+            target=start_test_server, 
+            args=(cls.port,),
+            daemon=True
+        )
+        cls.server_thread.start()
+        
+        # Wait for server to start
+        max_attempts = 30
+        for attempt in range(max_attempts):
+            try:
+                response = requests.get(f"{cls.base_url}/healthz", timeout=1)
+                if response.status_code == 200:
+                    break
+            except requests.exceptions.RequestException:
+                if attempt == max_attempts - 1:
+                    raise Exception("Server failed to start")
+                time.sleep(0.1)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up test environment."""
+        # The server thread will be cleaned up automatically as it's a daemon thread
+        pass
+
     def setUp(self):
         """Set up test environment."""
-        self.base_url = "http://localhost:8000"
-        self.api_base_url = f"{self.base_url}/api/v1"
         self.session = requests.Session()
         self.session_id = None
 
