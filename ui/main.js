@@ -24,7 +24,12 @@ const {
     Navigation,
     Tile,
     Factory,
-    PatternLine
+    PatternLine,
+    StatusMessage,
+    MoveOption,
+    ContextMenu,
+    Wall,
+    PlayerBoard
 } = {
     AdvancedAnalysisControls: window.AdvancedAnalysisControls || (() => React.createElement('div', null, 'AdvancedAnalysisControls not loaded')),
     ConfigurationPanel: window.ConfigurationPanel || (() => React.createElement('div', null, 'ConfigurationPanel not loaded')),
@@ -37,7 +42,12 @@ const {
     Navigation: window.Navigation || (() => React.createElement('div', null, 'Navigation not loaded')),
     Tile: window.Tile || (() => React.createElement('div', null, 'Tile not loaded')),
     Factory: window.Factory || (() => React.createElement('div', null, 'Factory not loaded')),
-    PatternLine: window.PatternLine || (() => React.createElement('div', null, 'PatternLine not loaded'))
+    PatternLine: window.PatternLine || (() => React.createElement('div', null, 'PatternLine not loaded')),
+    StatusMessage: window.StatusMessage || (() => React.createElement('div', null, 'StatusMessage not loaded')),
+    MoveOption: window.MoveOption || (() => React.createElement('div', null, 'MoveOption not loaded')),
+    ContextMenu: window.ContextMenu || (() => React.createElement('div', null, 'ContextMenu not loaded')),
+    Wall: window.Wall || (() => React.createElement('div', null, 'Wall not loaded')),
+    PlayerBoard: window.PlayerBoard || (() => React.createElement('div', null, 'PlayerBoard not loaded'))
 };
 
 // Import utility functions (these will be defined inline)
@@ -118,268 +128,15 @@ const { executeMove } = window.gameAPI || {};
 
 // PatternLine component extracted to separate file
 
-// Wall Component
-function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
-    const wallRef = React.useRef(null);
-    
-    React.useEffect(() => {
-        const wall = wallRef.current;
-        if (!wall) return;
-        
-        const handleDragOver = (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        };
-        
-        const handleDragLeave = (e) => {
-            e.currentTarget.classList.remove('drag-over');
-        };
-        
-        const handleDrop = (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-            if (onDrop) onDrop(e);
-        };
-        
-        wall.addEventListener('dragover', handleDragOver);
-        wall.addEventListener('dragleave', handleDragLeave);
-        wall.addEventListener('drop', handleDrop);
-        
-        return () => {
-            wall.removeEventListener('dragover', handleDragOver);
-            wall.removeEventListener('dragleave', handleDragLeave);
-            wall.removeEventListener('drop', handleDrop);
-        };
-    }, [onDrop]);
-    
-    return React.createElement('div', {
-        ref: wallRef,
-        className: 'wall'
-    },
-        // Column labels - more compact
-        React.createElement('div', {
-            className: 'flex gap-1 mb-1'
-        },
-            React.createElement('div', { 
-                className: 'w-6 h-4 text-xs text-gray-500 font-medium flex items-center justify-center' 
-            }, ''),
-            ['B', 'Y', 'R', 'K', 'W'].map((color, index) => 
-                React.createElement('div', {
-                    key: index,
-                    className: 'w-6 h-4 text-xs text-gray-600 font-medium flex items-center justify-center'
-                }, color)
-            )
-        ),
-        wall.map((row, rowIndex) => 
-            React.createElement('div', {
-                key: rowIndex,
-                className: 'flex gap-1 mb-1'
-            },
-                // Row label - more compact
-                React.createElement('div', {
-                    className: 'w-6 h-6 text-xs text-gray-600 font-medium flex items-center justify-center'
-                }, `R${rowIndex + 1}`),
-                row.map((cell, colIndex) => {
-                    const isSelected = editMode && selectedElements.some(el => 
-                        el.type === 'wall-cell' && 
-                        el.data.playerIndex === playerIndex && 
-                        el.data.rowIndex === rowIndex && 
-                        el.data.colIndex === colIndex
-                    );
-                    
-                    return React.createElement('div', {
-                        key: colIndex,
-                        className: `w-6 h-6 border border-gray-300 rounded flex items-center justify-center ${cell ? 'bg-gray-100' : 'bg-white'} ${isSelected ? 'ring-2 ring-blue-500' : ''}`,
-                        onClick: (e) => {
-                            if (editMode && onElementSelect) {
-                                const isCtrlClick = e.ctrlKey;
-                                onElementSelect({
-                                    type: 'wall-cell',
-                                    data: { playerIndex, rowIndex, colIndex, cell }
-                                }, isCtrlClick);
-                            } else if (onWallClick) {
-                                onWallClick(rowIndex, colIndex, cell);
-                            }
-                        },
-                        onContextMenu: (e) => {
-                            e.preventDefault();
-                            if (editMode && window.showContextMenu) {
-                                window.showContextMenu(e, 'wall', { playerIndex, rowIndex, colIndex, cell });
-                            }
-                        }
-                    },
-                        cell ? React.createElement(Tile, { 
-                            color: cell,
-                            className: 'w-4 h-4'
-                        }) : null
-                    );
-                })
-            )
-        )
-    );
-}
+// Wall Component - Extracted to separate file
 
-// PlayerBoard Component
-function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onPatternLineDrop, onWallDrop, selectedTile = null, onDestinationClick = null, isActive = false, onPlayerSwitch = null, canInteract = true, gameMode = 'sandbox', editMode = false, onElementSelect = null, selectedElements = [] }) {
-    const borderClass = isActive ? 'border-4 border-blue-500 bg-blue-50' : 'border-2 border-gray-300 bg-gray-50';
-    const headerClass = isActive ? 'text-blue-700 font-bold' : 'text-gray-700';
-    
-    return React.createElement('div', {
-        className: `player-board ${borderClass} p-3 rounded-lg mb-3`
-    },
-        React.createElement('div', {
-            className: `flex justify-between items-center mb-3 ${headerClass}`
-        },
-            React.createElement('h3', {
-                className: 'text-lg font-semibold'
-            }, `Player ${playerIndex + 1}`),
-            React.createElement('div', {
-                className: 'flex space-x-2 items-center'
-            },
-                React.createElement('button', {
-                    className: 'px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600',
-                    onClick: () => onPlayerSwitch ? onPlayerSwitch(playerIndex) : null
-                }, 'Switch'),
-                React.createElement('span', {
-                    className: 'text-sm font-medium'
-                }, `Score: ${player.score || 0}`)
-            )
-        ),
-        React.createElement('div', {
-            className: 'grid grid-cols-2 gap-3'
-        },
-            React.createElement('div', {
-                className: 'pattern-lines'
-            },
-                React.createElement('h4', {
-                    className: 'text-sm font-medium mb-2 text-gray-700'
-                }, 'Pattern Lines'),
-                player.pattern_lines.map((line, index) => 
-                    React.createElement(PatternLine, {
-                        key: index,
-                        tiles: line,
-                        rowIndex: index,
-                        maxTiles: index + 1,
-                        onTileClick: onPatternLineClick,
-                        onDrop: onPatternLineDrop,
-                        selectedTile: selectedTile,
-                        onDestinationClick: onDestinationClick,
-                        editMode: editMode,
-                        onElementSelect: onElementSelect,
-                        playerIndex: playerIndex,
-                        selectedElements: selectedElements
-                    })
-                )
-            ),
-            React.createElement('div', {
-                className: 'wall-section'
-            },
-                React.createElement('h4', {
-                    className: 'text-sm font-medium mb-2 text-gray-700'
-                }, 'Wall'),
-                React.createElement(Wall, {
-                    wall: player.wall,
-                    onWallClick: onWallClick,
-                    onDrop: onWallDrop,
-                    selectedTile: selectedTile,
-                    onDestinationClick: onDestinationClick,
-                    editMode: editMode,
-                    onElementSelect: onElementSelect,
-                    playerIndex: playerIndex,
-                    selectedElements: selectedElements
-                })
-            )
-        ),
-        React.createElement('div', {
-            className: 'floor-line mt-3'
-        },
-            React.createElement('h4', {
-                className: 'text-sm font-medium mb-2 text-gray-700'
-            }, 'Floor Line'),
-            React.createElement('div', {
-                className: 'flex flex-wrap gap-1'
-            },
-                (player.floor || []).map((tile, index) => 
-                    React.createElement(Tile, {
-                        key: index,
-                        color: tile,
-                        className: 'w-5 h-5'
-                    })
-                ),
-                Array.from({ length: 7 - (player.floor || []).length }, (_, index) => 
-                    React.createElement('div', {
-                        key: `empty-floor-${index}`,
-                        className: 'w-5 h-5 border border-gray-300 rounded',
-                        onContextMenu: (e) => {
-                            e.preventDefault();
-                            if (editMode && window.showContextMenu) {
-                                window.showContextMenu(e, 'floor', { playerIndex, floorIndex: index });
-                            }
-                        }
-                    })
-                )
-            )
-        )
-    );
-}
+// PlayerBoard Component - Extracted to separate file
 
-// StatusMessage Component
-function StatusMessage({ type, message }) {
-    const typeClasses = {
-        success: 'status-success',
-        error: 'status-error',
-        warning: 'status-warning'
-    };
-    
-    return React.createElement('div', {
-        className: `text-center p-3 rounded-lg ${typeClasses[type] || 'text-gray-600'}`
-    }, message);
-}
+// StatusMessage Component - Extracted to separate file
 
-// MoveOption Component
-function MoveOption({ move, score, visits, onClick, isSelected }) {
-    return React.createElement('div', {
-        className: `move-option ${isSelected ? 'selected' : ''}`,
-        onClick: onClick
-    },
-        React.createElement('div', {
-            className: 'flex justify-between items-center'
-        },
-            React.createElement('span', {
-                className: 'font-medium'
-            }, move),
-            React.createElement('span', {
-                className: 'text-sm'
-            }, score?.toFixed(2) || 'N/A')
-        ),
-        visits && React.createElement('div', {
-            className: 'text-xs text-gray-500'
-        }, `Visits: ${visits}`)
-    );
-}
+// MoveOption Component - Extracted to separate file
 
-// ContextMenu Component
-function ContextMenu({ visible, x, y, options, onAction, onClose }) {
-    if (!visible) return null;
-    
-    return React.createElement('div', {
-        className: 'context-menu',
-        style: { 
-            left: x, 
-            top: y,
-            position: 'fixed'
-        },
-        onClick: (e) => e.stopPropagation()
-    },
-        options.map((option, index) => 
-            React.createElement('div', {
-                key: index,
-                className: 'context-menu-item',
-                onClick: () => onAction(option)
-            }, option)
-        )
-    );
-}
+// ContextMenu Component - Extracted to separate file
 
 // AdvancedAnalysisControls Component - Extracted to separate file
 

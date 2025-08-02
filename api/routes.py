@@ -1944,98 +1944,110 @@ def get_monitoring_data():
 def execute_move():
     """Execute a move and return new game state."""
     try:
+        print("DEBUG: execute_move endpoint called")
+        
         try:
             data = request.get_json(force=True)
-        except Exception:
+            print(f"DEBUG: Raw data received: {data}")
+        except Exception as e:
+            print(f"DEBUG: Error parsing JSON: {e}")
             data = None
         
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
-        request_model = MoveExecutionRequest(**data)
         
-        print(f"DEBUG: Received move data: {data}")
+        print("DEBUG: About to create MoveExecutionRequest")
+        request_model = MoveExecutionRequest(**data)
+        print(f"DEBUG: Request model created: {request_model}")
         
         # Parse current state
         try:
+            print("DEBUG: About to parse FEN string")
             state = parse_fen_string(request_model.fen_string)
+            print(f"DEBUG: FEN parsed successfully - agent count: {len(state.agents)}, factories: {len(state.factories)}")
         except ValueError as e:
+            print(f"DEBUG: FEN parsing error: {e}")
             return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
-        
-        print(f"DEBUG: Parsed state - agent count: {len(state.agents)}, factories: {len(state.factories)}")
-        
-        # Debug: Print actual factory contents
-        for i, factory in enumerate(state.factories):
-            tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
-            factory_tiles = []
-            for tile_type, count in factory.tiles.items():
-                for _ in range(count):
-                    factory_tiles.append(tile_colors.get(tile_type, f'T{tile_type}'))
-            print(f"DEBUG: API Factory {i}: {factory_tiles}")
+        except Exception as e:
+            print(f"DEBUG: Unexpected error parsing FEN: {e}")
+            return jsonify({'error': f'Error parsing game state: {str(e)}'}), 500
         
         # Convert frontend move format to engine move format
-        move_data = request_model.move
-        engine_move = convert_frontend_move_to_engine(move_data)
-        print(f"DEBUG: Converted engine move: {engine_move}")
+        try:
+            print("DEBUG: About to convert frontend move")
+            move_data = request_model.move
+            engine_move = convert_frontend_move_to_engine(move_data)
+            print(f"DEBUG: Converted engine move: {engine_move}")
+        except Exception as e:
+            print(f"DEBUG: Error converting move: {e}")
+            return jsonify({'error': f'Error converting move: {str(e)}'}), 500
         
-        # Validate and execute move
-        from core.azul_move_generator import FastMoveGenerator
-        generator = FastMoveGenerator()
-        legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
-        print(f"DEBUG: Generated {len(legal_moves)} legal moves")
-        
-        # Debug: Show first few legal moves with same source and tile type
-        relevant_moves = [m for m in legal_moves if m.action_type == engine_move['action_type'] and m.source_id == engine_move['source_id'] and m.tile_type == engine_move['tile_type']]
-        print(f"DEBUG: Found {len(relevant_moves)} moves with same action_type, source_id, and tile_type")
-        for i, move in enumerate(relevant_moves[:3]):
-            print(f"DEBUG: Relevant move {i}: pattern_dest={move.pattern_line_dest}, num_pattern={move.num_to_pattern_line}, num_floor={move.num_to_floor_line}")
+        # Generate legal moves
+        try:
+            print("DEBUG: About to generate legal moves")
+            from core.azul_move_generator import FastMoveGenerator
+            generator = FastMoveGenerator()
+            legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
+            print(f"DEBUG: Generated {len(legal_moves)} legal moves")
+        except Exception as e:
+            print(f"DEBUG: Error generating moves: {e}")
+            return jsonify({'error': f'Error generating legal moves: {str(e)}'}), 500
         
         # Find matching move
-        matching_move = find_matching_move(engine_move, legal_moves)
-        print(f"DEBUG: Matching move found: {matching_move}")
-        if not matching_move:
-            print(f"DEBUG: No matching move found. Engine move: {engine_move}")
-            print(f"DEBUG: First few legal moves: {legal_moves[:3] if legal_moves else 'No legal moves'}")
-            return jsonify({'error': 'Illegal move'}), 400
+        try:
+            print("DEBUG: About to find matching move")
+            matching_move = find_matching_move(engine_move, legal_moves)
+            print(f"DEBUG: Matching move found: {matching_move}")
+            if not matching_move:
+                print(f"DEBUG: No matching move found. Engine move: {engine_move}")
+                return jsonify({'error': 'Illegal move'}), 400
+        except Exception as e:
+            print(f"DEBUG: Error finding matching move: {e}")
+            return jsonify({'error': f'Error validating move: {str(e)}'}), 500
         
         # Apply move using game rule
-        from core.azul_utils import Action, TileGrab
+        try:
+            print("DEBUG: About to apply move")
+            from core.azul_utils import Action, TileGrab
+            
+            # Convert FastMove to action format expected by generateSuccessor
+            tg = TileGrab()
+            tg.tile_type = matching_move.tile_type
+            tg.number = matching_move.num_to_pattern_line + matching_move.num_to_floor_line
+            tg.pattern_line_dest = matching_move.pattern_line_dest
+            tg.num_to_pattern_line = matching_move.num_to_pattern_line
+            tg.num_to_floor_line = matching_move.num_to_floor_line
+            
+            if matching_move.action_type == 1:  # Factory move
+                action = (Action.TAKE_FROM_FACTORY, matching_move.source_id, tg)
+            else:  # Center move
+                action = (Action.TAKE_FROM_CENTRE, -1, tg)
+            
+            # Apply the move using game rule
+            from core.azul_model import AzulGameRule
+            game_rule = AzulGameRule(len(state.agents))
+            new_state = game_rule.generateSuccessor(state, action, request_model.agent_id)
+            print("DEBUG: Move applied successfully")
+            
+            # Update the current game state
+            update_current_game_state(new_state)
+            
+            # Convert back to FEN
+            new_fen = state_to_fen(new_state)
+            print(f"DEBUG: New FEN: {new_fen}")
+            
+        except Exception as e:
+            print(f"DEBUG: Error applying move: {e}")
+            return jsonify({'error': f'Error applying move: {str(e)}'}), 500
         
-        # Convert FastMove to action format expected by generateSuccessor
-        tg = TileGrab()
-        tg.tile_type = matching_move.tile_type
-        tg.number = matching_move.num_to_pattern_line + matching_move.num_to_floor_line
-        tg.pattern_line_dest = matching_move.pattern_line_dest
-        tg.num_to_pattern_line = matching_move.num_to_pattern_line
-        tg.num_to_floor_line = matching_move.num_to_floor_line
-        
-        if matching_move.action_type == 1:  # Factory move
-            action = (Action.TAKE_FROM_FACTORY, matching_move.source_id, tg)
-        else:  # Center move
-            action = (Action.TAKE_FROM_CENTRE, -1, tg)
-        
-        # Apply the move using game rule
-        from core.azul_model import AzulGameRule
-        game_rule = AzulGameRule(len(state.agents))
-        new_state = game_rule.generateSuccessor(state, action, request_model.agent_id)
-        
-        # Update the current game state
-        update_current_game_state(new_state)
-        
-        # Convert back to FEN
-        new_fen = state_to_fen(new_state)
-        
-        # Get engine response if game continues
-        engine_response = None
-        if not new_state.is_game_over():
-            engine_response = get_engine_response(new_state, request_model.agent_id)
-        
+        # Return the actual response
         return jsonify({
             'success': True,
             'new_fen': new_fen,
             'move_executed': format_move(matching_move),
             'game_over': new_state.is_game_over(),
             'scores': [agent.score for agent in new_state.agents],
-            'engine_response': engine_response
+            'engine_response': None  # Temporarily disabled
         })
         
     except ValidationError as e:
