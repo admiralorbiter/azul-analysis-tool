@@ -15,7 +15,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const [selectedTags, setSelectedTags] = useState([]);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [customPositions, setCustomPositions] = useState([]);
-        const [modulesLoaded, setModulesLoaded] = useState(false);
+    const [modulesLoaded, setModulesLoaded] = useState(false);
+    const [previewPosition, setPreviewPosition] = useState(null);
     
     // Check if modules are loaded
     React.useEffect(() => {
@@ -413,7 +414,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
                         }, 'Load Position'),
                         React.createElement('button', {
                             className: 'btn-secondary',
-                            onClick: () => {/* TODO: Preview position */}
+                            onClick: () => setPreviewPosition(position)
                         }, 'Preview')
                     )
                 )
@@ -426,7 +427,14 @@ const PositionLibrary = React.memo(function PositionLibrary({
         },
             React.createElement('h3', null, 'No positions found'),
             React.createElement('p', null, 'Try adjusting your search or filters')
-        )
+        ),
+        
+        // Position Preview Modal
+        previewPosition && React.createElement(PositionPreview, {
+            position: previewPosition,
+            onClose: () => setPreviewPosition(null),
+            onLoadPosition: loadPosition
+        })
     );
 });
 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Position Preview Test</title>
+    <link rel="stylesheet" href="./styles/main.css">
+    <link rel="stylesheet" href="./styles/position-preview.css">
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Position Preview Test</h1>
+        <p>This page tests the position preview functionality.</p>
+        
+        <button class="test-button" onclick="testPreview()">Test Preview</button>
+        
+        <div id="root"></div>
+    </div>
+    
+    <!-- React and ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Position Preview Component -->
+    <script type="text/babel" src="./components/PositionPreview.js"></script>
+    
+    <script type="text/babel">
+        // Test position data
+        const testPosition = {
+            name: "Test Position",
+            description: "This is a test position for preview functionality",
+            difficulty: "beginner",
+            tags: ["test", "preview", "beginner"],
+            generate: () => ({
+                factories: [
+                    ['B', 'Y', 'R', 'K'],
+                    ['W', 'B', 'Y', 'R'],
+                    ['K', 'W', 'B', 'Y'],
+                    ['R', 'K', 'W', 'B'],
+                    ['Y', 'R', 'K', 'W']
+                ],
+                center: ['B', 'Y', 'R'],
+                players: [
+                    {
+                        pattern_lines: [['B'], ['Y', 'Y'], [], ['R'], []],
+                        wall: [
+                            ['B', null, null, null, null],
+                            [null, 'Y', null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null]
+                        ],
+                        floor_line: ['K'],
+                        score: 5
+                    },
+                    {
+                        pattern_lines: [[], ['R'], ['W'], [], ['K']],
+                        wall: [
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null]
+                        ],
+                        floor_line: [],
+                        score: 0
+                    }
+                ]
+            })
+        };
+        
+        const { createRoot } = ReactDOM;
+        
+        function TestApp() {
+            const [showPreview, setShowPreview] = React.useState(false);
+            
+            const handleLoadPosition = (position) => {
+                console.log('Loading position:', position.name);
+                alert(`Loading position: ${position.name}`);
+            };
+            
+            return React.createElement('div', null,
+                showPreview && React.createElement(PositionPreview, {
+                    position: testPosition,
+                    onClose: () => setShowPreview(false),
+                    onLoadPosition: handleLoadPosition
+                })
+            );
+        }
+        
+        // Render the test app
+        const root = createRoot(document.getElementById('root'));
+        root.render(React.createElement(TestApp));
+        
+        // Global function for testing
+        window.testPreview = () => {
+            const testApp = document.querySelector('#root')._reactInternalFiber;
+            if (testApp && testApp.child && testApp.child.stateNode) {
+                testApp.child.stateNode.setState({ showPreview: true });
+            }
+        };
+    </script>
+</body>
+</html> 
