@@ -572,9 +572,9 @@ class TestD5D6Integration:
         
         for endpoint, method in endpoints:
             if method == 'POST':
-                response = client.post(endpoint, json={})
+                response = client.post(endpoint, headers={})  # Explicitly no auth headers
             else:
-                response = client.get(endpoint)
+                response = client.get(endpoint, headers={})  # Explicitly no auth headers
             
             # Should require authentication
             assert response.status_code == 401

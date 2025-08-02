@@ -100,8 +100,13 @@ def create_app(config=None):
             
             return response
         else:
-            # Fall back to index.html for SPA routing
-            return send_from_directory(ui_dir, 'index.html')
+            # Only fall back to index.html for known UI routes (not API routes)
+            if not filename.startswith('api/'):
+                return send_from_directory(ui_dir, 'index.html')
+            else:
+                # Let Flask handle 404 for API routes
+                from werkzeug.exceptions import NotFound
+                raise NotFound()
     
     # API info endpoint
     @app.route('/api')

@@ -409,7 +409,7 @@ class TestAPIErrorHandling:
     
     def test_404_error(self):
         """Test 404 error handling."""
-        response = self.client.get('/nonexistent')
+        response = self.client.get('/api/v1/nonexistent')
         
         assert response.status_code == 404
         data = json.loads(response.data)

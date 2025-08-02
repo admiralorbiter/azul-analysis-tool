@@ -1332,13 +1332,13 @@ def analyze_position():
     }
     """
     try:
-        # Skip rate limiting for local development
-        # session_id = request.headers.get('X-Session-ID')
-        # if current_app.rate_limiter and not current_app.rate_limiter.check_rate_limit(session_id, "heavy"):
-        #     return jsonify({
-        #         'error': 'Rate limit exceeded',
-        #         'message': 'Too many heavy analysis requests'
-        #     }), 429
+        # Check rate limiting
+        session_id = request.headers.get('X-Session-ID')
+        if current_app.rate_limiter and not current_app.rate_limiter.check_rate_limit(session_id, "heavy"):
+            return jsonify({
+                'error': 'Rate limit exceeded',
+                'message': 'Too many heavy analysis requests'
+            }), 429
         
         # Parse request
         data = request.get_json()
@@ -2403,6 +2403,7 @@ def reset_game():
 
 
 @api_bp.route('/analyze_game', methods=['POST'])
+@require_session
 def analyze_game():
     """Analyze a complete game for blunders and insights."""
     try:
@@ -2492,7 +2493,7 @@ def analyze_game():
 def upload_game_log():
     """Upload and parse a game log file."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({'success': False, 'error': 'No request data provided'}), 400
         
@@ -2543,6 +2544,7 @@ def upload_game_log():
     except ValidationError as e:
         return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
     except Exception as e:
+        print(f"DEBUG: Exception in upload_game_log: {e}")
         return jsonify({'success': False, 'error': f'Failed to upload game log: {str(e)}'}), 500
 
 
@@ -2670,6 +2672,7 @@ def find_similar_positions():
     except ValidationError as e:
         return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
     except Exception as e:
+        print(f"DEBUG: Exception in find_similar_positions: {e}")
         return jsonify({'success': False, 'error': f'Failed to find similar positions: {str(e)}'}), 500
 
 
@@ -2713,6 +2716,7 @@ def get_popular_continuations():
     except ValidationError as e:
         return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
     except Exception as e:
+        print(f"DEBUG: Exception in get_popular_continuations: {e}")
         return jsonify({'success': False, 'error': f'Failed to get continuations: {str(e)}'}), 500
 
 
@@ -2746,6 +2750,7 @@ def add_position_to_database():
     except ValidationError as e:
         return jsonify({'success': False, 'error': f'Invalid request: {str(e)}'}), 400
     except Exception as e:
+        print(f"DEBUG: Exception in add_position_to_database: {e}")
         return jsonify({'success': False, 'error': f'Failed to add position: {str(e)}'}), 500
 
 
