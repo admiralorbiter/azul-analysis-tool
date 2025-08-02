@@ -4,7 +4,7 @@
 const { createRoot } = ReactDOM;
 
 // Import utility functions (these will be defined inline)
-const API_BASE = '/api/v1';
+// Use shared API constants - no need to redeclare since we're importing from modules
 let sessionId = null;
 
 // Simple Router Component
@@ -1728,438 +1728,64 @@ function NeuralTrainingPage({
 }
 
 // API functions - No session required for local development
-async function initializeSession() {
-    // Skip session initialization for local development
-    console.log('Session initialization skipped for local development');
-    return { session_id: 'local-dev' };
-}
+// Import game API functions from external module
+const {
+    initializeSession,
+    analyzePosition,
+    getHint,
+    analyzeNeural,
+    analyzeGame
+} = window.gameAPI || {};
 
-async function analyzePosition(fenString, depth = 3, timeBudget = 4.0, agentId = 0) {
-    try {
-        const response = await fetch(`${API_BASE}/analyze`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                fen_string: fenString,
-                depth: depth,
-                time_budget: timeBudget,
-                agent_id: agentId
-            })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to analyze position:', error);
-        throw error;
-    }
-}
+// Import neural API functions from external module
+const {
+    startNeuralTraining,
+    getNeuralTrainingStatus,
+    getNeuralTrainingProgress,
+    getNeuralTrainingLogs,
+    getAllTrainingSessions,
+    deleteTrainingSession,
+    stopNeuralTraining,
+    evaluateNeuralModel,
+    getEvaluationStatus,
+    getAllEvaluationSessions,
+    deleteEvaluationSession,
+    getAvailableModels
+} = window.neuralAPI || {};
 
-async function getHint(fenString, budget = 0.2, rollouts = 100, agentId = 0) {
-    try {
-        const response = await fetch(`${API_BASE}/hint`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                fen_string: fenString,
-                budget: budget,
-                rollouts: rollouts,
-                agent_id: agentId
-            })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get hint:', error);
-        throw error;
-    }
-}
+// Import additional neural API functions
+const {
+    getNeuralConfig,
+    saveNeuralConfig
+} = window.neuralAPI || {};
 
-async function analyzeNeural(fenString, timeBudget = 2.0, maxRollouts = 100, agentId = 0) {
-    try {
-        const response = await fetch(`${API_BASE}/analyze_neural`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                fen: fenString,
-                time_budget: timeBudget,
-                max_rollouts: maxRollouts,
-                agent_id: agentId
-            })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to analyze with neural network:', error);
-        throw error;
-    }
-}
+// Import additional game API functions
+const {
+    getGameState,
+    saveGameState
+} = window.gameAPI || {};
 
-async function analyzeGame(gameData, analysisDepth = 3) {
-    try {
-        const response = await fetch(`${API_BASE}/analyze_game`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                game_data: gameData,
-                analysis_depth: analysisDepth
-            })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to analyze game:', error);
-        throw error;
-    }
-}
+// Import additional neural API functions
+const {
+    getTrainingHistory,
+    getNeuralConfigurations,
+    saveNeuralConfiguration,
+    updateNeuralConfiguration,
+    deleteNeuralConfiguration
+} = window.neuralAPI || {};
 
-// Neural Training API Functions
-async function startNeuralTraining(config) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/train`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to start neural training:', error);
-        throw error;
-    }
-}
+// Import utility functions from modules
+const {
+    generateHeatmapData,
+    getHeatmapColor
+} = window.heatmapUtils || {};
 
-async function getNeuralTrainingStatus(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/status/${sessionId}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get training status:', error);
-        throw error;
-    }
-}
-
-async function getNeuralTrainingProgress(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/progress/${sessionId}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get training progress:', error);
-        throw error;
-    }
-}
-
-async function getNeuralTrainingLogs(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/logs/${sessionId}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get training logs:', error);
-        throw error;
-    }
-}
-
-async function getAllTrainingSessions() {
-    try {
-        const response = await fetch(`${API_BASE}/neural/sessions`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get training sessions:', error);
-        throw error;
-    }
-}
-
-async function deleteTrainingSession(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/sessions/${sessionId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to delete training session:', error);
-        throw error;
-    }
-}
-
-async function stopNeuralTraining(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/stop/${sessionId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to stop training:', error);
-        throw error;
-    }
-}
-
-async function evaluateNeuralModel(config) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/evaluate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-        const result = await response.json();
-        
-        // If evaluation started in background, return session info
-        if (result.success && result.session_id) {
-            return {
-                ...result,
-                background: true
-            };
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('Failed to evaluate model:', error);
-        throw error;
-    }
-}
-
-async function getEvaluationStatus(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/evaluate/status/${sessionId}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get evaluation status:', error);
-        throw error;
-    }
-}
-
-async function getAllEvaluationSessions() {
-    try {
-        const response = await fetch(`${API_BASE}/neural/evaluation-sessions`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get evaluation sessions:', error);
-        throw error;
-    }
-}
-
-async function deleteEvaluationSession(sessionId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/evaluation-sessions/${sessionId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to delete evaluation session:', error);
-        throw error;
-    }
-}
-
-async function getAvailableModels() {
-    try {
-        const response = await fetch(`${API_BASE}/neural/models`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get available models:', error);
-        throw error;
-    }
-}
-
-async function getNeuralConfig() {
-    try {
-        const response = await fetch(`${API_BASE}/neural/config`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get neural config:', error);
-        throw error;
-    }
-}
-
-async function saveNeuralConfig(config) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/config`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to save neural config:', error);
-        throw error;
-    }
-}
-
-async function getGameState(fenString = 'initial') {
-    try {
-        const response = await fetch(`${API_BASE}/game_state?fen_string=${fenString}`);
-        const data = await response.json();
-        // Return the nested game_state property
-        return data.game_state || data;
-    } catch (error) {
-        console.error('Failed to get game state:', error);
-        throw error;
-    }
-}
-
-async function saveGameState(gameState, fenString = 'initial') {
-    try {
-        const response = await fetch(`${API_BASE}/game_state`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                fen_string: fenString,
-                game_state: gameState
-            })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to save game state:', error);
-        throw error;
-    }
-}
-
-// Training History API Functions
-async function getTrainingHistory(filters = {}) {
-    try {
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                params.append(key, value);
-            }
-        });
-        
-        const response = await fetch(`${API_BASE}/neural/history?${params.toString()}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get training history:', error);
-        throw error;
-    }
-}
-
-async function getNeuralConfigurations(filters = {}) {
-    try {
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                params.append(key, value);
-            }
-        });
-        
-        const response = await fetch(`${API_BASE}/neural/configurations?${params.toString()}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to get neural configurations:', error);
-        throw error;
-    }
-}
-
-async function saveNeuralConfiguration(config) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/configurations`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to save neural configuration:', error);
-        throw error;
-    }
-}
-
-async function updateNeuralConfiguration(configId, config) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/configurations/${configId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to update neural configuration:', error);
-        throw error;
-    }
-}
-
-async function deleteNeuralConfiguration(configId) {
-    try {
-        const response = await fetch(`${API_BASE}/neural/configurations/${configId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to delete neural configuration:', error);
-        throw error;
-    }
-}
-
-// Generate heatmap data from analysis
-function generateHeatmapData(analysisData) {
-    if (!analysisData || !analysisData.variations) return null;
-    
-    const heatmap = {};
-    const bestScore = analysisData.variations[0]?.score || 0;
-    
-    analysisData.variations.forEach(variation => {
-        const scoreDelta = variation.score - bestScore;
-        const normalizedScore = Math.max(-1, Math.min(1, scoreDelta / 10)); // Normalize to -1 to 1
-        
-        // Extract move information for heatmap positioning
-        if (variation.move_data) {
-            const key = `${variation.move_data.source_id}_${variation.move_data.tile_type}`;
-            heatmap[key] = {
-                score: variation.score,
-                delta: scoreDelta,
-                normalized: normalizedScore,
-                color: getHeatmapColor(normalizedScore)
-            };
-        }
-    });
-    
-    return heatmap;
-}
-
-// Get heatmap color based on score delta
-function getHeatmapColor(normalizedScore) {
-    // Red for bad moves (negative), green for good moves (positive)
-    const intensity = Math.abs(normalizedScore);
-    if (normalizedScore < 0) {
-        return `rgba(239, 68, 68, ${intensity})`; // Red with alpha
-    } else {
-        return `rgba(34, 197, 94, ${intensity})`; // Green with alpha
-    }
-}
-
-// Helper functions
-const TILE_COLORS = {
-    'R': '#ef4444', 'Y': '#eab308', 'B': '#3b82f6', 
-    'W': '#f8fafc', 'K': '#8b5cf6'
-};
-
-function getTileColor(tile) {
-    return TILE_COLORS[tile] || '#6b7280';
-}
-
-function formatMoveDescription(move) {
-    if (!move) return 'No move available';
-    return `Move: ${move.source_id} → ${move.pattern_line_dest} (${move.tile_type})`;
-}
-
-function formatSelectedElement(element) {
-    if (!element) return 'No element selected';
-    return `${element.type}: ${JSON.stringify(element.data)}`;
-}
-
-function getMenuOptions(elementType, elementData) {
-    const options = [];
-    switch (elementType) {
-        case 'factory':
-            options.push('Clear Factory', 'Add Tiles', 'Remove Tiles');
-            break;
-        case 'pattern-line':
-            options.push('Clear Line', 'Add Tile', 'Remove Tile');
-            break;
-        case 'wall':
-            options.push('Place Tile', 'Remove Tile', 'Clear Wall');
-            break;
-        case 'floor':
-            options.push('Add Penalty', 'Remove Penalty', 'Clear Floor');
-            break;
-    }
-    return options;
-}
+const {
+    getTileColor,
+    formatMoveDescription,
+    formatSelectedElement,
+    getMenuOptions
+} = window.formatUtils || {};
 
 // Tile Component
 function Tile({ color, onClick, className = "", draggable = false, onDragStart, onDragEnd, dataAttributes = {}, isSelected = false }) {
@@ -2346,54 +1972,8 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
     );
 }
 
-// Move execution functions
-async function executeMove(fenString, move, agentId = 0) {
-    try {
-        console.log('Sending move to server:', { fen_string: fenString, move: move, agent_id: agentId });
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const response = await fetch(`${API_BASE}/execute_move`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-Session-ID': sessionId 
-            },
-            body: JSON.stringify({
-                fen_string: fenString,
-                move: move,
-                agent_id: agentId
-            }),
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server error response:', response.status, errorText);
-            throw new Error(`Server error: ${response.status} - ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Server response:', result);
-        return result;
-    } catch (error) {
-        console.error('Failed to execute move:', error);
-        
-        // Handle different types of errors
-        if (error.name === 'AbortError') {
-            throw new Error('Request timed out. Server may be overloaded.');
-        }
-        
-        if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_RESET')) {
-            throw new Error('Server connection lost. Please refresh the page and try again.');
-        }
-        
-        throw error;
-    }
-}
+// Import executeMove function from game API
+const { executeMove } = window.gameAPI || {};
 
 // PatternLine Component
 function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
@@ -2915,7 +2495,7 @@ function ConfigurationPanel({
     const testDatabaseConnection = React.useCallback(async () => {
         setConfigLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/health`);
+            const response = await fetch(`${window.API_CONSTANTS?.API_BASE || '/api/v1'}/health`);
             const data = await response.json();
             if (data.success) {
                 setStatusMessage('Database connection successful');

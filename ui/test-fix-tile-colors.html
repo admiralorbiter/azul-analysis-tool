@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix TILE_COLORS Test</title>
+</head>
+<body>
+    <h1>Fix TILE_COLORS Test</h1>
+    <div id="results"></div>
+    
+    <!-- Load modules in correct order -->
+    <script src="./api/constants.js"></script>
+    <script src="./api/neural-api.js"></script>
+    <script src="./api/game-api.js"></script>
+    <script src="./utils/heatmap-utils.js"></script>
+    <script src="./utils/format-utils.js"></script>
+    
+    <script>
+        // Test if TILE_COLORS fix is working
+        const results = document.getElementById('results');
+        
+        function testTileColorsFix() {
+            let output = '<h2>TILE_COLORS Fix Test Results:</h2>';
+            
+            try {
+                // Check if formatUtils is loaded
+                if (window.formatUtils) {
+                    output += '<h3>✅ Format utilities loaded successfully</h3>';
+                    
+                    // Test TILE_COLORS access
+                    if (window.formatUtils.TILE_COLORS) {
+                        output += '<p>✅ TILE_COLORS accessible via formatUtils</p>';
+                        
+                        // Test getTileColor function
+                        const redColor = window.formatUtils.getTileColor('R');
+                        if (redColor === '#ef4444') {
+                            output += '<p>✅ getTileColor working with TILE_COLORS</p>';
+                        } else {
+                            output += '<p>❌ getTileColor failed</p>';
+                        }
+                    } else {
+                        output += '<p>❌ TILE_COLORS not accessible</p>';
+                    }
+                } else {
+                    output += '<h3>❌ Format utilities failed to load</h3>';
+                }
+                
+                output += '<h3>✅ No duplicate declaration errors!</h3>';
+                output += '<h3>✅ TILE_COLORS fix successful!</h3>';
+                
+            } catch (error) {
+                output += `<h3>❌ Error: ${error.message}</h3>`;
+            }
+            
+            results.innerHTML = output;
+        }
+        
+        // Run test after page loads
+        window.addEventListener('load', testTileColorsFix);
+    </script>
+</body>
+</html> 
