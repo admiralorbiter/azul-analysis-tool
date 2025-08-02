@@ -14,6 +14,8 @@ console.log('Component loading status:', {
 
 // Import components from extracted modules with fallbacks
 const {
+    ValidationFeedback,
+    BoardEditor,
     AdvancedAnalysisControls,
     ConfigurationPanel,
     DevelopmentToolsPanel,
@@ -32,6 +34,8 @@ const {
     Wall,
     PlayerBoard
 } = {
+    ValidationFeedback: window.ValidationFeedback || (() => React.createElement('div', null, 'ValidationFeedback not loaded')),
+    BoardEditor: window.BoardEditor || (() => React.createElement('div', null, 'BoardEditor not loaded')),
     AdvancedAnalysisControls: window.AdvancedAnalysisControls || (() => React.createElement('div', null, 'AdvancedAnalysisControls not loaded')),
     ConfigurationPanel: window.ConfigurationPanel || (() => React.createElement('div', null, 'ConfigurationPanel not loaded')),
     DevelopmentToolsPanel: window.DevelopmentToolsPanel || (() => React.createElement('div', null, 'DevelopmentToolsPanel not loaded')),

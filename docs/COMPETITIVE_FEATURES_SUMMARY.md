@@ -7,20 +7,29 @@
 ### **Phase 1: Position Analysis & Setup Tools** (Weeks 1-3) ⭐ CRITICAL
 
 #### **R1.1: Advanced Board State Editor**
+- [ ] **Rule Validation Engine** ⚠️ CRITICAL
+  - [ ] **Pattern Line Validation**: Single color per line, correct capacity (1,2,3,4,5)
+  - [ ] **Wall Validation**: Fixed color patterns, no row/column duplicates
+  - [ ] **Tile Conservation**: Track all 100 tiles across game areas
+  - [ ] **Floor Line Validation**: Max 7 tiles, correct negative points
+  - [ ] **Real-time Validation**: Block illegal moves immediately
 - [ ] **Complete Board Editor**
-  - [ ] Factory content editing (add/remove tiles by color)
-  - [ ] Center pool manipulation 
-  - [ ] Player board states (pattern lines, wall, floor)
-  - [ ] Score and turn order adjustments
+  - [ ] Factory content editing with tile count validation
+  - [ ] Center pool manipulation with conservation checks
+  - [ ] Pattern line editing with color/capacity constraints
+  - [ ] Wall state editing with pattern enforcement
+  - [ ] Floor line editing with capacity limits
+  - [ ] Score adjustments with consistency validation
 - [ ] **Position Templates**
-  - [ ] Opening position presets
-  - [ ] Mid-game scenario templates
-  - [ ] Endgame position setups
-  - [ ] Tactical puzzle templates
-- [ ] **Position Validation**
-  - [ ] Tile count verification (100 total)
-  - [ ] Legal position checking
-  - [ ] Score consistency validation
+  - [ ] Validated opening position presets
+  - [ ] Rule-compliant mid-game scenarios
+  - [ ] Legal endgame position setups
+  - [ ] Verified tactical puzzle templates
+- [ ] **Visual Validation Feedback**
+  - [ ] Red highlights for rule violations
+  - [ ] Green indicators for valid placements
+  - [ ] Tooltip explanations for blocked moves
+  - [ ] Suggested corrections for invalid states
 
 **Priority: HIGHEST** - Essential for any competitive analysis
 
@@ -187,6 +196,7 @@ Complete all phases for advanced research capabilities
 #### **New Core Components**
 ```
 core/
+├── azul_rule_validator.py    # ⚠️ CRITICAL: Comprehensive rule validation
 ├── azul_patterns.py          # Pattern recognition engine
 ├── azul_move_analyzer.py     # Move quality assessment  
 ├── azul_game_analyzer.py     # Complete game analysis
@@ -197,7 +207,8 @@ core/
 #### **New UI Components**
 ```
 ui/components/
-├── BoardEditor.js            # Advanced position editor
+├── BoardEditor.js            # Advanced position editor with validation
+├── ValidationFeedback.js     # ⚠️ CRITICAL: Rule violation indicators
 ├── PositionLibrary.js        # Position management
 ├── PatternAnalysis.js        # Pattern visualization
 ├── MoveAnalysis.js           # Move quality display
@@ -263,9 +274,14 @@ git checkout -b feature/position-library
 
 ### **2. Start with MVP Features**
 Begin implementation in this order:
-1. **Board State Editor** (R1.1) - Foundation for all position work
-2. **Position Library** (R1.2) - Organization system
-3. **Move Quality Assessment** (R2.2) - Learning enhancement
+1. **Rule Validation Engine** - MUST BE FIRST! Foundation for all editing
+   - Implement `core/azul_rule_validator.py` with comprehensive Azul rules
+   - Test thoroughly with edge cases and illegal positions
+2. **Board State Editor** (R1.1) - Build editor with integrated validation
+   - Real-time rule checking prevents illegal positions
+   - Visual feedback guides users to valid moves
+3. **Position Library** (R1.2) - Organization system with validation
+4. **Move Quality Assessment** (R2.2) - Learning enhancement
 
 ### **3. User Testing Strategy**
 - **Alpha Testing**: Internal testing with existing UI
@@ -276,6 +292,85 @@ Begin implementation in this order:
 - Update API documentation for new endpoints
 - Create user guides for competitive features  
 - Maintain this implementation checklist
+
+---
+
+## 🔧 **R1.1 Implementation Starter Guide**
+
+### **Step 1: Rule Validation Engine Foundation**
+
+#### **Core Azul Rules to Implement**
+```python
+# core/azul_rule_validator.py - Critical foundation file
+
+class AzulRuleValidator:
+    def validate_pattern_line_edit(self, player_board, line_index, color, tile_count):
+        """Validate pattern line tile placement"""
+        # Rule 1: Single color per pattern line
+        if self.has_different_color_tiles(player_board.pattern_lines[line_index], color):
+            return ValidationResult(False, "Pattern lines can only contain one color")
+        
+        # Rule 2: Correct capacity (line 0=1, line 1=2, etc.)
+        max_capacity = line_index + 1
+        if tile_count > max_capacity:
+            return ValidationResult(False, f"Pattern line {line_index} can only hold {max_capacity} tiles")
+        
+        # Rule 3: Can't place if color already on wall
+        if self.color_already_on_wall_row(player_board.wall, line_index, color):
+            return ValidationResult(False, f"Color {color} already completed on wall row {line_index}")
+        
+        return ValidationResult(True, "Valid placement")
+    
+    def validate_tile_conservation(self, game_state):
+        """Ensure total tiles = 100 (20 of each color)"""
+        tile_counts = self.count_all_tiles(game_state)
+        for color in COLORS:
+            if tile_counts[color] != 20:
+                return ValidationResult(False, f"Invalid tile count for {color}: {tile_counts[color]}/20")
+        return ValidationResult(True, "Tile conservation valid")
+```
+
+#### **Visual Validation Feedback**
+```javascript
+// ui/components/ValidationFeedback.js
+
+function ValidationFeedback({ validationResult, targetElement }) {
+    if (!validationResult.isValid) {
+        return (
+            <div className="validation-error">
+                <span className="error-icon">⚠️</span>
+                <span className="error-message">{validationResult.message}</span>
+                {validationResult.suggestion && (
+                    <div className="error-suggestion">
+                        💡 {validationResult.suggestion}
+                    </div>
+                )}
+            </div>
+        );
+    }
+    return <div className="validation-success">✅ Valid placement</div>;
+}
+```
+
+### **Step 2: Integration Points**
+- **Extend existing**: `core/azul_validator.py` (has basic validation)  
+- **Connect to**: `ui/main.js` edit mode (already has foundation)
+- **Database**: Validate before saving positions
+- **API**: Server-side validation for position endpoints
+
+### **Step 3: Testing Strategy**
+```python
+# tests/test_rule_validator.py
+def test_pattern_line_single_color():
+    """Test critical rule: single color per pattern line"""
+    validator = AzulRuleValidator()
+    board = create_test_board_with_blue_tiles_in_line_0()
+    
+    # Should fail - trying to add red tiles to line with blue tiles
+    result = validator.validate_pattern_line_edit(board, 0, RED, 1)
+    assert not result.is_valid
+    assert "one color" in result.message.lower()
+```
 
 ---
 

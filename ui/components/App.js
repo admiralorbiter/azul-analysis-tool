@@ -10,6 +10,8 @@ const Navigation = window.Navigation;
 const AdvancedAnalysisControls = window.AdvancedAnalysisControls;
 const ConfigurationPanel = window.ConfigurationPanel;
 const DevelopmentToolsPanel = window.DevelopmentToolsPanel;
+const BoardEditor = window.BoardEditor;
+const ValidationFeedback = window.ValidationFeedback;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -753,6 +755,17 @@ function App() {
                         }, `Moves: ${moveHistory.length}`)
                     )
                 ),
+                
+                // Enhanced Board Editor (R1.1) - appears when edit mode is enabled
+                editMode && BoardEditor && React.createElement(BoardEditor, {
+                    gameState: gameState,
+                    setGameState: setGameState,
+                    editMode: editMode,
+                    selectedElements: selectedElements,
+                    onElementSelect: handleElementSelect,
+                    setStatusMessage: setStatusMessage,
+                    sessionToken: window.sessionStorage?.getItem('sessionToken') || null
+                }),
                 
                 // Main game layout - 3 columns: Sidebar | Game Board | Analysis
                 React.createElement('div', {

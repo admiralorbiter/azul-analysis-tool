@@ -2979,7 +2979,7 @@ def get_popular_continuations_internal(fen_string: str, limit: int) -> List[Dict
                 'move': move_data,
                 'frequency': frequency,
                 'win_rate': win_rate,
-                'description': format_move_description(move_data)
+                'description': str(move_data)
             })
         
         return continuations
@@ -4206,5 +4206,212 @@ def get_neural_models():
     except Exception as e:
         return jsonify({
             'error': 'Failed to get models',
+            'message': str(e)
+        }), 500
+
+
+# ================================
+# Board State Validation Endpoints
+# ================================
+
+class BoardValidationRequest(BaseModel):
+    """Request model for board state validation."""
+    game_state: Dict[str, Any]
+    validation_type: str = "complete"  # "complete", "pattern_line", "wall", "floor"
+    player_id: Optional[int] = None
+    element_id: Optional[str] = None
+
+
+@api_bp.route('/validate-board-state', methods=['POST'])
+@require_session
+def validate_board_state():
+    """
+    Validate a complete board state for rule compliance.
+    
+    This endpoint is used by the board editor (R1.1) to ensure
+    that edited positions follow all Azul rules.
+    """
+    try:
+        # Parse request
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        try:
+            validation_request = BoardValidationRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': 'Invalid request format', 'details': str(e)}), 400
+        
+        # Import the validator
+        from core.azul_rule_validator import BoardStateValidator
+        from core.azul_model import AzulState
+        
+        # Create validator
+        validator = BoardStateValidator()
+        
+        # Convert game state dict to AzulState
+        game_state_dict = validation_request.game_state
+        
+        # Convert game state dict to AzulState using the new from_dict method
+        try:
+            # Create AzulState from the provided game state
+            state = AzulState.from_dict(game_state_dict)
+        except Exception as e:
+            return jsonify({
+                'error': 'Invalid game state format',
+                'message': str(e)
+            }), 400
+        
+        # Perform validation based on type
+        if validation_request.validation_type == "complete":
+            result = validator.validate_complete_board_state(state)
+        elif validation_request.validation_type == "pattern_line":
+            # Extract pattern line specific parameters
+            player_id = validation_request.player_id or 0
+            # Parse element_id like "pattern_line_0_2" -> line_index=2
+            if validation_request.element_id:
+                parts = validation_request.element_id.split('_')
+                line_index = int(parts[-1]) if len(parts) > 2 else 0
+            else:
+                line_index = 0
+            
+            # Get current pattern line state
+            agent = state.agents[player_id]
+            current_color = agent.lines_tile[line_index]
+            tile_count = agent.lines_number[line_index]
+            
+            result = validator.validate_pattern_line_edit(
+                state, player_id, line_index, current_color, tile_count
+            )
+        else:
+            # Default to complete validation
+            result = validator.validate_complete_board_state(state)
+        
+        # Convert result to JSON response
+        response = {
+            'valid': result.is_valid,
+            'errors': result.errors,
+            'warnings': result.warnings,
+            'affected_elements': getattr(result, 'affected_elements', []),
+            'suggestion': getattr(result, 'suggestion', None)
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        current_app.logger.error(f"Board validation error: {str(e)}")
+        return jsonify({
+            'error': 'Validation service error',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/validate-pattern-line-edit', methods=['POST'])
+def validate_pattern_line_edit():
+    """
+    Validate a pattern line edit in real-time (no auth required for UI responsiveness).
+    
+    This provides immediate feedback during board editing.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract parameters
+        current_color = data.get('current_color', -1)
+        new_color = data.get('new_color', -1)
+        current_count = data.get('current_count', 0)
+        new_count = data.get('new_count', 0)
+        line_index = data.get('line_index', 0)
+        
+        # Import validation function
+        from core.azul_rule_validator import validate_pattern_line_edit_simple
+        
+        # Validate
+        result = validate_pattern_line_edit_simple(
+            current_color, new_color, current_count, new_count, line_index + 1
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'valid': False,
+            'error': 'Validation error',
+            'message': str(e)
+        }), 500
+
+
+@api_bp.route('/validate-tile-count', methods=['POST'])
+def validate_tile_count():
+    """
+    Validate tile conservation during editing (no auth required for UI responsiveness).
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract parameters
+        game_state = data.get('game_state', {})
+        changed_color = data.get('changed_color')
+        changed_amount = data.get('changed_amount', 0)
+        
+        if changed_color is None:
+            return jsonify({'valid': True})
+        
+        # Count current tiles of this color (simplified)
+        current_count = 0
+        
+        # Count in factories
+        if 'factories' in game_state:
+            for factory in game_state['factories']:
+                if 'tiles' in factory and str(changed_color) in factory['tiles']:
+                    current_count += factory['tiles'][str(changed_color)]
+        
+        # Count in center pool
+        if 'centre_pool' in game_state and 'tiles' in game_state['centre_pool']:
+            if str(changed_color) in game_state['centre_pool']['tiles']:
+                current_count += game_state['centre_pool']['tiles'][str(changed_color)]
+        
+        # Count in player areas (simplified)
+        if 'agents' in game_state:
+            for agent in game_state['agents']:
+                # Pattern lines
+                for i in range(5):
+                    if agent.get('lines_tile', [None]*5)[i] == changed_color:
+                        current_count += agent.get('lines_number', [0]*5)[i]
+                
+                # Floor tiles
+                floor_tiles = agent.get('floor_tiles', [])
+                current_count += floor_tiles.count(changed_color)
+        
+        # Calculate new count
+        new_count = current_count + changed_amount
+        
+        # Validate
+        if new_count > 20:
+            color_names = ["Blue", "Yellow", "Red", "Black", "White"]
+            color_name = color_names[changed_color] if 0 <= changed_color < 5 else f"Color {changed_color}"
+            
+            return jsonify({
+                'valid': False,
+                'error': f'Too many {color_name} tiles: {new_count}/20',
+                'suggestion': f'Remove {new_count - 20} tiles to maintain game balance'
+            })
+        elif new_count < 0:
+            return jsonify({
+                'valid': False,
+                'error': 'Cannot have negative tile count',
+                'suggestion': f'Add {abs(new_count)} tiles back'
+            })
+        
+        return jsonify({'valid': True})
+        
+    except Exception as e:
+        return jsonify({
+            'valid': False,
+            'error': 'Tile count validation error',
             'message': str(e)
         }), 500

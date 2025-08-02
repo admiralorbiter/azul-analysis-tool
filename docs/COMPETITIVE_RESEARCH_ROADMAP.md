@@ -38,24 +38,59 @@ While the technical foundation is excellent, the project currently lacks special
   - Endgame positions (final round optimization)
   - Tactical puzzles (negative point management)
 
-- **Position Validation**: Ensure edited positions are legal
-  - Tile count verification (100 tiles total)
-  - Wall completion consistency
-  - Score calculation accuracy
+- **Comprehensive Position Validation**: Ensure edited positions follow all Azul rules
+  - **Pattern Line Validation**:
+    - Single color per pattern line (critical rule!)
+    - Correct capacity per line (1,2,3,4,5 tiles)
+    - No color placement if already on wall in that row
+    - Proper tile placement order (left to right)
+  - **Wall Validation**:
+    - Fixed color pattern enforcement
+    - No duplicate colors in rows/columns
+    - Wall completion matches pattern line states
+  - **Tile Conservation**:
+    - Total tiles = 100 (20 of each color)
+    - Track distribution: factories + center + patterns + wall + floor + bag/lid
+    - No tile duplication or loss
+  - **Floor Line Validation**:
+    - Maximum 7 tiles on floor line
+    - Proper negative point calculation (-1,-1,-2,-2,-2,-3,-3)
+  - **Score Consistency**:
+    - Scores match actual board state
+    - Proper bonus calculations (completed rows/columns/colors)
 
 #### Implementation Tasks:
-1. Extend existing edit mode foundation to full board editing
-2. Create modal dialogs for each editable element
-3. Implement position template system with predefined scenarios
-4. Add position validation logic
-5. Integrate with existing database for position saving/loading
-6. Add keyboard shortcuts for power users
+1. **Rule Validation Engine**: Create comprehensive Azul rule validator
+   - Pattern line color/capacity constraints
+   - Wall completion rules and color patterns
+   - Tile conservation mathematics
+   - Floor line and scoring validation
+2. **Real-time Validation**: Prevent illegal moves during editing
+   - Block invalid tile placements immediately
+   - Visual feedback for rule violations
+   - Suggest corrections for invalid states
+3. **Board Editor UI**: Extend existing edit mode foundation
+   - Modal dialogs for each editable element with validation
+   - Visual indicators for valid/invalid placements
+   - Undo/redo with validation checkpoints
+4. **Position Templates**: Implement validated preset system
+   - All templates pass comprehensive rule validation
+   - Template categories with difficulty progression
+5. **Database Integration**: Save/load with validation
+   - Validate positions before database storage
+   - Flag and fix legacy invalid positions
+6. **Power User Features**: Advanced editing tools
+   - Keyboard shortcuts with validation
+   - Batch editing with rule enforcement
 
 **Files to Modify/Create**:
-- `ui/components/BoardEditor.js` (new)
-- `ui/components/PositionTemplates.js` (new)
-- `api/routes.py` (extend position endpoints)
-- `core/azul_validator.py` (add position validation)
+- `core/azul_rule_validator.py` (new) - Comprehensive rule validation engine
+- `ui/components/BoardEditor.js` (new) - Main editing interface with real-time validation
+- `ui/components/ValidationFeedback.js` (new) - Visual rule violation indicators
+- `ui/components/PositionTemplates.js` (new) - Validated position presets
+- `api/routes.py` (extend) - Position endpoints with server-side validation
+- `core/azul_validator.py` (extend) - Add advanced position validation methods
+- `ui/styles/validation.css` (new) - Styling for validation feedback
 
 ---
 

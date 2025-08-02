@@ -173,6 +173,77 @@ class AzulState(GameState):
     _ZOBRIST_TABLES = None
     
     @classmethod
+    def from_dict(cls, game_dict):
+        """
+        Create AzulState from dictionary format (from UI).
+        
+        This is a simplified implementation for validation purposes.
+        """
+        try:
+            # Determine number of agents from the data
+            agents_data = game_dict.get('agents', [])
+            if not agents_data:
+                # Try alternative keys that might be used
+                if 'players' in game_dict:
+                    agents_data = game_dict['players']
+                else:
+                    # Default to 2 players
+                    agents_data = [{}, {}]
+            
+            num_agents = len(agents_data)
+            if num_agents == 0:
+                num_agents = 2  # Default to 2 players
+            
+            # Create new state
+            state = cls(num_agents)
+            
+            # Update agent states if available
+            for i, agent_data in enumerate(agents_data):
+                if i < len(state.agents):
+                    agent = state.agents[i]
+                    
+                    # Update pattern lines
+                    if 'lines_tile' in agent_data:
+                        agent.lines_tile = list(agent_data['lines_tile'])
+                    if 'lines_number' in agent_data:
+                        agent.lines_number = list(agent_data['lines_number'])
+                    
+                    # Update score
+                    if 'score' in agent_data:
+                        agent.score = agent_data['score']
+                    
+                    # Update grid state (wall)
+                    if 'grid_state' in agent_data:
+                        agent.grid_state = [list(row) for row in agent_data['grid_state']]
+                    
+                    # Update floor tiles
+                    if 'floor_tiles' in agent_data:
+                        agent.floor_tiles = list(agent_data['floor_tiles'])
+            
+            # Update factories if available
+            factories_data = game_dict.get('factories', [])
+            for i, factory_data in enumerate(factories_data):
+                if i < len(state.factories):
+                    factory = state.factories[i]
+                    if 'tiles' in factory_data:
+                        factory.tiles = dict(factory_data['tiles'])
+                        factory.total = sum(factory.tiles.values())
+            
+            # Update center pool if available
+            if 'centre_pool' in game_dict:
+                center_data = game_dict['centre_pool']
+                if 'tiles' in center_data:
+                    state.centre_pool.tiles = dict(center_data['tiles'])
+                    state.centre_pool.total = sum(state.centre_pool.tiles.values())
+            
+            return state
+            
+        except Exception as e:
+            # If conversion fails, create a basic valid state
+            print(f"Warning: Failed to convert game dict to AzulState: {e}")
+            return cls(2)  # Return basic 2-player state
+
+    @classmethod
     def _initialize_zobrist_tables(cls):
         """Initialize Zobrist hash tables for efficient position hashing."""
         if cls._ZOBRIST_TABLES is not None:

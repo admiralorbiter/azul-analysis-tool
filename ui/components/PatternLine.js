@@ -1,8 +1,14 @@
 // PatternLine Component
 // Pattern line component for displaying tiles in player boards
+// Enhanced with R1.1 validation integration
 
-function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [] }) {
+function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedTile = null, onDestinationClick = null, editMode = false, onElementSelect = null, playerIndex = null, selectedElements = [], gameState = null, onPatternLineEdit = null }) {
     const patternLineRef = React.useRef(null);
+    const [validationResult, setValidationResult] = React.useState(null);
+    
+    // Import validation components
+    const PatternLineValidator = window.PatternLineValidator;
+    const ValidationFeedback = window.ValidationFeedback;
     
     React.useEffect(() => {
         const patternLine = patternLineRef.current;
@@ -34,6 +40,25 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
         };
     }, [onDrop, rowIndex]);
     
+    // Real-time validation for edit mode
+    React.useEffect(() => {
+        if (editMode && gameState && PatternLineValidator && playerIndex !== null) {
+            // Get current pattern line state
+            const agent = gameState.agents?.[playerIndex];
+            if (agent) {
+                const currentColor = agent.lines_tile?.[rowIndex] || -1;
+                const currentCount = agent.lines_number?.[rowIndex] || 0;
+                
+                // Trigger validation check (simplified for demo)
+                const result = {
+                    valid: currentColor === -1 || currentCount <= maxTiles,
+                    error: currentCount > maxTiles ? `Too many tiles: ${currentCount}/${maxTiles}` : null
+                };
+                setValidationResult(result);
+            }
+        }
+    }, [editMode, gameState, playerIndex, rowIndex, maxTiles]);
+
     const handlePatternLineClick = (e) => {
         if (editMode && onElementSelect) {
             const isCtrlClick = e.ctrlKey;
@@ -41,6 +66,16 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
                 type: 'pattern-line',
                 data: { playerIndex, rowIndex, tiles, maxTiles }
             }, isCtrlClick);
+        }
+    };
+    
+    const handlePatternLineEdit = async (newColor, newCount) => {
+        if (editMode && onPatternLineEdit) {
+            const success = await onPatternLineEdit(playerIndex, rowIndex, newColor, newCount);
+            if (success) {
+                // Update validation state
+                setValidationResult({ valid: true });
+            }
         }
     };
     
@@ -86,7 +121,23 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
                     })
                 )
             )
-        )
+        ),
+        
+        // Add validation feedback for edit mode
+        editMode && validationResult && !validationResult.valid && ValidationFeedback && React.createElement(ValidationFeedback, {
+            validationResult: validationResult,
+            position: 'right'
+        }),
+        
+        // Add pattern line validator for real-time feedback
+        editMode && PatternLineValidator && gameState && React.createElement(PatternLineValidator, {
+            playerId: playerIndex,
+            lineIndex: rowIndex,
+            currentColor: gameState.agents?.[playerIndex]?.lines_tile?.[rowIndex] || -1,
+            newColor: gameState.agents?.[playerIndex]?.lines_tile?.[rowIndex] || -1,
+            currentCount: gameState.agents?.[playerIndex]?.lines_number?.[rowIndex] || 0,
+            newCount: gameState.agents?.[playerIndex]?.lines_number?.[rowIndex] || 0
+        })
     );
 }
 
