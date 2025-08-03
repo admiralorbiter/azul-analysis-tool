@@ -176,7 +176,7 @@ def execute_move():
             print(f"DEBUG: TileGrab num_to_pattern_line: {action[2].num_to_pattern_line}")
             print(f"DEBUG: TileGrab num_to_floor_line: {action[2].num_to_floor_line}")
             
-            new_state = game_rule.generateSuccessor(state, action)
+            new_state = game_rule.generateSuccessor(state, action, request_model.agent_id)
             print(f"DEBUG: Move applied successfully")
             
         except Exception as e:
@@ -198,8 +198,8 @@ def execute_move():
         
         # Convert new state to frontend format
         try:
-            from ..utils import convert_frontend_state_to_azul_state
-            frontend_state = convert_frontend_state_to_azul_state(new_state)
+            from ..utils import convert_azul_state_to_frontend
+            frontend_state = convert_azul_state_to_frontend(new_state)
             print(f"DEBUG: Frontend state converted successfully")
         except Exception as e:
             print(f"DEBUG: Error converting to frontend format: {e}")

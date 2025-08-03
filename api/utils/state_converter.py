@@ -129,4 +129,79 @@ def convert_tile_string_to_type(tile_string):
     }
     result = tile_map.get(tile_string.upper(), 0)
     print(f"DEBUG: convert_tile_string_to_type('{tile_string}') -> {result}")
-    return result 
+    return result
+
+
+def convert_azul_state_to_frontend(azul_state):
+    """Convert AzulState object to frontend format."""
+    try:
+        frontend_state = {
+            'factories': [],
+            'center': [],
+            'players': []
+        }
+        
+        # Convert factories
+        for factory in azul_state.factories:
+            factory_tiles = []
+            for tile_type, count in factory.tiles.items():
+                for _ in range(count):
+                    # Convert tile type to color string
+                    tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                    factory_tiles.append(tile_colors.get(tile_type, 'W'))
+            frontend_state['factories'].append(factory_tiles)
+        
+        # Convert center pool
+        center_tiles = []
+        for tile_type, count in azul_state.centre_pool.tiles.items():
+            for _ in range(count):
+                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                center_tiles.append(tile_colors.get(tile_type, 'W'))
+        frontend_state['center'] = center_tiles
+        
+        # Convert player states
+        for agent in azul_state.agents:
+            player = {
+                'pattern_lines': [],
+                'wall': [],
+                'floor': []
+            }
+            
+            # Convert pattern lines
+            for i in range(5):
+                line = []
+                if agent.lines_tile[i] != -1:
+                    tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                    tile_color = tile_colors.get(agent.lines_tile[i], 'W')
+                    for _ in range(agent.lines_number[i]):
+                        line.append(tile_color)
+                player['pattern_lines'].append(line)
+            
+            # Convert wall
+            for row in range(5):
+                wall_row = []
+                for col in range(5):
+                    if agent.grid_state[row][col] != 0:
+                        tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                        tile_color = tile_colors.get(agent.grid_state[row][col], 'W')
+                        wall_row.append(tile_color)
+                    else:
+                        wall_row.append(False)
+                player['wall'].append(wall_row)
+            
+            # Convert floor
+            floor_tiles = []
+            for tile_type in agent.floor_tiles:
+                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                floor_tiles.append(tile_colors.get(tile_type, 'W'))
+            player['floor'] = floor_tiles
+            
+            frontend_state['players'].append(player)
+        
+        return frontend_state
+        
+    except Exception as e:
+        print(f"DEBUG: Error converting AzulState to frontend: {e}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        return None 

@@ -9,7 +9,10 @@ state parsing, move conversion, and formatting utilities.
 from .state_parser import (
     parse_fen_string,
     state_to_fen,
-    update_current_game_state
+    update_current_game_state,
+    _current_game_state,
+    _initial_game_state,
+    _current_editable_game_state
 )
 
 from .move_converter import (
@@ -20,7 +23,8 @@ from .move_converter import (
 
 from .state_converter import (
     convert_frontend_state_to_azul_state,
-    convert_tile_string_to_type
+    convert_tile_string_to_type,
+    convert_azul_state_to_frontend
 )
 
 from .formatters import (
@@ -38,6 +42,9 @@ __all__ = [
     'parse_fen_string',
     'state_to_fen', 
     'update_current_game_state',
+    '_current_game_state',
+    '_initial_game_state',
+    '_current_editable_game_state',
     
     # Move conversion utilities
     'convert_frontend_move_to_engine',
@@ -47,6 +54,7 @@ __all__ = [
     # State conversion utilities
     'convert_frontend_state_to_azul_state',
     'convert_tile_string_to_type',
+    'convert_azul_state_to_frontend',
     
     # Formatting utilities
     'format_move',
