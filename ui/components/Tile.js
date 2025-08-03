@@ -42,5 +42,4 @@ function Tile({ color, onClick, className = "", draggable = false, onDragStart, 
     });
 }
 
-// Export for global access
 window.Tile = Tile; 

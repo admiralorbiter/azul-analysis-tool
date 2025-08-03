@@ -278,5 +278,4 @@ const PositionPreview = React.memo(function PositionPreview({
     );
 });
 
-// Export for global access
 window.PositionPreview = PositionPreview; 

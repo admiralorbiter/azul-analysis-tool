@@ -367,5 +367,4 @@ function BoardEditor({
     );
 }
 
-// Export to global scope
 window.BoardEditor = BoardEditor;

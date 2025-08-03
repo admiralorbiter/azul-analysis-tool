@@ -1,7 +1,8 @@
 // Game Constants and Configuration
 
 // Tile types
-export const TILE_TYPES = {
+window.gameConstants = window.gameConstants || {};
+window.gameConstants.TILE_TYPES = {
     RED: 'R',
     YELLOW: 'Y',
     BLUE: 'B',
@@ -11,7 +12,7 @@ export const TILE_TYPES = {
 };
 
 // Tile colors mapping - Updated to match BGA colors
-export const TILE_COLORS = {
+window.gameConstants.TILE_COLORS = {
     'R': '#dc2626', // Bright vibrant red (BGA style)
     'Y': '#f59e0b', // Yellow with orange tint (BGA style)
     'B': '#06b6d4', // Bright teal/cyan blue (BGA style)
@@ -21,14 +22,14 @@ export const TILE_COLORS = {
 };
 
 // Game modes
-export const GAME_MODES = {
+window.gameConstants.GAME_MODES = {
     SANDBOX: 'sandbox',
     ANALYSIS: 'analysis',
     SETUP: 'setup'
 };
 
 // Element types for editing
-export const ELEMENT_TYPES = {
+window.gameConstants.ELEMENT_TYPES = {
     FACTORY: 'factory',
     FACTORY_TILE: 'factory-tile',
     PATTERN_LINE: 'pattern-line',
@@ -40,7 +41,7 @@ export const ELEMENT_TYPES = {
 };
 
 // Context menu actions
-export const CONTEXT_MENU_ACTIONS = {
+window.gameConstants.CONTEXT_MENU_ACTIONS = {
     EDIT_TILES: 'Edit Tiles',
     CLEAR_FACTORY: 'Clear Factory',
     ADD_TILE: 'Add Tile',
@@ -52,7 +53,7 @@ export const CONTEXT_MENU_ACTIONS = {
 };
 
 // Status message types
-export const STATUS_TYPES = {
+window.gameConstants.STATUS_TYPES = {
     SUCCESS: 'success',
     ERROR: 'error',
     WARNING: 'warning',
@@ -60,15 +61,15 @@ export const STATUS_TYPES = {
 };
 
 // Default game configuration
-export const DEFAULT_GAME_CONFIG = {
+window.gameConstants.DEFAULT_GAME_CONFIG = {
     playerCount: 2,
     currentPlayer: 0,
     autoAdvanceTurn: false,
-    gameMode: GAME_MODES.SANDBOX
+    gameMode: window.gameConstants.GAME_MODES.SANDBOX
 };
 
 // API endpoints
-export const API_ENDPOINTS = {
+window.gameConstants.API_ENDPOINTS = {
     SESSION: '/api/v1/auth/session',
     ANALYZE: '/api/v1/analyze',
     HINT: '/api/v1/hint',
@@ -77,14 +78,14 @@ export const API_ENDPOINTS = {
 };
 
 // Drag and drop configuration
-export const DRAG_CONFIG = {
+window.gameConstants.DRAG_CONFIG = {
     GHOST_OPACITY: 0.8,
     GHOST_ROTATION: 5,
     GHOST_SIZE: 40
 };
 
 // Visual feedback configuration
-export const VISUAL_CONFIG = {
+window.gameConstants.VISUAL_CONFIG = {
     HOVER_SCALE: 1.1,
     SELECTED_SCALE: 1.15,
     TRANSITION_DURATION: '0.2s',

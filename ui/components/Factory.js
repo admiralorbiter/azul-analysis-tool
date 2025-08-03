@@ -143,5 +143,4 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
     );
 }
 
-// Export for global access
 window.Factory = Factory; 

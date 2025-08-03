@@ -683,3 +683,4 @@ function NeuralTrainingPage({
         })
     );
 } 
+window.NeuralTrainingPage = NeuralTrainingPage; 

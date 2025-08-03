@@ -13,5 +13,4 @@ function StatusMessage({ type, message }) {
     }, message);
 }
 
-// Export to window object for global access
 window.StatusMessage = StatusMessage; 

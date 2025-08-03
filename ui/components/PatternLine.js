@@ -141,5 +141,4 @@ function PatternLine({ tiles, rowIndex, maxTiles, onTileClick, onDrop, selectedT
     );
 }
 
-// Export for global access
 window.PatternLine = PatternLine; 

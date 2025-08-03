@@ -453,5 +453,4 @@ function TrainingMonitor({ trainingStatus, setStatusMessage, loading, setLoading
     );
 }
 
-// Export for global access
 window.TrainingMonitor = TrainingMonitor; 

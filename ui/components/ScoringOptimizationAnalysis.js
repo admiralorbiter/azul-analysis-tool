@@ -373,5 +373,4 @@ function ScoringOptimizationAnalysis({ gameState, currentPlayer = 0, onOptimizat
     );
 }
 
-// Export to global scope
 window.ScoringOptimizationAnalysis = ScoringOptimizationAnalysis; 

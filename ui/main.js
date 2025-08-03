@@ -65,6 +65,37 @@ const {
     FloorLinePatternAnalysis: window.FloorLinePatternAnalysis || (() => React.createElement('div', null, 'FloorLinePatternAnalysis not loaded'))
 };
 
+// Import custom hooks and components
+const {
+    useGameState,
+    useUserActivity,
+    useEditMode,
+    useAnalysis,
+    useConfiguration,
+    useKeyboardShortcuts,
+    GameHeader,
+    GameControls,
+    GameBoard,
+    StatusBar,
+    exportPosition,
+    importPosition,
+    handleFileImport
+} = {
+    useGameState: window.useGameState || {},
+    useUserActivity: window.useUserActivity || {},
+    useEditMode: window.useEditMode || {},
+    useAnalysis: window.useAnalysis || {},
+    useConfiguration: window.useConfiguration || {},
+    useKeyboardShortcuts: window.useKeyboardShortcuts || {},
+    GameHeader: window.GameHeader || (() => React.createElement('div', null, 'GameHeader not loaded')),
+    GameControls: window.GameControls || (() => React.createElement('div', null, 'GameControls not loaded')),
+    GameBoard: window.GameBoard || (() => React.createElement('div', null, 'GameBoard not loaded')),
+    StatusBar: window.StatusBar || (() => React.createElement('div', null, 'StatusBar not loaded')),
+    exportPosition: window.exportPosition || (() => {}),
+    importPosition: window.importPosition || (() => {}),
+    handleFileImport: window.handleFileImport || (() => {})
+};
+
 // Import App component from window with fallback
 const App = window.App || (() => React.createElement('div', null, 'App component not loaded'));
 

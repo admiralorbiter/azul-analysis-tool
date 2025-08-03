@@ -563,5 +563,4 @@ const PositionLibrary = React.memo(function PositionLibrary({
     );
 });
 
-// Export to global scope
 window.PositionLibrary = PositionLibrary; 

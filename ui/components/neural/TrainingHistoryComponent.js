@@ -407,5 +407,4 @@ function TrainingHistoryComponent({ setStatusMessage, loading, setLoading }) {
     );
 }
 
-// Export for global access
 window.TrainingHistoryComponent = TrainingHistoryComponent; 

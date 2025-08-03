@@ -229,5 +229,4 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
     );
 }
 
-// Export for use in other components
 window.PatternAnalysis = PatternAnalysis; 

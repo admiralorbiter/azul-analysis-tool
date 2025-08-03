@@ -112,8 +112,8 @@ function formatTimestamp(timestamp) {
     return new Date(timestamp).toLocaleTimeString();
 }
 
-// Export functions
-export {
+// Export functions to window.helpers
+window.helpers = {
     TILE_COLORS,
     getTileColor,
     formatMoveDescription,

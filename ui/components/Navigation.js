@@ -19,5 +19,4 @@ function Navigation({ currentPage, onPageChange }) {
     );
 }
 
-// Export for global access
 window.Navigation = Navigation; 

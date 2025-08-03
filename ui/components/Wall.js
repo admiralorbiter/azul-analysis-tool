@@ -101,5 +101,4 @@ function Wall({ wall, onWallClick, onDrop, selectedTile = null, onDestinationCli
     );
 }
 
-// Export to window object for global access
 window.Wall = Wall; 

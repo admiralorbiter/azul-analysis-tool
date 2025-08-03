@@ -22,5 +22,4 @@ function MoveOption({ move, score, visits, onClick, isSelected }) {
     );
 }
 
-// Export to window object for global access
 window.MoveOption = MoveOption; 

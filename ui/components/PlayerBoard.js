@@ -104,5 +104,4 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
     );
 }
 
-// Export to window object for global access
 window.PlayerBoard = PlayerBoard; 

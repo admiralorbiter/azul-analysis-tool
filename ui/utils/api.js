@@ -159,8 +159,8 @@ async function analyzeNeural(fenString) {
     }
 }
 
-// Export functions
-export {
+// Export functions to window.api
+window.api = {
     initializeSession,
     analyzePosition,
     getGameState,

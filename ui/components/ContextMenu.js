@@ -23,5 +23,4 @@ function ContextMenu({ visible, x, y, options, onAction, onClose }) {
     );
 }
 
-// Export to window object for global access
 window.ContextMenu = ContextMenu; 
