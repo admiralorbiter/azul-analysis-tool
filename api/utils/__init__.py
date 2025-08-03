@@ -27,6 +27,11 @@ from .formatters import (
     format_move
 )
 
+from .performance import (
+    get_process_resources,
+    get_system_resources
+)
+
 # Export all utilities
 __all__ = [
     # State parsing utilities
@@ -45,4 +50,8 @@ __all__ = [
     
     # Formatting utilities
     'format_move',
+    
+    # Performance utilities
+    'get_process_resources',
+    'get_system_resources',
 ] 
