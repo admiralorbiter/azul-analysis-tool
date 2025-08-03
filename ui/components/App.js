@@ -903,53 +903,66 @@ function App() {
                     onClose: () => setShowPositionLibrary(false)
                 }),
                 
-                // Main game layout - 3 columns: Sidebar | Game Board | Analysis
+                // Main game layout - 2 columns: Controls | Game Board
                 React.createElement('div', {
-                    className: 'grid grid-cols-12 gap-4 h-[calc(100vh-200px)]'
+                    className: 'flex gap-4 h-[calc(100vh-200px)]'
                 },
-                    // Left Sidebar - Analysis Tools (3 columns)
+                    // Left Sidebar - Unified Controls Panel (25% width)
                     React.createElement('div', {
-                        className: 'col-span-12 lg:col-span-3 space-y-3 overflow-y-auto'
+                        className: 'w-1/4 min-w-80'
                     },
-                        // Compact Analysis Results
+                        // Single unified controls panel
                         React.createElement('div', {
-                            className: 'bg-white rounded p-3 shadow-sm'
-                        },
-                            React.createElement(AnalysisResults, {
-                                variations: variations,
-                                loading: loading,
-                                engineThinking: engineThinking
-                            })
-                        ),
-                        
-                        // Compact Analysis Controls
-                        React.createElement('div', {
-                            className: 'bg-white rounded p-3 shadow-sm'
+                            className: 'bg-white rounded p-4 shadow-sm h-full overflow-y-auto'
                         },
                             React.createElement('h3', {
-                                className: 'font-medium text-sm mb-2 text-blue-700'
-                            }, '🔍 Analysis & Controls'),
+                                className: 'font-medium text-lg mb-4 text-blue-700 border-b pb-2'
+                            }, '🎮 Game Controls'),
                             
-                            // Compact action buttons
+                            // Analysis Results Section
                             React.createElement('div', {
-                                className: 'grid grid-cols-2 gap-2 mb-3'
+                                className: 'mb-4'
                             },
-                                React.createElement('button', {
-                                    className: 'btn-warning btn-xs',
-                                    onClick: handleUndo,
-                                    disabled: moveHistory.length === 0 || loading
-                                }, '↶ Undo'),
-                                React.createElement('button', {
-                                    className: 'btn-secondary btn-xs',
-                                    onClick: handleRedo,
-                                    disabled: loading
-                                }, '↷ Redo')
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '📊 Analysis Results'),
+                                React.createElement(AnalysisResults, {
+                                    variations: variations,
+                                    loading: loading,
+                                    engineThinking: engineThinking
+                                })
                             ),
                             
-                            // Compact Analysis Tools
+                            // Action Controls Section
                             React.createElement('div', {
-                                className: 'space-y-2'
+                                className: 'mb-4'
                             },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '↶↷ Move Controls'),
+                                React.createElement('div', {
+                                    className: 'grid grid-cols-2 gap-2 mb-3'
+                                },
+                                    React.createElement('button', {
+                                        className: 'btn-warning btn-xs',
+                                        onClick: handleUndo,
+                                        disabled: moveHistory.length === 0 || loading
+                                    }, '↶ Undo'),
+                                    React.createElement('button', {
+                                        className: 'btn-secondary btn-xs',
+                                        onClick: handleRedo,
+                                        disabled: loading
+                                    }, '↷ Redo')
+                                )
+                            ),
+                            
+                            // Analysis Tools Section
+                            React.createElement('div', {
+                                className: 'mb-4'
+                            },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '🔍 Analysis Tools'),
                                 React.createElement(AdvancedAnalysisControls, {
                                     loading: loading,
                                     setLoading: setLoading,
@@ -971,50 +984,86 @@ function App() {
                                     agentId: agentId,
                                     setAgentId: setAgentId
                                 })
+                            ),
+                            
+                            // Quick Actions Section
+                            React.createElement('div', {
+                                className: 'mb-4'
+                            },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '⚡ Quick Actions'),
+                                React.createElement('div', {
+                                    className: 'grid grid-cols-2 gap-2'
+                                },
+                                    React.createElement('button', {
+                                        className: 'btn-primary btn-xs',
+                                        onClick: () => setConfigExpanded(!configExpanded)
+                                    }, configExpanded ? '⚙️ Hide Config' : '⚙️ Show Config'),
+                                    React.createElement('button', {
+                                        className: 'btn-secondary btn-xs',
+                                        onClick: () => setDevToolsExpanded(!devToolsExpanded)
+                                    }, devToolsExpanded ? '🔧 Hide Dev Tools' : '🔧 Show Dev Tools'),
+                                    React.createElement('button', {
+                                        className: 'btn-info btn-xs',
+                                        onClick: () => setHeatmapEnabled(!heatmapEnabled)
+                                    }, heatmapEnabled ? '🔥 Hide Heatmap' : '🔥 Show Heatmap'),
+                                    React.createElement('button', {
+                                        className: `${autoRefreshEnabled ? 'btn-warning' : 'btn-success'} btn-xs`,
+                                        onClick: () => setAutoRefreshEnabled(!autoRefreshEnabled)
+                                    }, autoRefreshEnabled ? '⏸️ Disable Auto-Refresh' : '▶️ Enable Auto-Refresh')
+                                )
+                            ),
+                            
+                            // Collapsible Configuration Panel
+                            configExpanded && React.createElement('div', {
+                                className: 'mb-4'
+                            },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '⚙️ Configuration'),
+                                React.createElement(ConfigurationPanel, {
+                                    loading: loading,
+                                    setLoading: setLoading,
+                                    setStatusMessage: setStatusMessage,
+                                    databasePath: databasePath,
+                                    setDatabasePath: setDatabasePath,
+                                    modelPath: modelPath,
+                                    setModelPath: setModelPath,
+                                    defaultTimeout: defaultTimeout,
+                                    setDefaultTimeout: setDefaultTimeout,
+                                    defaultDepth: defaultDepth,
+                                    setDefaultDepth: setDefaultDepth,
+                                    defaultRollouts: defaultRollouts,
+                                    setDefaultRollouts: setDefaultRollouts,
+                                    configExpanded: configExpanded,
+                                    setConfigExpanded: setConfigExpanded
+                                })
+                            ),
+                            
+                            // Collapsible Development Tools Panel
+                            devToolsExpanded && React.createElement('div', {
+                                className: 'mb-4'
+                            },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '🔧 Development Tools'),
+                                React.createElement(DevelopmentToolsPanel, {
+                                    loading: loading,
+                                    setLoading: setLoading,
+                                    setStatusMessage: setStatusMessage,
+                                    devToolsExpanded: devToolsExpanded,
+                                    setDevToolsExpanded: setDevToolsExpanded
+                                })
                             )
-                        ),
-                        
-                        // Collapsible panels - more compact
-                        configExpanded && React.createElement('div', {
-                            className: 'bg-white rounded p-3 shadow-sm'
-                        },
-                            React.createElement(ConfigurationPanel, {
-                                loading: loading,
-                                setLoading: setLoading,
-                                setStatusMessage: setStatusMessage,
-                                databasePath: databasePath,
-                                setDatabasePath: setDatabasePath,
-                                modelPath: modelPath,
-                                setModelPath: setModelPath,
-                                defaultTimeout: defaultTimeout,
-                                setDefaultTimeout: setDefaultTimeout,
-                                defaultDepth: defaultDepth,
-                                setDefaultDepth: setDefaultDepth,
-                                defaultRollouts: defaultRollouts,
-                                setDefaultRollouts: setDefaultRollouts,
-                                configExpanded: configExpanded,
-                                setConfigExpanded: setConfigExpanded
-                            })
-                        ),
-                        
-                        devToolsExpanded && React.createElement('div', {
-                            className: 'bg-white rounded p-3 shadow-sm'
-                        },
-                            React.createElement(DevelopmentToolsPanel, {
-                                loading: loading,
-                                setLoading: setLoading,
-                                setStatusMessage: setStatusMessage,
-                                devToolsExpanded: devToolsExpanded,
-                                setDevToolsExpanded: setDevToolsExpanded
-                            })
                         )
                     ),
                     
-                    // Center - Game Board (6 columns)
+                    // Right - Game Board (75% width for maximum board space)
                     React.createElement('div', {
-                        className: 'col-span-12 lg:col-span-6 space-y-3'
+                        className: 'flex-1 space-y-3'
                     },
-                        // Compact Factories at top
+                        // Factories at top
                         React.createElement('div', {
                             className: 'bg-white rounded p-3 shadow-sm'
                         },
@@ -1062,7 +1111,7 @@ function App() {
                             )
                         ),
                         
-                        // Player boards - more compact, side by side
+                        // Player boards - now with more space
                         React.createElement('div', {
                             className: 'bg-white rounded p-3 shadow-sm flex-1'
                         },
@@ -1070,7 +1119,7 @@ function App() {
                                 className: 'font-medium text-sm mb-2'
                             }, '👥 Player Boards'),
                             React.createElement('div', {
-                                className: 'grid grid-cols-1 xl:grid-cols-2 gap-3 h-full'
+                                className: 'grid grid-cols-1 xl:grid-cols-2 gap-4 h-full'
                             },
                                 (gameState.players || []).map((player, index) => 
                                     React.createElement(PlayerBoard, {
@@ -1086,40 +1135,6 @@ function App() {
                                         canInteract: !loading && !engineThinking
                                     })
                                 )
-                            )
-                        )
-                    ),
-                    
-                    // Right Sidebar - Quick Actions & Settings (3 columns)
-                    React.createElement('div', {
-                        className: 'col-span-12 lg:col-span-3 space-y-3'
-                    },
-                        // Quick action panel
-                        React.createElement('div', {
-                            className: 'bg-white rounded p-3 shadow-sm'
-                        },
-                            React.createElement('h3', {
-                                className: 'font-medium text-sm mb-2 text-blue-700'
-                            }, '⚡ Quick Actions'),
-                            React.createElement('div', {
-                                className: 'space-y-2'
-                            },
-                                React.createElement('button', {
-                                    className: 'btn-primary btn-xs w-full',
-                                    onClick: () => setConfigExpanded(!configExpanded)
-                                }, configExpanded ? '⚙️ Hide Config' : '⚙️ Show Config'),
-                                React.createElement('button', {
-                                    className: 'btn-secondary btn-xs w-full',
-                                    onClick: () => setDevToolsExpanded(!devToolsExpanded)
-                                }, devToolsExpanded ? '🔧 Hide Dev Tools' : '🔧 Show Dev Tools'),
-                                React.createElement('button', {
-                                    className: 'btn-info btn-xs w-full',
-                                    onClick: () => setHeatmapEnabled(!heatmapEnabled)
-                                }, heatmapEnabled ? '🔥 Hide Heatmap' : '🔥 Show Heatmap'),
-                                React.createElement('button', {
-                                    className: `${autoRefreshEnabled ? 'btn-warning' : 'btn-success'} btn-xs w-full`,
-                                    onClick: () => setAutoRefreshEnabled(!autoRefreshEnabled)
-                                }, autoRefreshEnabled ? '⏸️ Disable Auto-Refresh' : '▶️ Enable Auto-Refresh')
                             )
                         )
                     )
