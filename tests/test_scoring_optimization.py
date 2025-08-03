@@ -32,8 +32,26 @@ class TestScoringOptimizationDetector(unittest.TestCase):
         # Create a basic game state for testing
         self.basic_state = Mock(spec=AzulState)
         self.basic_state.agents = [Mock(), Mock()]
-        self.basic_state.factories = [[0, 1, 2], [1, 2, 3], [2, 3, 4]]
-        self.basic_state.center = [0, 1, 2, 3, 4]
+        
+        # Create proper TileDisplay objects for factories and center
+        factory1 = Mock()
+        factory1.tiles = {utils.Tile.BLUE: 1, utils.Tile.RED: 1, utils.Tile.YELLOW: 1}
+        factory1.total = 3
+        
+        factory2 = Mock()
+        factory2.tiles = {utils.Tile.RED: 1, utils.Tile.YELLOW: 1, utils.Tile.BLACK: 1}
+        factory2.total = 3
+        
+        factory3 = Mock()
+        factory3.tiles = {utils.Tile.YELLOW: 1, utils.Tile.BLACK: 1, utils.Tile.WHITE: 1}
+        factory3.total = 3
+        
+        self.basic_state.factories = [factory1, factory2, factory3]
+        
+        center_pool = Mock()
+        center_pool.tiles = {utils.Tile.BLUE: 1, utils.Tile.RED: 1, utils.Tile.YELLOW: 1, utils.Tile.BLACK: 1, utils.Tile.WHITE: 1}
+        center_pool.total = 5
+        self.basic_state.centre_pool = center_pool
         
         # Set up basic player state
         self.basic_state.agents[0].GRID_SIZE = 5
@@ -368,9 +386,8 @@ class TestScoringOptimizationDetector(unittest.TestCase):
         )
         
         # Should count tiles in factories and center pool
-        expected_count = sum(1 for factory in self.basic_state.factories 
-                           for tile in factory if tile == 0)
-        expected_count += sum(1 for tile in self.basic_state.center if tile == 0)
+        expected_count = sum(factory.tiles.get(utils.Tile.BLUE, 0) for factory in self.basic_state.factories)
+        expected_count += self.basic_state.centre_pool.tiles.get(utils.Tile.BLUE, 0)
         
         self.assertEqual(count, expected_count)
     
@@ -394,7 +411,7 @@ class TestScoringOptimizationDetector(unittest.TestCase):
         
         # Find empty position for color
         empty_pos = self.detector._find_empty_position_for_color(
-            self.basic_state.agents[0], 0  # Blue
+            self.basic_state.agents[0], utils.Tile.BLUE  # Blue
         )
         self.assertIsNotNone(empty_pos)
         self.assertEqual(len(empty_pos), 2)  # Should be (row, col) tuple
@@ -406,7 +423,7 @@ class TestScoringOptimizationDetector(unittest.TestCase):
         self.basic_state.agents[0].grid_state[1, 4] = 1  # Blue at (1,4)
         
         count = self.detector._count_color_on_wall(
-            self.basic_state.agents[0], 0  # Blue
+            self.basic_state.agents[0], utils.Tile.BLUE  # Blue
         )
         self.assertEqual(count, 2)
     
@@ -417,7 +434,7 @@ class TestScoringOptimizationDetector(unittest.TestCase):
         self.basic_state.agents[0].grid_state[:, 0] = [1, 1, 1, 1, 0]  # 4 tiles in column 0
         
         potential = self.detector._calculate_multiplier_potential(
-            self.basic_state.agents[0], 0, 0, 0  # Place blue at (0,0)
+            self.basic_state.agents[0], 0, 0, utils.Tile.BLUE  # Place blue at (0,0)
         )
         
         # Should be row bonus (2) + column bonus (7) + color set bonus (10) = 19

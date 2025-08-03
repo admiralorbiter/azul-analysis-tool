@@ -270,7 +270,9 @@ class BoardStateValidator(AzulRuleValidator):
     def _color_name(self, color: int) -> str:
         """Convert color number to readable name."""
         color_names = ["Blue", "Yellow", "Red", "Black", "White"]
-        return color_names[color] if 0 <= color < 5 else f"Unknown({color})"
+        # Handle numpy types
+        color_int = int(color) if hasattr(color, '__int__') else color
+        return color_names[color_int] if 0 <= color_int < 5 else f"Unknown({color})"
 
 
 # Validation helper functions for the UI

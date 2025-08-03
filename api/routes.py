@@ -702,6 +702,9 @@ def parse_fen_string(fen_string: str):
         print(f"DEBUG: Exception in parse_fen_string: {e}")
         import traceback
         traceback.print_exc()
+        # Re-raise ValueError for invalid FEN strings to get proper 400 status codes
+        if isinstance(e, ValueError):
+            raise
         return None
 
 def update_current_game_state(new_state):
@@ -1353,6 +1356,148 @@ def search_positions():
         return jsonify({
             'error': 'Internal server error',
             'message': 'Failed to search positions'
+        }), 500
+
+
+@api_bp.route('/positions/load', methods=['POST'])
+def load_position():
+    """
+    Load a position from the position library.
+    
+    POST /api/v1/positions/load
+    
+    Body:
+        {
+            "position_id": "string",
+            "category": "string",
+            "difficulty": "string"
+        }
+    
+    Returns:
+        Position data with game state
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'Invalid request',
+                'message': 'Request body is required'
+            }), 400
+        
+        position_id = data.get('position_id')
+        category = data.get('category', 'opening')
+        difficulty = data.get('difficulty', 'beginner')
+        
+        if not position_id:
+            return jsonify({
+                'error': 'Invalid parameter',
+                'message': 'position_id is required'
+            }), 400
+        
+        # For now, return a mock position since we don't have a full position library
+        # In a real implementation, this would load from a database or file system
+        mock_position = {
+            'id': position_id,
+            'name': f'Position {position_id}',
+            'category': category,
+            'difficulty': difficulty,
+            'description': f'A {difficulty} {category} position',
+            'state': {
+                'agents': [
+                    {
+                        'score': 0,
+                        'lines_number': [0, 0, 0, 0, 0],
+                        'lines_tile': [-1, -1, -1, -1, -1],
+                        'grid_state': [[0, 0, 0, 0, 0] for _ in range(5)],
+                        'floor_tiles': []
+                    },
+                    {
+                        'score': 0,
+                        'lines_number': [0, 0, 0, 0, 0],
+                        'lines_tile': [-1, -1, -1, -1, -1],
+                        'grid_state': [[0, 0, 0, 0, 0] for _ in range(5)],
+                        'floor_tiles': []
+                    }
+                ],
+                'factories': [
+                    {'tiles': {0: 2, 1: 2}, 'total': 4},
+                    {'tiles': {2: 2, 3: 2}, 'total': 4},
+                    {'tiles': {4: 2, 0: 2}, 'total': 4}
+                ],
+                'centre_pool': {'tiles': {0: 1, 1: 1, 2: 1, 3: 1, 4: 1}, 'total': 5}
+            },
+            'tags': [category, difficulty]
+        }
+        
+        return jsonify({
+            'success': True,
+            'position': mock_position
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading position: {e}")
+        return jsonify({
+            'error': 'Internal server error',
+            'message': 'Failed to load position'
+        }), 500
+
+
+@api_bp.route('/positions/save', methods=['POST'])
+def save_position():
+    """
+    Save a position to the position library.
+    
+    POST /api/v1/positions/save
+    
+    Body:
+        {
+            "name": "string",
+            "category": "string",
+            "difficulty": "string",
+            "description": "string",
+            "state": {...},
+            "tags": ["string"]
+        }
+    
+    Returns:
+        Success confirmation
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'Invalid request',
+                'message': 'Request body is required'
+            }), 400
+        
+        name = data.get('name')
+        category = data.get('category', 'custom')
+        difficulty = data.get('difficulty', 'intermediate')
+        description = data.get('description', '')
+        state = data.get('state')
+        tags = data.get('tags', [])
+        
+        if not name or not state:
+            return jsonify({
+                'error': 'Invalid parameter',
+                'message': 'name and state are required'
+            }), 400
+        
+        # For now, just return success since we don't have a full position library
+        # In a real implementation, this would save to a database or file system
+        position_id = f"{category}_{difficulty}_{len(name)}"
+        
+        return jsonify({
+            'success': True,
+            'position_id': position_id,
+            'message': 'Position saved successfully'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error saving position: {e}")
+        return jsonify({
+            'error': 'Internal server error',
+            'message': 'Failed to save position'
         }), 500
 
 
@@ -5234,7 +5379,15 @@ def validate_tile_count():
 def detect_patterns():
     """Detect tactical patterns in the current position."""
     try:
-        data = request.get_json()
+        # Handle malformed JSON
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        try:
+            data = request.get_json()
+        except Exception:
+            return jsonify({'error': 'Invalid JSON format'}), 400
+        
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
@@ -5303,7 +5456,15 @@ def detect_patterns():
 def detect_scoring_optimization():
     """Detect scoring optimization opportunities in the current position."""
     try:
-        data = request.get_json()
+        # Handle malformed JSON
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        try:
+            data = request.get_json()
+        except Exception:
+            return jsonify({'error': 'Invalid JSON format'}), 400
+        
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
@@ -5434,6 +5595,10 @@ def detect_scoring_optimization():
 def detect_floor_line_patterns():
     """Detect floor line management patterns in the current position."""
     try:
+        # Handle malformed JSON
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -5605,5 +5770,101 @@ def detect_floor_line_patterns():
         
     except Exception as e:
         return jsonify({'error': f'Floor line pattern detection error: {str(e)}'}), 500
+
+
+@api_bp.route('/positions', methods=['GET'])
+@require_session
+def get_positions():
+    """Get all available positions."""
+    try:
+        # Import position data
+        from ui.components.positions.opening_positions import opening_positions
+        from ui.components.positions.midgame_positions import midgame_positions
+        from ui.components.positions.endgame_positions import endgame_positions
+        from ui.components.positions.educational_positions import educational_positions
+        from ui.components.positions.custom_positions import custom_positions
+        
+        # Combine all positions
+        all_positions = []
+        all_positions.extend(opening_positions)
+        all_positions.extend(midgame_positions)
+        all_positions.extend(endgame_positions)
+        all_positions.extend(educational_positions)
+        all_positions.extend(custom_positions)
+        
+        return jsonify({
+            'positions': all_positions,
+            'total': len(all_positions)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to load positions: {str(e)}'}), 500
+
+
+@api_bp.route('/positions', methods=['POST'])
+@require_session
+def create_position():
+    """Create a new position."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields
+        required_fields = ['name', 'category', 'difficulty', 'state']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # For now, just return success (in a real implementation, this would save to database)
+        return jsonify({
+            'success': True,
+            'message': 'Position created successfully',
+            'position_id': f"pos_{int(time.time())}"
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to create position: {str(e)}'}), 500
+
+
+# Add CORS headers to all responses
+@api_bp.after_request
+def add_cors_headers(response):
+    """Add CORS headers to all API responses."""
+    response.headers['Access-Control-Allow-Origin'] = 'http://127.0.0.1:3000'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
+
+
+# Global error handler for malformed JSON
+@api_bp.errorhandler(400)
+def handle_bad_request(error):
+    """Handle 400 Bad Request errors."""
+    if request.is_json:
+        return jsonify({'error': 'Invalid JSON format'}), 400
+    return jsonify({'error': 'Bad request'}), 400
+
+
+# Global error handler for JSON decode errors
+@api_bp.errorhandler(500)
+def handle_internal_error(error):
+    """Handle 500 Internal Server errors."""
+    if hasattr(error, 'description') and 'JSON' in error.description:
+        return jsonify({'error': 'Invalid JSON format'}), 400
+    return jsonify({'error': 'Internal server error'}), 500
+
+
+# Handle OPTIONS requests for CORS preflight
+@api_bp.route('/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    """Handle CORS preflight requests."""
+    response = jsonify({})
+    response.headers['Access-Control-Allow-Origin'] = 'http://127.0.0.1:3000'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
 
 

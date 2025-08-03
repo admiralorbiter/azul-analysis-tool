@@ -418,6 +418,12 @@ class AzulState(GameState):
             self.tiles[tile_type] += number
             self.total += number
 
+        def to_dict(self):
+            return {
+                'tiles': dict(self.tiles),
+                'total': self.total
+            }
+
 
     class AgentState:
         GRID_SIZE = 5
@@ -487,6 +493,14 @@ class AzulState(GameState):
             for tile in utils.Tile:
                 self.number_of[tile] = 0
 
+        def to_dict(self):
+            return {
+                'score': self.score,
+                'lines_number': list(self.lines_number),
+                'lines_tile': list(self.lines_tile),
+                'grid_state': [list(row) for row in self.grid_state],
+                'floor_tiles': list(self.floor_tiles),
+            }
 
         # Add given tiles to the agent's floor line. After calling this 
         # method, 'tiles' will contain tiles that could not be added to
@@ -1006,6 +1020,17 @@ class AzulState(GameState):
             }
         
         return move_info
+
+    def to_dict(self):
+        """Serialize the AzulState to a dictionary for API/testing."""
+        return {
+            'agents': [agent.to_dict() for agent in self.agents],
+            'factories': [factory.to_dict() for factory in self.factories],
+            'centre_pool': self.centre_pool.to_dict() if hasattr(self.centre_pool, 'to_dict') else {},
+            'first_agent_taken': getattr(self, 'first_agent_taken', False),
+            'first_agent': getattr(self, 'first_agent', 0),
+            'next_first_agent': getattr(self, 'next_first_agent', 0),
+        }
 
     def is_game_over(self):
         """Check if the game is over according to Azul rules.

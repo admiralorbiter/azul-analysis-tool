@@ -33,21 +33,38 @@ class TestFloorLinePatternDetection(unittest.TestCase):
         self.basic_state = Mock(spec=AzulState)
         self.basic_state.agents = [Mock(), Mock()]
         
-        # Set up basic factory and center pool
-        self.basic_state.factories = [[0, 1, 2], [1, 2, 3], [2, 3, 4]]
-        self.basic_state.center = [0, 1, 2, 3, 4]
-        self.basic_state.center_pool = [0, 1, 2, 3, 4]
+        # Create proper TileDisplay objects for factories and center
+        factory1 = Mock()
+        factory1.tiles = {utils.Tile.BLUE: 1, utils.Tile.RED: 1, utils.Tile.YELLOW: 1}
+        factory1.total = 3
+        
+        factory2 = Mock()
+        factory2.tiles = {utils.Tile.RED: 1, utils.Tile.YELLOW: 1, utils.Tile.BLACK: 1}
+        factory2.total = 3
+        
+        factory3 = Mock()
+        factory3.tiles = {utils.Tile.YELLOW: 1, utils.Tile.BLACK: 1, utils.Tile.WHITE: 1}
+        factory3.total = 3
+        
+        self.basic_state.factories = [factory1, factory2, factory3]
+        
+        center_pool = Mock()
+        center_pool.tiles = {utils.Tile.BLUE: 1, utils.Tile.RED: 1, utils.Tile.YELLOW: 1, utils.Tile.BLACK: 1, utils.Tile.WHITE: 1}
+        center_pool.total = 5
+        self.basic_state.centre_pool = center_pool
         
         # Set up basic player state attributes
         self.basic_state.agents[0].GRID_SIZE = 5
         self.basic_state.agents[0].grid_state = np.zeros((5, 5), dtype=int)
-        self.basic_state.agents[0].pattern_lines = [[], [], [], [], []]
+        self.basic_state.agents[0].lines_number = [0, 0, 0, 0, 0]  # Pattern line counts
+        self.basic_state.agents[0].lines_tile = [-1, -1, -1, -1, -1]  # Pattern line colors
         self.basic_state.agents[0].floor_tiles = []
         self.basic_state.agents[0].score = 0
         
         self.basic_state.agents[1].GRID_SIZE = 5
         self.basic_state.agents[1].grid_state = np.zeros((5, 5), dtype=int)
-        self.basic_state.agents[1].pattern_lines = [[], [], [], [], []]
+        self.basic_state.agents[1].lines_number = [0, 0, 0, 0, 0]  # Pattern line counts
+        self.basic_state.agents[1].lines_tile = [-1, -1, -1, -1, -1]  # Pattern line colors
         self.basic_state.agents[1].floor_tiles = []
         self.basic_state.agents[1].score = 0
     
@@ -113,7 +130,8 @@ class TestFloorLinePatternDetection(unittest.TestCase):
     def test_blocking_opportunity_detection(self):
         """Test detection of blocking opportunities."""
         # Set up opponent with nearly complete pattern line
-        self.basic_state.agents[1].pattern_lines[2] = [utils.Tile.BLUE, utils.Tile.BLUE]  # 2/3 tiles
+        self.basic_state.agents[1].lines_number = [0, 0, 2, 0, 0]  # 2 tiles in line 2
+        self.basic_state.agents[1].lines_tile = [-1, -1, utils.Tile.BLUE, -1, -1]  # Blue tiles in line 2
         
         with patch.object(self.detector, '_count_tiles_available', return_value=1):
             opportunities = self.detector._detect_floor_line_blocking_opportunities(
@@ -282,7 +300,8 @@ class TestFloorLinePatternDetection(unittest.TestCase):
         """Test comprehensive pattern detection."""
         # Set up a complex state with multiple opportunities
         self.basic_state.agents[0].floor_tiles = [utils.Tile.BLUE, utils.Tile.RED]
-        self.basic_state.agents[1].pattern_lines[2] = [utils.Tile.YELLOW, utils.Tile.YELLOW]
+        self.basic_state.agents[1].lines_number[2] = 2  # 2 tiles in pattern line 2
+        self.basic_state.agents[1].lines_tile[2] = utils.Tile.YELLOW  # Yellow tiles
         
         with patch.object(self.detector, '_count_tiles_available', return_value=2):
             with patch.object(self.detector, '_assess_game_phase', return_value="mid"):
