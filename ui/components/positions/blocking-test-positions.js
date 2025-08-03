@@ -16,9 +16,16 @@ window.blockingTestPositions = (() => {
         
         // Convert player data to the expected format
         const convertedPlayers = players.map(player => ({
-            pattern_lines: player.patternLines.map((count, index) => 
-                Array(count).fill(player.patternLineColors[index] === -1 ? null : player.patternLineColors[index])
-            ),
+            pattern_lines: player.patternLines.map((count, index) => {
+                const colorIndex = player.patternLineColors[index];
+                if (colorIndex === -1) {
+                    return Array(count).fill(null);
+                }
+                // Convert numeric color index to string color
+                const colorMap = ['B', 'Y', 'R', 'K', 'W'];
+                const colorString = colorMap[colorIndex];
+                return Array(count).fill(colorString);
+            }),
             wall: player.wall,
             floor_line: player.floorTiles || [],
             score: player.score
