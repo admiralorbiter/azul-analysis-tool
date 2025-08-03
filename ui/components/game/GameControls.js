@@ -8,6 +8,7 @@ const DevelopmentToolsPanel = window.DevelopmentToolsPanel;
 const AnalysisResults = window.AnalysisResults;
 const PatternAnalysis = window.PatternAnalysis;
 const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
+const StrategicPatternAnalysis = window.StrategicPatternAnalysis;
 
 window.GameControls = function GameControls({
     // Analysis state
@@ -176,6 +177,29 @@ window.GameControls = function GameControls({
                     onOptimizationDetected: (optimizations) => {
                         if (optimizations.opportunities_detected) {
                             setStatusMessage(`🎯 ${optimizations.total_opportunities} scoring optimization opportunity${optimizations.total_opportunities !== 1 ? 'ies' : 'y'} detected`);
+                        }
+                    }
+                })
+            ),
+            
+            // Strategic Pattern Analysis Section (Phase 2.4)
+            React.createElement('div', {
+                className: 'mb-4'
+            },
+                React.createElement('h4', {
+                    className: 'font-medium text-sm mb-2 text-gray-700'
+                }, '🎯 Strategic Pattern Analysis'),
+                React.createElement(StrategicPatternAnalysis, {
+                    gameState: gameState,
+                    currentPlayer: currentPlayer,
+                    onStrategicAnalysis: (analysis) => {
+                        if (analysis.factory_control_opportunities?.length > 0 || 
+                            analysis.endgame_scenarios?.length > 0 || 
+                            analysis.risk_reward_scenarios?.length > 0) {
+                            const totalOpportunities = (analysis.factory_control_opportunities?.length || 0) + 
+                                                     (analysis.endgame_scenarios?.length || 0) + 
+                                                     (analysis.risk_reward_scenarios?.length || 0);
+                            setStatusMessage(`🎯 ${totalOpportunities} strategic pattern opportunity${totalOpportunities !== 1 ? 'ies' : 'y'} detected`);
                         }
                     }
                 })

@@ -29,8 +29,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
             const hasBlockingTest = window.blockingTestPositions && Object.keys(window.blockingTestPositions).length > 0;
             const hasScoringOptimization = window.scoringOptimizationTestPositions && Object.keys(window.scoringOptimizationTestPositions).length > 0;
             const hasFloorLineTest = window.floorLineTestPositions && Object.keys(window.floorLineTestPositions).length > 0;
+            const hasStrategicPattern = window.strategicPatternTestPositions && Object.keys(window.strategicPatternTestPositions).length > 0;
             
-            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization || hasFloorLineTest) {
+            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization || hasFloorLineTest || hasStrategicPattern) {
                 setModulesLoaded(true);
             } else {
                 // Check again in 100ms if modules aren't loaded yet
@@ -50,6 +51,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const blockingTestPositions = window.blockingTestPositions || {};
     const scoringOptimizationTestPositions = window.scoringOptimizationTestPositions || {};
     const floorLineTestPositions = window.floorLineTestPositions || {};
+    const strategicPatternTestPositions = window.strategicPatternTestPositions || {};
 
     // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
@@ -160,7 +162,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
             subcategories: {
                 ...blockingTestPositions,
                 ...scoringOptimizationTestPositions,
-                ...floorLineTestPositions
+                ...floorLineTestPositions,
+                ...strategicPatternTestPositions
             }
         }
     };

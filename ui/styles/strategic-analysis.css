@@ -1,0 +1,331 @@
+/* Strategic Pattern Analysis Styles */
+
+.strategic-analysis {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.strategic-analysis.loading {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.strategic-analysis.loading .loading-spinner {
+    font-size: 24px;
+    margin-bottom: 8px;
+    animation: pulse 1.5s infinite;
+}
+
+.strategic-analysis.error {
+    padding: 20px;
+    text-align: center;
+    color: #d32f2f;
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+}
+
+.strategic-analysis.error .error-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.strategic-analysis.error .error-message {
+    font-weight: 500;
+}
+
+.strategic-analysis .analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.strategic-analysis .analysis-title {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.strategic-analysis .analysis-icon {
+    margin-right: 8px;
+    font-size: 20px;
+}
+
+.strategic-analysis .analysis-metrics {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.strategic-analysis .metric-box {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.strategic-analysis .confidence-display {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.strategic-analysis .details-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.strategic-analysis .details-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.strategic-analysis .details-button.active {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.strategic-analysis .analysis-content {
+    padding: 20px;
+}
+
+.strategic-analysis .analysis-content.no-results {
+    text-align: center;
+    color: #666;
+}
+
+.strategic-analysis .no-results-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.strategic-analysis .no-results-message {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.strategic-analysis .no-results-hint {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.strategic-analysis .summary-view {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.strategic-analysis .summary-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.strategic-analysis .summary-message {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.strategic-analysis .summary-breakdown {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.strategic-analysis .breakdown-item {
+    background: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #666;
+}
+
+.strategic-analysis .detailed-analysis {
+    margin-top: 16px;
+}
+
+.strategic-analysis .analysis-section {
+    margin-bottom: 24px;
+}
+
+.strategic-analysis .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.strategic-analysis .opportunity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.strategic-analysis .opportunity-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    transition: all 0.2s;
+}
+
+.strategic-analysis .opportunity-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+}
+
+.strategic-analysis .opportunity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.strategic-analysis .opportunity-type {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.strategic-analysis .confidence-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.strategic-analysis .confidence-badge.confidence-high {
+    background: #d4edda;
+    color: #155724;
+}
+
+.strategic-analysis .confidence-badge.confidence-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.strategic-analysis .confidence-badge.confidence-low {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.strategic-analysis .opportunity-description {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.strategic-analysis .recommended-actions {
+    font-size: 13px;
+    color: #666;
+    background: #e8f4fd;
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #667eea;
+}
+
+.strategic-analysis .risk-reward-metrics {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+}
+
+.strategic-analysis .risk-metric {
+    color: #d32f2f;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.strategic-analysis .reward-metric {
+    color: #388e3c;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.strategic-analysis .suggestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.strategic-analysis .suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #667eea;
+}
+
+.strategic-analysis .suggestion-number {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 20px;
+}
+
+.strategic-analysis .suggestion-text {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.4;
+}
+
+.strategic-analysis .position-assessment {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.strategic-analysis .assessment-text {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+}
+
+/* Animation for loading spinner */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .strategic-analysis .analysis-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .strategic-analysis .analysis-metrics {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .strategic-analysis .summary-breakdown {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .strategic-analysis .risk-reward-metrics {
+        flex-direction: column;
+        gap: 8px;
+    }
+} 
