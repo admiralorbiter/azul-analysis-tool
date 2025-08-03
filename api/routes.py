@@ -2254,7 +2254,7 @@ def create_game():
 @api_bp.route('/game_state', methods=['GET'])
 def get_game_state():
     """Get the current game state for display."""
-    global _current_editable_game_state
+    global _current_editable_game_state, _initial_game_state
     
     try:
         # If we have a stored editable game state, return it
@@ -2269,9 +2269,18 @@ def get_game_state():
         try:
             state = parse_fen_string(fen_string)
         except ValueError:
-            # For invalid FEN, return default initial state
+            # For invalid FEN, return default initial state with consistent seed
             from core.azul_model import AzulState
+            import random
+            
+            # Use fixed seed for consistent initial state
+            random.seed(42)
             state = AzulState(2)
+            random.seed()  # Reset to random seed
+            
+            # Store this as the initial state for future use
+            if _initial_game_state is None:
+                _initial_game_state = copy.deepcopy(state)
         
         # Convert state to frontend format
         game_state = {

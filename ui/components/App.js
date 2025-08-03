@@ -59,6 +59,51 @@ function App() {
         console.log('App: setGameState called with:', newState);
         setGameState(newState);
     }, []);
+    
+    // Add state stability tracking
+    const [hasStableState, setHasStableState] = useState(false);
+    const [lastStateHash, setLastStateHash] = useState(null);
+    const [userActive, setUserActive] = useState(false);
+    const [lastUserActivity, setLastUserActivity] = useState(Date.now());
+    
+    // Helper function to create a simple hash of game state for comparison
+    const createStateHash = useCallback((state) => {
+        if (!state) return null;
+        try {
+            // Create a simple hash based on factories and player scores
+            const factoriesHash = JSON.stringify(state.factories || []);
+            const scoresHash = JSON.stringify(state.players?.map(p => p.score) || []);
+            return `${factoriesHash}_${scoresHash}`;
+        } catch (error) {
+            console.error('Error creating state hash:', error);
+            return null;
+        }
+    }, []);
+    
+    // Track user activity
+    const trackUserActivity = useCallback(() => {
+        setUserActive(true);
+        setLastUserActivity(Date.now());
+        // Reset user active flag after 30 seconds of inactivity
+        setTimeout(() => setUserActive(false), 30000);
+    }, []);
+    
+    // Manual refresh function
+    const manualRefresh = useCallback(() => {
+        if (sessionStatus === 'connected' && !loading) {
+            setLoading(true);
+            getGameState('saved').catch(() => getGameState('initial')).then(data => {
+                debugSetGameState(data);
+                setStatusMessage('Game state refreshed manually');
+                setLastStateHash(createStateHash(data));
+            }).catch(error => {
+                console.error('Failed to refresh game state:', error);
+                setStatusMessage('Failed to refresh game state');
+            }).finally(() => {
+                setLoading(false);
+            });
+        }
+    }, [sessionStatus, loading, createStateHash]);
     const [selectedTile, setSelectedTile] = useState(null);
     const [editMode, setEditMode] = useState(false);
     const [selectedElements, setSelectedElements] = useState([]);
@@ -96,6 +141,9 @@ function App() {
     const [showPositionLibrary, setShowPositionLibrary] = useState(false);
     const [positionJustLoaded, setPositionJustLoaded] = useState(false);
     
+    // Auto-refresh configuration
+    const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+    
 
     
 
@@ -127,6 +175,8 @@ function App() {
                 console.log('Game state loaded:', data);
                 debugSetGameState(data);
                 setStatusMessage('Game loaded');
+                setHasStableState(true);
+                setLastStateHash(createStateHash(data));
             })
             .catch(error => {
                 setSessionStatus('error');
@@ -134,20 +184,47 @@ function App() {
             });
     }, []);
 
-    // Refresh game state periodically
+    // Improved refresh game state periodically - only when necessary
     useEffect(() => {
         const interval = setInterval(() => {
-            if (sessionStatus === 'connected' && !loading && !editMode && !positionJustLoaded) {
+            // Only refresh if:
+            // 1. We're connected
+            // 2. Not loading
+            // 3. Not in edit mode
+            // 4. Position wasn't just loaded
+            // 5. We have a stable state (don't keep refreshing if state is unstable)
+            // 6. User is not actively interacting (inactive for 30+ seconds)
+            // 7. Auto-refresh is enabled
+            const timeSinceActivity = Date.now() - lastUserActivity;
+            const shouldRefresh = sessionStatus === 'connected' && 
+                               !loading && 
+                               !editMode && 
+                               !positionJustLoaded && 
+                               hasStableState && 
+                               !userActive && 
+                               timeSinceActivity > 30000 && // 30 seconds
+                               autoRefreshEnabled;
+                               
+            if (shouldRefresh) {
                 // Try to load saved state first, fall back to initial state
                 getGameState('saved').catch(() => getGameState('initial')).then(data => {
-                    debugSetGameState(data);
+                    const newStateHash = createStateHash(data);
+                    
+                    // Only update if the state has actually changed
+                    if (newStateHash !== lastStateHash) {
+                        console.log('State changed, updating...');
+                        debugSetGameState(data);
+                        setLastStateHash(newStateHash);
+                    } else {
+                        console.log('State unchanged, skipping update');
+                    }
                 }).catch(error => {
                     console.error('Failed to refresh game state:', error);
                 });
             }
-        }, 5000);
+        }, 15000); // Increased interval to 15 seconds to reduce unnecessary calls
         return () => clearInterval(interval);
-    }, [sessionStatus, loading, editMode, positionJustLoaded]);
+    }, [sessionStatus, loading, editMode, positionJustLoaded, hasStableState, lastStateHash, createStateHash, userActive, lastUserActivity, autoRefreshEnabled]);
 
     // Clear selection function
     const clearSelection = useCallback(() => {
@@ -752,7 +829,10 @@ function App() {
             
             // Main content - Condensed single-screen layout
             React.createElement('div', {
-                className: 'max-w-full mx-auto px-4 py-2'
+                className: 'max-w-full mx-auto px-4 py-2',
+                onMouseMove: trackUserActivity,
+                onClick: trackUserActivity,
+                onKeyDown: trackUserActivity
             },
                 // Compact status bar
                 React.createElement('div', {
@@ -776,11 +856,26 @@ function App() {
                             }, '🤖 Thinking...'),
                             positionJustLoaded && React.createElement('span', {
                                 className: 'text-green-600 font-medium'
-                            }, '📚 Position Loaded')
+                            }, '📚 Position Loaded'),
+                            userActive && React.createElement('span', {
+                                className: 'text-orange-600'
+                            }, '👤 Active'),
+                            !autoRefreshEnabled && React.createElement('span', {
+                                className: 'text-red-600'
+                            }, '⏸️ Auto-Refresh Off')
                         ),
                         React.createElement('div', {
-                            className: 'text-gray-600'
-                        }, `Moves: ${moveHistory.length}`)
+                            className: 'flex items-center space-x-2'
+                        },
+                            React.createElement('span', {
+                                className: 'text-gray-600'
+                            }, `Moves: ${moveHistory.length}`),
+                            React.createElement('button', {
+                                className: 'btn-secondary btn-xs',
+                                onClick: manualRefresh,
+                                disabled: loading
+                            }, '🔄 Refresh')
+                        )
                     )
                 ),
                 
@@ -1016,7 +1111,11 @@ function App() {
                                 React.createElement('button', {
                                     className: 'btn-info btn-xs w-full',
                                     onClick: () => setHeatmapEnabled(!heatmapEnabled)
-                                }, heatmapEnabled ? '🔥 Hide Heatmap' : '🔥 Show Heatmap')
+                                }, heatmapEnabled ? '🔥 Hide Heatmap' : '🔥 Show Heatmap'),
+                                React.createElement('button', {
+                                    className: `${autoRefreshEnabled ? 'btn-warning' : 'btn-success'} btn-xs w-full`,
+                                    onClick: () => setAutoRefreshEnabled(!autoRefreshEnabled)
+                                }, autoRefreshEnabled ? '⏸️ Disable Auto-Refresh' : '▶️ Enable Auto-Refresh')
                             )
                         )
                     )
