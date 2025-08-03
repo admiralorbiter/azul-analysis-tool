@@ -181,31 +181,61 @@ def parse_fen_string(fen_string: str):
     global _current_game_state, _initial_game_state
     from core.azul_model import AzulState
     
-    if fen_string.lower() == "initial":
-        # Use a consistent initial state with fixed seed for reproducibility
-        if _initial_game_state is None:
-            # Set a fixed seed to ensure consistent initial state
-            random.seed(42)
-            _initial_game_state = AzulState(2)  # 2-player starting position
-            # Reset seed to random
-            random.seed()
-            # Initialize current state from initial state
-            _current_game_state = copy.deepcopy(_initial_game_state)
-        
-        # Always return the current game state (which starts as a copy of initial)
-        return _current_game_state
-    elif fen_string.startswith("state_"):
-        # This is a state identifier - return the current game state
-        if _current_game_state is None:
-            # If we don't have a current state, create from initial state
+    print(f"DEBUG: parse_fen_string called with: {fen_string}")
+    print(f"DEBUG: _initial_game_state is None: {_initial_game_state is None}")
+    print(f"DEBUG: _current_game_state is None: {_current_game_state is None}")
+    
+    try:
+        if fen_string.lower() == "initial":
+            # Use a consistent initial state with fixed seed for reproducibility
             if _initial_game_state is None:
+                print("DEBUG: Creating initial game state")
+                # Set a fixed seed to ensure consistent initial state
+                random.seed(42)
+                _initial_game_state = AzulState(2)  # 2-player starting position
+                print(f"DEBUG: Initial game state created: {_initial_game_state is not None}")
+                # Reset seed to random
+                random.seed()
+                # Initialize current state from initial state
+                print("DEBUG: About to create current game state from initial")
+                _current_game_state = copy.deepcopy(_initial_game_state)
+                print(f"DEBUG: Current game state created: {_current_game_state is not None}")
+            
+            # Always return the current game state (which starts as a copy of initial)
+            print(f"DEBUG: Returning current game state: {_current_game_state is not None}")
+            if _current_game_state is None:
+                print("DEBUG: ERROR - _current_game_state is None!")
+                return None
+            return _current_game_state
+        elif fen_string.startswith("state_"):
+            # This is a state identifier - return the current game state
+            if _current_game_state is None:
+                # If we don't have a current state, create from initial state
+                if _initial_game_state is None:
+                    print("DEBUG: Creating initial game state for state_ identifier")
+                    random.seed(42)
+                    _initial_game_state = AzulState(2)
+                    random.seed()
+                _current_game_state = copy.deepcopy(_initial_game_state)
+            return _current_game_state
+        elif fen_string.lower() == "saved":
+            # Handle 'saved' as equivalent to 'initial' for now
+            # In the future, this could load from a saved state file
+            print("DEBUG: Handling 'saved' FEN string as 'initial'")
+            if _initial_game_state is None:
+                print("DEBUG: Creating initial game state for saved")
                 random.seed(42)
                 _initial_game_state = AzulState(2)
                 random.seed()
-            _current_game_state = copy.deepcopy(_initial_game_state)
-        return _current_game_state
-    else:
-        raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial' or state identifiers.")
+                _current_game_state = copy.deepcopy(_initial_game_state)
+            return _current_game_state
+        else:
+            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', or state identifiers.")
+    except Exception as e:
+        print(f"DEBUG: Exception in parse_fen_string: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 def update_current_game_state(new_state):
     """Update the current game state."""
@@ -1949,6 +1979,7 @@ def execute_move():
         try:
             data = request.get_json(force=True)
             print(f"DEBUG: Raw data received: {data}")
+            print(f"DEBUG: FEN string received: {data.get('fen_string', 'NOT_FOUND')}")
         except Exception as e:
             print(f"DEBUG: Error parsing JSON: {e}")
             data = None
@@ -1964,7 +1995,19 @@ def execute_move():
         try:
             print("DEBUG: About to parse FEN string")
             state = parse_fen_string(request_model.fen_string)
-            print(f"DEBUG: FEN parsed successfully - agent count: {len(state.agents)}, factories: {len(state.factories)}")
+            print(f"DEBUG: FEN parsed successfully - state is None: {state is None}")
+            if state is not None:
+                print(f"DEBUG: State has agents: {hasattr(state, 'agents')}")
+                print(f"DEBUG: Agent count: {len(state.agents) if hasattr(state, 'agents') else 'No agents'}")
+                print(f"DEBUG: FEN parsed successfully - agent count: {len(state.agents)}, factories: {len(state.factories)}")
+                
+                # Debug: Print factory contents
+                print("DEBUG: Factory contents:")
+                for i, factory in enumerate(state.factories):
+                    print(f"  Factory {i}: {dict(factory.tiles)}")
+            else:
+                print("DEBUG: ERROR - parse_fen_string returned None!")
+                
         except ValueError as e:
             print(f"DEBUG: FEN parsing error: {e}")
             return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
@@ -1976,6 +2019,10 @@ def execute_move():
         try:
             print("DEBUG: About to convert frontend move")
             move_data = request_model.move
+            print(f"DEBUG: Frontend move data: {move_data}")
+            print(f"DEBUG: Frontend move data type: {type(move_data)}")
+            print(f"DEBUG: Frontend move data keys: {move_data.keys() if isinstance(move_data, dict) else 'Not a dict'}")
+            
             engine_move = convert_frontend_move_to_engine(move_data)
             print(f"DEBUG: Converted engine move: {engine_move}")
         except Exception as e:
@@ -1989,6 +2036,11 @@ def execute_move():
             generator = FastMoveGenerator()
             legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
             print(f"DEBUG: Generated {len(legal_moves)} legal moves")
+            
+            # Debug: Print first few legal moves to see their format
+            for i, move in enumerate(legal_moves[:5]):
+                print(f"DEBUG: Legal move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type}, pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
+                
         except Exception as e:
             print(f"DEBUG: Error generating moves: {e}")
             return jsonify({'error': f'Error generating legal moves: {str(e)}'}), 500
@@ -2044,6 +2096,7 @@ def execute_move():
         return jsonify({
             'success': True,
             'new_fen': new_fen,
+            'fen_string': new_fen,  # Include for consistency
             'move_executed': format_move(matching_move),
             'game_over': new_state.is_game_over(),
             'scores': [agent.score for agent in new_state.agents],
@@ -2286,7 +2339,8 @@ def get_game_state():
         game_state = {
             'factories': [],
             'center': [],
-            'players': []
+            'players': [],
+            'fen_string': state_to_fen(state)  # Include current FEN string
         }
         
         # Convert factories

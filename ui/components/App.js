@@ -436,7 +436,10 @@ function App() {
         setStatusMessage('Executing move...');
         
         try {
-            const result = await executeMove(gameState.fen_string || 'initial', move, currentPlayer);
+            // Use the current FEN string from game state, or 'initial' as fallback
+            const currentFen = gameState.fen_string || 'initial';
+            console.log('Executing move with FEN:', currentFen);
+            const result = await executeMove(currentFen, move, currentPlayer);
             
             if (result.success) {
                 const newGameState = await getGameState(result.new_fen);
@@ -551,6 +554,7 @@ function App() {
                 
                 console.log('=== MOVE DEBUG ===');
                 console.log(`Factory ${dragData.sourceId} contents:`, factory);
+                console.log(`All factories:`, gameState?.factories);
                 console.log(`Taking ${tilesOfColor} ${dragData.tile} tiles (type ${tileType})`);
                 console.log(`Pattern line ${rowIndex}: ${currentTilesInLine}/${maxPatternLineCapacity} tiles`);
                 console.log(`Available space: ${availableSpace}`);
