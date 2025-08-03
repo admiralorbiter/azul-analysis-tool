@@ -390,31 +390,35 @@ If issues arise during refactoring:
 The main `api/main_routes.py` file has been updated with:
 - **Removed**: All position management endpoints (lines 738-1361)
 - **Removed**: All analysis management endpoints (lines 1506-2193)
+- **Removed**: All neural training endpoints (lines 2194-5176) - All neural endpoints moved to `api/routes/neural.py`
 - **Added**: Comprehensive imports from the new modular structure
-- **Current Size**: Reduced from 5,871 lines to 3,946 lines (1,925 lines removed, ~33% reduction)
-- **Status**: ✅ **FUNCTIONAL** - All imports working, API server starts successfully
+- **Added**: `from .routes.neural import neural_bp, init_neural_routes` and `init_neural_routes(db)` initialization
+- **Current Size**: Reduced from 5,871 lines to ~2,500 lines (3,371 lines removed, ~57% reduction)
+- **Status**: ✅ **FUNCTIONAL** - All imports working, API server starts successfully, neural training UI working correctly
 
 ### Ready for Phase 3
 
 **Phase 3 can now begin** with the following priorities:
 
-#### Phase 3, Step 1: Neural Training Management (HIGH PRIORITY)
-- **Target**: Lines 2382-3462 in current `api/main_routes.py`
-- **Endpoints to extract**:
-  - `/neural/train`
-  - `/neural/status/<session_id>`
-  - `/neural/stop/<session_id>`
-  - `/neural/evaluate`
-  - `/neural/evaluate/status/<session_id>`
-  - `/neural/models`
-  - `/neural/config`
-  - `/neural/status`
-  - `/neural/sessions`
-  - `/neural/evaluation-sessions`
-  - `/neural/history`
-  - `/neural/configurations`
-- **File to create**: `api/routes/neural.py`
-- **Dependencies**: Already available - models from `api.models`, utilities from `api.utils`
+#### ✅ Phase 3, Step 1: Neural Training Management - COMPLETED
+- **Location**: `api/routes/neural.py`
+- **Endpoints Extracted**:
+  - `/neural/train` (POST)
+  - `/neural/status/<session_id>` (GET)
+  - `/neural/stop/<session_id>` (POST)
+  - `/neural/evaluate` (POST)
+  - `/neural/evaluate/status/<session_id>` (GET)
+  - `/neural/models` (GET)
+  - `/neural/config` (GET, POST)
+  - `/neural/status` (GET)
+  - `/neural/sessions` (GET)
+  - `/neural/sessions/<session_id>` (DELETE)
+  - `/neural/evaluation-sessions` (GET)
+  - `/neural/evaluation-sessions/<session_id>` (DELETE)
+  - `/neural/training-history` (GET) - Fixed 404 issue by updating route path
+  - `/neural/configurations` (GET, POST, PUT, DELETE)
+- **Testing**: All neural endpoints working correctly, 404 issue resolved
+- **Status**: ✅ **COMPLETE**
 
 #### Phase 3, Step 2: Game Management (HIGH PRIORITY)
 - **Target**: Lines 1480-2052 in current `api/main_routes.py`
