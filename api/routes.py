@@ -229,8 +229,28 @@ def parse_fen_string(fen_string: str):
                 random.seed()
                 _current_game_state = copy.deepcopy(_initial_game_state)
             return _current_game_state
+        elif fen_string == "test_blocking_position":
+            # Handle test blocking position - create a state with blocking opportunities
+            print("DEBUG: Creating test blocking position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up a blocking scenario: Player 1 has blue tiles in pattern line 0
+            # Player 0 (current player) can block by taking blue tiles
+            test_state.agents[1].lines_tile[0] = 0  # Blue tiles in pattern line 0
+            test_state.agents[1].lines_number[0] = 1  # 1 blue tile
+            
+            # Add blue tiles to factories for blocking
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            
+            # Add some blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
         else:
-            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', or state identifiers.")
+            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', 'test_blocking_position', or state identifiers.")
     except Exception as e:
         print(f"DEBUG: Exception in parse_fen_string: {e}")
         import traceback
@@ -4285,6 +4305,15 @@ class BoardValidationRequest(BaseModel):
     element_id: Optional[str] = None
 
 
+class PatternDetectionRequest(BaseModel):
+    """Request model for pattern detection."""
+    fen_string: str
+    current_player: int = 0
+    include_blocking_opportunities: bool = True
+    include_move_suggestions: bool = True
+    urgency_threshold: float = 0.7
+
+
 @api_bp.route('/validate-board-state', methods=['POST'])
 @require_session
 def validate_board_state():
@@ -4408,73 +4437,107 @@ def validate_pattern_line_edit():
 
 @api_bp.route('/validate-tile-count', methods=['POST'])
 def validate_tile_count():
-    """
-    Validate tile conservation during editing (no auth required for UI responsiveness).
-    """
+    """Validate tile count conservation in the game state."""
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        # Extract parameters
-        game_state = data.get('game_state', {})
-        changed_color = data.get('changed_color')
-        changed_amount = data.get('changed_amount', 0)
+        # Parse the request
+        try:
+            request_model = BoardValidationRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
         
-        if changed_color is None:
-            return jsonify({'valid': True})
+        # Parse FEN string to get game state
+        try:
+            state = parse_fen_string(request_model.game_state.get('fen', ''))
+        except Exception as e:
+            return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
         
-        # Count current tiles of this color (simplified)
-        current_count = 0
+        # Import and use the rule validator
+        from core.azul_rule_validator import AzulRuleValidator
+        validator = AzulRuleValidator()
         
-        # Count in factories
-        if 'factories' in game_state:
-            for factory in game_state['factories']:
-                if 'tiles' in factory and str(changed_color) in factory['tiles']:
-                    current_count += factory['tiles'][str(changed_color)]
+        # Validate tile conservation
+        validation_result = validator.validate_tile_conservation(state)
         
-        # Count in center pool
-        if 'centre_pool' in game_state and 'tiles' in game_state['centre_pool']:
-            if str(changed_color) in game_state['centre_pool']['tiles']:
-                current_count += game_state['centre_pool']['tiles'][str(changed_color)]
-        
-        # Count in player areas (simplified)
-        if 'agents' in game_state:
-            for agent in game_state['agents']:
-                # Pattern lines
-                for i in range(5):
-                    if agent.get('lines_tile', [None]*5)[i] == changed_color:
-                        current_count += agent.get('lines_number', [0]*5)[i]
-                
-                # Floor tiles
-                floor_tiles = agent.get('floor_tiles', [])
-                current_count += floor_tiles.count(changed_color)
-        
-        # Calculate new count
-        new_count = current_count + changed_amount
-        
-        # Validate
-        if new_count > 20:
-            color_names = ["Blue", "Yellow", "Red", "Black", "White"]
-            color_name = color_names[changed_color] if 0 <= changed_color < 5 else f"Color {changed_color}"
-            
-            return jsonify({
-                'valid': False,
-                'error': f'Too many {color_name} tiles: {new_count}/20',
-                'suggestion': f'Remove {new_count - 20} tiles to maintain game balance'
-            })
-        elif new_count < 0:
-            return jsonify({
-                'valid': False,
-                'error': 'Cannot have negative tile count',
-                'suggestion': f'Add {abs(new_count)} tiles back'
-            })
-        
-        return jsonify({'valid': True})
+        return jsonify({
+            'is_valid': validation_result.is_valid,
+            'message': validation_result.message,
+            'tile_counts': validator.count_all_tiles(state) if hasattr(validator, 'count_all_tiles') else {}
+        })
         
     except Exception as e:
-        return jsonify({
-            'valid': False,
-            'error': 'Tile count validation error',
-            'message': str(e)
-        }), 500
+        return jsonify({'error': f'Validation error: {str(e)}'}), 500
+
+
+@api_bp.route('/detect-patterns', methods=['POST'])
+def detect_patterns():
+    """Detect tactical patterns in the current position."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Parse the request
+        try:
+            request_model = PatternDetectionRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
+        
+        # Parse FEN string to get game state
+        try:
+            state = parse_fen_string(request_model.fen_string)
+        except Exception as e:
+            return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
+        
+        # Import and use the pattern detector
+        from core.azul_patterns import AzulPatternDetector
+        detector = AzulPatternDetector()
+        
+        # Update urgency threshold if provided
+        if request_model.urgency_threshold != 0.7:
+            detector.blocking_urgency_threshold = request_model.urgency_threshold
+        
+        # Detect patterns
+        pattern_detection = detector.detect_patterns(state, request_model.current_player)
+        
+        # Prepare response
+        response = {
+            'total_patterns': pattern_detection.total_patterns,
+            'confidence_score': pattern_detection.confidence_score,
+            'patterns_detected': True if pattern_detection.total_patterns > 0 else False
+        }
+        
+        # Add blocking opportunities if requested
+        if request_model.include_blocking_opportunities:
+            blocking_opportunities = []
+            for opp in pattern_detection.blocking_opportunities:
+                blocking_opportunities.append({
+                    'target_player': opp.target_player,
+                    'target_pattern_line': opp.target_pattern_line,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}"),
+                    'blocking_tiles_available': opp.blocking_tiles_available,
+                    'blocking_factories': opp.blocking_factories,
+                    'blocking_center': opp.blocking_center,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "HIGH" if opp.urgency_score > 0.8 else "MEDIUM" if opp.urgency_score > 0.6 else "LOW",
+                    'description': opp.description
+                })
+            response['blocking_opportunities'] = blocking_opportunities
+        
+        # Add move suggestions if requested
+        if request_model.include_move_suggestions and pattern_detection.blocking_opportunities:
+            move_suggestions = detector.get_blocking_move_suggestions(
+                state, request_model.current_player, pattern_detection.blocking_opportunities
+            )
+            response['move_suggestions'] = move_suggestions
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': f'Pattern detection error: {str(e)}'}), 500
+
+

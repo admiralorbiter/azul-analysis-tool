@@ -34,7 +34,8 @@ const {
     MoveOption,
     ContextMenu,
     Wall,
-    PlayerBoard
+    PlayerBoard,
+    PatternAnalysis
 } = {
     ValidationFeedback: window.ValidationFeedback || (() => React.createElement('div', null, 'ValidationFeedback not loaded')),
     BoardEditor: window.BoardEditor || (() => React.createElement('div', null, 'BoardEditor not loaded')),
@@ -56,7 +57,8 @@ const {
     MoveOption: window.MoveOption || (() => React.createElement('div', null, 'MoveOption not loaded')),
     ContextMenu: window.ContextMenu || (() => React.createElement('div', null, 'ContextMenu not loaded')),
     Wall: window.Wall || (() => React.createElement('div', null, 'Wall not loaded')),
-    PlayerBoard: window.PlayerBoard || (() => React.createElement('div', null, 'PlayerBoard not loaded'))
+    PlayerBoard: window.PlayerBoard || (() => React.createElement('div', null, 'PlayerBoard not loaded')),
+    PatternAnalysis: window.PatternAnalysis || (() => React.createElement('div', null, 'PatternAnalysis not loaded'))
 };
 
 // Import App component from window with fallback
@@ -70,7 +72,8 @@ const loadPositionModules = () => {
             'components/positions/midgame-positions.js',
             'components/positions/endgame-positions.js',
             'components/positions/educational-positions.js',
-            'components/positions/custom-positions.js'
+            'components/positions/custom-positions.js',
+            'components/positions/blocking-test-positions.js'
         ];
         
         let loadedCount = 0;

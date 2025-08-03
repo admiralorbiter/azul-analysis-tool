@@ -13,6 +13,7 @@ const DevelopmentToolsPanel = window.DevelopmentToolsPanel;
 const BoardEditor = window.BoardEditor;
 const ValidationFeedback = window.ValidationFeedback;
 const PositionLibrary = window.PositionLibrary;
+const PatternAnalysis = window.PatternAnalysis;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -983,6 +984,24 @@ function App() {
                                     setRollouts: setRollouts,
                                     agentId: agentId,
                                     setAgentId: setAgentId
+                                })
+                            ),
+                            
+                            // Pattern Analysis Section (R2.1)
+                            React.createElement('div', {
+                                className: 'mb-4'
+                            },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '🎯 Pattern Analysis'),
+                                React.createElement(PatternAnalysis, {
+                                    gameState: gameState,
+                                    currentPlayer: currentPlayer,
+                                    onPatternDetected: (patterns) => {
+                                        if (patterns.patterns_detected) {
+                                            setStatusMessage(`🎯 ${patterns.total_patterns} tactical pattern${patterns.total_patterns !== 1 ? 's' : ''} detected`);
+                                        }
+                                    }
                                 })
                             ),
                             

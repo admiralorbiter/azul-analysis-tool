@@ -26,8 +26,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
             const hasEndgame = window.endgamePositions && Object.keys(window.endgamePositions).length > 0;
             const hasEducational = window.educationalPositions && Object.keys(window.educationalPositions).length > 0;
             const hasCustom = window.customPositions && Object.keys(window.customPositions).length > 0;
+            const hasBlockingTest = window.blockingTestPositions && Object.keys(window.blockingTestPositions).length > 0;
             
-            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom) {
+            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest) {
                 setModulesLoaded(true);
             } else {
                 // Check again in 100ms if modules aren't loaded yet
@@ -44,6 +45,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const endgamePositions = window.endgamePositions || {};
     const educationalPositions = window.educationalPositions || {};
     const customPositionsModule = window.customPositions || {};
+    const blockingTestPositions = window.blockingTestPositions || {};
 
     // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
@@ -146,18 +148,31 @@ const PositionLibrary = React.memo(function PositionLibrary({
                     positions: []
                 }
             }
+        },
+        testing: {
+            name: "Testing Positions",
+            description: "Positions designed for testing specific features",
+            icon: "🧪",
+            subcategories: blockingTestPositions || {
+                "blocking": {
+                    name: "Blocking Detection Tests",
+                    description: "Positions designed to test tile blocking detection",
+                    positions: []
+                }
+            }
         }
     };
 
     // Available tags for filtering (2-player only)
     const availableTags = [
-        "opening", "midgame", "endgame", "educational",
+        "opening", "midgame", "endgame", "educational", "testing",
         "beginner", "intermediate", "advanced", "expert",
         "scoring", "blocking", "optimization", "counting",
         "2-player",
         "balanced", "aggressive", "color-focus", "high-interaction",
         "multiplier", "color-race", "floor-line", "final-round",
-        "tie-breaker", "conservation", "pattern-lines", "wall-strategy"
+        "tie-breaker", "conservation", "pattern-lines", "wall-strategy",
+        "pattern-detection", "simple", "complex", "multiple", "no-blocking"
     ];
 
     // Load position with validation
