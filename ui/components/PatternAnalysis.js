@@ -54,10 +54,15 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
     
     // Auto-detect patterns when game state changes
     useEffect(() => {
+        // Reset state when game state changes
+        setPatterns(null);
+        setError(null);
+        setShowDetails(false);
+        
         if (gameState && gameState.fen_string) {
             detectPatterns();
         }
-    }, [gameState?.fen_string, currentPlayer]);
+    }, [gameState?.fen_string, currentPlayer, gameState?.factories, gameState?.players]);
     
     // Color mapping for display
     const colorMap = {
