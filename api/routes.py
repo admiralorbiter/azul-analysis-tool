@@ -178,12 +178,13 @@ evaluation_sessions = {}
 
 def parse_fen_string(fen_string: str):
     """Parse FEN string to create game state."""
-    global _current_game_state, _initial_game_state
+    global _current_game_state, _initial_game_state, _current_editable_game_state
     from core.azul_model import AzulState
     
     print(f"DEBUG: parse_fen_string called with: {fen_string}")
     print(f"DEBUG: _initial_game_state is None: {_initial_game_state is None}")
     print(f"DEBUG: _current_game_state is None: {_current_game_state is None}")
+    print(f"DEBUG: _current_editable_game_state is None: {_current_editable_game_state is None}")
     
     try:
         if fen_string.lower() == "initial":
@@ -208,16 +209,41 @@ def parse_fen_string(fen_string: str):
                 return None
             return _current_game_state
         elif fen_string.startswith("state_"):
-            # This is a state identifier - return the current game state
-            if _current_game_state is None:
-                # If we don't have a current state, create from initial state
-                if _initial_game_state is None:
-                    print("DEBUG: Creating initial game state for state_ identifier")
-                    random.seed(42)
-                    _initial_game_state = AzulState(2)
-                    random.seed()
-                _current_game_state = copy.deepcopy(_initial_game_state)
-            return _current_game_state
+            # This is a state identifier - check if we have an editable game state
+            if _current_editable_game_state is not None:
+                print("DEBUG: Using editable game state for custom state identifier")
+                # Convert the frontend state back to an AzulState object
+                try:
+                    converted_state = convert_frontend_state_to_azul_state(_current_editable_game_state)
+                    if converted_state is not None:
+                        print("DEBUG: Successfully converted frontend state to AzulState. Setting as _current_game_state.")
+                        _current_game_state = converted_state  # IMPORTANT: Update _current_game_state
+                        return _current_game_state
+                    else:
+                        print("DEBUG: Failed to convert frontend state, falling back to current state")
+                except Exception as e:
+                    print(f"DEBUG: Error converting frontend state: {e}")
+                
+                # Fall back to current game state if conversion fails
+                if _current_game_state is None:
+                    # Fall back to initial state if no current state
+                    if _initial_game_state is None:
+                        random.seed(42)
+                        _initial_game_state = AzulState(2)
+                        random.seed()
+                    _current_game_state = copy.deepcopy(_initial_game_state)
+                return _current_game_state
+            else:
+                # No editable state, use current game state
+                if _current_game_state is None:
+                    # If we don't have a current state, create from initial state
+                    if _initial_game_state is None:
+                        print("DEBUG: Creating initial game state for state_ identifier")
+                        random.seed(42)
+                        _initial_game_state = AzulState(2)
+                        random.seed()
+                    _current_game_state = copy.deepcopy(_initial_game_state)
+                return _current_game_state
         elif fen_string.lower() == "saved":
             # Handle 'saved' as equivalent to 'initial' for now
             # In the future, this could load from a saved state file
@@ -2466,6 +2492,7 @@ def execute_move():
             
             engine_move = convert_frontend_move_to_engine(move_data)
             print(f"DEBUG: Converted engine move: {engine_move}")
+            print(f"DEBUG: Engine move tile_type: {engine_move.get('tile_type')} (should be 0 for blue)")
         except Exception as e:
             print(f"DEBUG: Error converting move: {e}")
             return jsonify({'error': f'Error converting move: {str(e)}'}), 500
@@ -2473,17 +2500,25 @@ def execute_move():
         # Generate legal moves
         try:
             print("DEBUG: About to generate legal moves")
+            print(f"DEBUG: State factories before move generation:")
+            for i, factory in enumerate(state.factories):
+                print(f"  Factory {i}: {dict(factory.tiles)}")
+            print(f"DEBUG: State center pool before move generation: {dict(state.centre_pool.tiles)}")
+            
             from core.azul_move_generator import FastMoveGenerator
             generator = FastMoveGenerator()
             legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
             print(f"DEBUG: Generated {len(legal_moves)} legal moves")
             
-            # Debug: Print first few legal moves to see their format
-            for i, move in enumerate(legal_moves[:5]):
-                print(f"DEBUG: Legal move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type}, pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
+            # Debug: Print all legal moves to see their format
+            print("DEBUG: All legal moves:")
+            for i, move in enumerate(legal_moves):
+                print(f"  Move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type}, pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
                 
         except Exception as e:
             print(f"DEBUG: Error generating moves: {e}")
+            import traceback
+            print(f"DEBUG: Move generation traceback: {traceback.format_exc()}")
             return jsonify({'error': f'Error generating legal moves: {str(e)}'}), 500
         
         # Find matching move
@@ -2491,6 +2526,10 @@ def execute_move():
             print("DEBUG: About to find matching move")
             matching_move = find_matching_move(engine_move, legal_moves)
             print(f"DEBUG: Matching move found: {matching_move}")
+            if matching_move:
+                print(f"DEBUG: Matching move tile_type: {matching_move.tile_type}")
+                print(f"DEBUG: Matching move source_id: {matching_move.source_id}")
+                print(f"DEBUG: Matching move pattern_line_dest: {matching_move.pattern_line_dest}")
             if not matching_move:
                 print(f"DEBUG: No matching move found. Engine move: {engine_move}")
                 return jsonify({'error': 'Illegal move'}), 400
@@ -2511,16 +2550,50 @@ def execute_move():
             tg.num_to_pattern_line = matching_move.num_to_pattern_line
             tg.num_to_floor_line = matching_move.num_to_floor_line
             
+            print(f"DEBUG: TileGrab created - tile_type: {tg.tile_type}, number: {tg.number}, pattern_line_dest: {tg.pattern_line_dest}")
+            
             if matching_move.action_type == 1:  # Factory move
                 action = (Action.TAKE_FROM_FACTORY, matching_move.source_id, tg)
             else:  # Center move
                 action = (Action.TAKE_FROM_CENTRE, -1, tg)
             
+            print(f"DEBUG: Action created: {action}")
+            
             # Apply the move using game rule
             from core.azul_model import AzulGameRule
             game_rule = AzulGameRule(len(state.agents))
-            new_state = game_rule.generateSuccessor(state, action, request_model.agent_id)
-            print("DEBUG: Move applied successfully")
+            print(f"DEBUG: About to apply move with action: {action}")
+            print(f"DEBUG: Action[0] (action_type): {action[0]}")
+            print(f"DEBUG: Action[1] (source_id): {action[1]}")
+            print(f"DEBUG: Action[2] (tile_grab): {action[2]}")
+            print(f"DEBUG: TileGrab tile_type: {action[2].tile_type}")
+            print(f"DEBUG: TileGrab number: {action[2].number}")
+            print(f"DEBUG: TileGrab pattern_line_dest: {action[2].pattern_line_dest}")
+            print(f"DEBUG: TileGrab num_to_pattern_line: {action[2].num_to_pattern_line}")
+            print(f"DEBUG: TileGrab num_to_floor_line: {action[2].num_to_floor_line}")
+            
+            # Debug: Check factory state before move
+            print(f"DEBUG: Factory {action[1]} state before move: {dict(state.factories[action[1]].tiles)}")
+            print(f"DEBUG: Center pool state before move: {dict(state.centre_pool.tiles)}")
+            
+            try:
+                new_state = game_rule.generateSuccessor(state, action, request_model.agent_id)
+                print("DEBUG: Move applied successfully")
+                
+                # Debug: Check factory state after move
+                print(f"DEBUG: Factory {action[1]} state after move: {dict(new_state.factories[action[1]].tiles)}")
+                print(f"DEBUG: Center pool state after move: {dict(new_state.centre_pool.tiles)}")
+                
+                # Debug: Check if tiles were actually moved
+                print(f"DEBUG: Tiles moved from factory {action[1]}: {action[2].number} tiles of type {action[2].tile_type}")
+                print(f"DEBUG: Tiles to pattern line: {action[2].num_to_pattern_line}")
+                print(f"DEBUG: Tiles to floor: {action[2].num_to_floor_line}")
+                
+            except Exception as e:
+                print(f"DEBUG: Error in generateSuccessor: {e}")
+                import traceback
+                print(f"DEBUG: Traceback: {traceback.format_exc()}")
+                raise
             
             # Update the current game state
             update_current_game_state(new_state)
@@ -2533,11 +2606,77 @@ def execute_move():
             print(f"DEBUG: Error applying move: {e}")
             return jsonify({'error': f'Error applying move: {str(e)}'}), 500
         
-        # Return the actual response
+        # Convert the new state to frontend format for immediate use
+        game_state = {
+            'factories': [],
+            'center': [],
+            'players': [],
+            'fen_string': new_fen
+        }
+        
+        # Convert factories
+        for factory in new_state.factories:
+            factory_tiles = []
+            for tile_type, count in factory.tiles.items():
+                for _ in range(count):
+                    # Convert tile type to color string
+                    tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                    factory_tiles.append(tile_colors.get(tile_type, 'W'))
+            game_state['factories'].append(factory_tiles)
+        
+        # Convert center pool
+        center_tiles = []
+        for tile_type, count in new_state.centre_pool.tiles.items():
+            for _ in range(count):
+                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                center_tiles.append(tile_colors.get(tile_type, 'W'))
+        game_state['center'] = center_tiles
+        
+        # Convert player states
+        for agent in new_state.agents:
+            player = {
+                'pattern_lines': [],
+                'wall': [],
+                'floor': []
+            }
+            
+            # Convert pattern lines
+            for i in range(5):
+                line = []
+                if agent.lines_tile[i] != -1:
+                    tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                    tile_color = tile_colors.get(agent.lines_tile[i], 'W')
+                    for _ in range(agent.lines_number[i]):
+                        line.append(tile_color)
+                player['pattern_lines'].append(line)
+            
+            # Convert wall
+            for row in range(5):
+                wall_row = []
+                for col in range(5):
+                    if agent.grid_state[row][col] != 0:
+                        tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                        tile_color = tile_colors.get(agent.grid_state[row][col], 'W')
+                        wall_row.append(tile_color)
+                    else:
+                        wall_row.append(False)
+                player['wall'].append(wall_row)
+            
+            # Convert floor
+            floor_tiles = []
+            for tile_type in agent.floor_tiles:
+                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                floor_tiles.append(tile_colors.get(tile_type, 'W'))
+            player['floor'] = floor_tiles
+            
+            game_state['players'].append(player)
+        
+        # Return the actual response with complete game state
         return jsonify({
             'success': True,
             'new_fen': new_fen,
             'fen_string': new_fen,  # Include for consistency
+            'game_state': game_state,  # Include complete game state
             'move_executed': format_move(matching_move),
             'game_over': new_state.is_game_over(),
             'scores': [agent.score for agent in new_state.agents],
@@ -2558,12 +2697,16 @@ def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]
     # Frontend format: {sourceId, tileType, patternLineDest, numToPatternLine, numToFloorLine}
     # Engine format: FastMove(action_type, source_id, tile_type, pattern_line_dest, num_to_pattern_line, num_to_floor_line)
     
+    print(f"DEBUG: convert_frontend_move_to_engine called with: {move_data}")
+    
     # Handle both snake_case and camelCase field names
     source_id = move_data.get('source_id', move_data.get('sourceId', 0))
     tile_type = move_data.get('tile_type', move_data.get('tileType', 0))
     pattern_line_dest = move_data.get('pattern_line_dest', move_data.get('patternLineDest', -1))
     num_to_pattern_line = move_data.get('num_to_pattern_line', move_data.get('numToPatternLine', 0))
     num_to_floor_line = move_data.get('num_to_floor_line', move_data.get('numToFloorLine', 0))
+    
+    print(f"DEBUG: Extracted values - source_id: {source_id}, tile_type: {tile_type} (type: {type(tile_type)}), pattern_line_dest: {pattern_line_dest}")
     
     # Handle string tile types from frontend
     if isinstance(tile_type, str):
@@ -2576,17 +2719,20 @@ def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]
             'W': 4   # White
         }
         tile_type = tile_color_map.get(tile_type.upper(), 0)
+        print(f"DEBUG: Converted string tile_type '{move_data.get('tile_type', move_data.get('tileType', 0))}' to {tile_type}")
     
     # Ensure tile_type is an integer (convert from enum if needed)
     if hasattr(tile_type, 'value'):
         tile_type = tile_type.value
+        print(f"DEBUG: Converted enum tile_type to value: {tile_type}")
     tile_type = int(tile_type)
+    print(f"DEBUG: Final tile_type: {tile_type}")
     
     # Determine action type based on source_id
     # Factory moves (source_id >= 0) are action_type 1, center moves (source_id < 0) are action_type 2
     action_type = 1 if source_id >= 0 else 2
     
-    return {
+    result = {
         'action_type': action_type,
         'source_id': source_id,
         'tile_type': tile_type,
@@ -2594,6 +2740,9 @@ def convert_frontend_move_to_engine(move_data: Dict[str, Any]) -> Dict[str, Any]
         'num_to_pattern_line': num_to_pattern_line,
         'num_to_floor_line': num_to_floor_line
     }
+    
+    print(f"DEBUG: Returning engine move: {result}")
+    return result
 
 
 def find_matching_move(engine_move: Dict[str, Any], legal_moves: List) -> Optional[object]:
@@ -2601,9 +2750,10 @@ def find_matching_move(engine_move: Dict[str, Any], legal_moves: List) -> Option
     print(f"DEBUG: Looking for match with engine move: {engine_move}")
     print(f"DEBUG: Engine move type: {type(engine_move)}")
     print(f"DEBUG: Engine move keys: {engine_move.keys()}")
+    print(f"DEBUG: Engine move tile_type: {engine_move.get('tile_type')} (type: {type(engine_move.get('tile_type'))})")
     
     for i, move in enumerate(legal_moves):
-        print(f"DEBUG: Checking legal move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type}, pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
+        print(f"DEBUG: Checking legal move {i}: action_type={move.action_type}, source_id={move.source_id}, tile_type={move.tile_type} (type: {type(move.tile_type)}), pattern_line_dest={move.pattern_line_dest}, num_to_pattern_line={move.num_to_pattern_line}, num_to_floor_line={move.num_to_floor_line}")
         print(f"DEBUG: Move type: {type(move)}")
         
         # Check each field individually
@@ -2614,7 +2764,7 @@ def find_matching_move(engine_move: Dict[str, Any], legal_moves: List) -> Option
         num_pattern_match = move.num_to_pattern_line == engine_move['num_to_pattern_line']
         num_floor_match = move.num_to_floor_line == engine_move['num_to_floor_line']
         
-        print(f"DEBUG: Matches - action: {action_match}, source: {source_match}, tile: {tile_match}, pattern: {pattern_match}, num_pattern: {num_pattern_match}, num_floor: {num_floor_match}")
+        print(f"DEBUG: Matches - action: {action_match}, source: {source_match}, tile: {tile_match} (engine: {engine_move.get('tile_type')} vs legal: {move.tile_type}), pattern: {pattern_match}, num_pattern: {num_pattern_match}, num_floor: {num_floor_match}")
         
         if (action_match and source_match and tile_match and 
             pattern_match and num_pattern_match and num_floor_match):
@@ -2642,6 +2792,131 @@ def get_engine_response(state, agent_id: int) -> Optional[Dict[str, Any]]:
         print(f"Engine response error: {e}")
     
     return None
+
+
+def convert_frontend_state_to_azul_state(frontend_state):
+    """Convert frontend game state to AzulState object."""
+    try:
+        from core.azul_model import AzulState
+        
+        # Create a new AzulState
+        state = AzulState(2)  # 2-player game
+        
+        # Convert factories
+        if 'factories' in frontend_state:
+            print(f"DEBUG: Converting factories from frontend state: {frontend_state['factories']}")
+            for i, factory in enumerate(frontend_state['factories']):
+                if i < len(state.factories):
+                    # Clear existing tiles
+                    state.factories[i].tiles.clear()
+                    
+                    # Add tiles from frontend format
+                    if isinstance(factory, list):
+                        # New format: array of tile strings
+                        tile_counts = {}
+                        for tile in factory:
+                            tile_type = convert_tile_string_to_type(tile)
+                            tile_counts[tile_type] = tile_counts.get(tile_type, 0) + 1
+                            print(f"DEBUG: Converting tile '{tile}' to type {tile_type}")
+                        state.factories[i].tiles.update(tile_counts)
+                        print(f"DEBUG: Factory {i} converted from list format: {factory} -> {tile_counts}")
+                        print(f"DEBUG: Factory {i} final state: {dict(state.factories[i].tiles)}")
+                    elif isinstance(factory, dict) and 'tiles' in factory:
+                        # Old format: object with tiles
+                        for tile_type_str, count in factory['tiles'].items():
+                            tile_type = int(tile_type_str)
+                            state.factories[i].tiles[tile_type] = count
+                        print(f"DEBUG: Factory {i} converted from dict format: {factory} -> {dict(state.factories[i].tiles)}")
+                    else:
+                        print(f"DEBUG: Factory {i} has unknown format: {factory}")
+        
+        # Convert center pool
+        if 'center' in frontend_state:
+            state.centre_pool.tiles.clear()
+            center_data = frontend_state['center']
+            if isinstance(center_data, dict):
+                # Dictionary format: {"0": 2, "1": 1} (tile_type: count)
+                for tile_type_str, count in center_data.items():
+                    tile_type = int(tile_type_str)
+                    state.centre_pool.tiles[tile_type] = count
+            elif isinstance(center_data, list):
+                # List format: ["B", "B", "Y"] (array of tile strings)
+                tile_counts = {}
+                for tile in center_data:
+                    tile_type = convert_tile_string_to_type(tile)
+                    tile_counts[tile_type] = tile_counts.get(tile_type, 0) + 1
+                state.centre_pool.tiles.update(tile_counts)
+        
+        # Convert players/agents
+        if 'players' in frontend_state:
+            for i, player in enumerate(frontend_state['players']):
+                if i < len(state.agents):
+                    agent = state.agents[i]
+                    
+                    # Convert pattern lines
+                    if 'pattern_lines' in player:
+                        for j, pattern_line in enumerate(player['pattern_lines']):
+                            if j < len(agent.lines_tile):
+                                if isinstance(pattern_line, list) and len(pattern_line) > 0:
+                                    # Get tile type from first tile in pattern line
+                                    tile_type = convert_tile_string_to_type(pattern_line[0])
+                                    agent.lines_tile[j] = tile_type
+                                    agent.lines_number[j] = len(pattern_line)
+                                else:
+                                    agent.lines_tile[j] = -1
+                                    agent.lines_number[j] = 0
+                    
+                    # Convert wall
+                    if 'wall' in player:
+                        wall_data = player['wall']
+                        if isinstance(wall_data, list) and len(wall_data) == 5:
+                            for row in range(5):
+                                if row < len(agent.grid_state) and len(wall_data[row]) == 5:
+                                    for col in range(5):
+                                        if col < len(agent.grid_state[row]):
+                                            # wall_data[row][col] should be False (empty) or tile color string (has tile)
+                                            if wall_data[row][col] and wall_data[row][col] is not False:
+                                                # Convert tile color string to tile type
+                                                tile_type = convert_tile_string_to_type(wall_data[row][col])
+                                                agent.grid_state[row][col] = tile_type
+                                            else:
+                                                agent.grid_state[row][col] = 0  # Empty
+                    
+                    # Convert floor tiles
+                    if 'floor_tiles' in player:
+                        agent.floor_tiles = player['floor_tiles']
+                    
+                    # Convert score
+                    if 'score' in player:
+                        agent.score = player['score']
+        
+        print(f"DEBUG: State conversion completed successfully")
+        print(f"DEBUG: Final factory contents:")
+        for i, factory in enumerate(state.factories):
+            print(f"  Factory {i}: {dict(factory.tiles)}")
+        print(f"DEBUG: Final center pool: {dict(state.centre_pool.tiles)}")
+        
+        return state
+        
+    except Exception as e:
+        print(f"DEBUG: Error converting frontend state: {e}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        return None
+
+
+def convert_tile_string_to_type(tile_string):
+    """Convert tile string (B, Y, R, K, W) to tile type integer."""
+    tile_map = {
+        'B': 0,  # Blue
+        'Y': 1,  # Yellow
+        'R': 2,  # Red
+        'K': 3,  # Black
+        'W': 4   # White
+    }
+    result = tile_map.get(tile_string.upper(), 0)
+    print(f"DEBUG: convert_tile_string_to_type('{tile_string}') -> {result}")
+    return result
 
 
 def state_to_fen(state) -> str:
@@ -2751,12 +3026,33 @@ def get_game_state():
     global _current_editable_game_state, _initial_game_state
     
     try:
-        # If we have a stored editable game state, return it
+        # If we have a stored editable game state, return it with a generated FEN string
         if _current_editable_game_state is not None:
-            return jsonify({
-                'success': True,
-                'game_state': _current_editable_game_state
-            })
+            # Generate a unique FEN string for this state
+            import hashlib
+            import json
+            
+            try:
+                # Create a hash of the game state
+                state_json = json.dumps(_current_editable_game_state, sort_keys=True)
+                state_hash = hashlib.md5(state_json.encode('utf-8')).hexdigest()[:8]
+                unique_fen = f"state_{state_hash}"
+                
+                # Add the FEN string to the game state
+                game_state_with_fen = _current_editable_game_state.copy()
+                game_state_with_fen['fen_string'] = unique_fen
+                
+                return jsonify({
+                    'success': True,
+                    'game_state': game_state_with_fen
+                })
+            except Exception as e:
+                print(f"Warning: Failed to generate FEN for editable state: {e}")
+                # Fallback to returning without FEN
+                return jsonify({
+                    'success': True,
+                    'game_state': _current_editable_game_state
+                })
         
         # Otherwise, parse current state from FEN
         fen_string = request.args.get('fen_string', 'initial')
@@ -2868,13 +3164,28 @@ def put_game_state():
         if not game_state:
             return jsonify({'error': 'No game_state provided'}), 400
         
+        # Generate a unique FEN string for this state
+        import hashlib
+        import json
+        import time
+        
+        try:
+            # Create a hash of the game state
+            state_json = json.dumps(game_state, sort_keys=True)
+            state_hash = hashlib.md5(state_json.encode('utf-8')).hexdigest()[:8]
+            unique_fen = f"state_{state_hash}"
+        except Exception as e:
+            # Fallback to timestamp-based identifier
+            timestamp = int(time.time() * 1000) % 1000000
+            unique_fen = f"state_{timestamp}"
+        
         # Store the game state for future retrieval
         _current_editable_game_state = game_state
         
         return jsonify({
             'success': True,
             'message': 'Game state saved successfully',
-            'fen_string': fen_string
+            'fen_string': unique_fen
         })
         
     except Exception as e:

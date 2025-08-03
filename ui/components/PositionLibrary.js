@@ -180,14 +180,70 @@ const PositionLibrary = React.memo(function PositionLibrary({
         "risk-mitigation", "timing-optimization", "trade-off", "endgame-management", "efficiency"
     ];
 
+    // Helper function to normalize factory tiles to exactly 4 tiles per factory
+    const normalizeFactories = (factories) => {
+        return factories.map(factory => {
+            if (factory.length === 4) {
+                return factory; // Already correct
+            } else if (factory.length < 4) {
+                // Pad with the first tile type to reach 4 tiles
+                const firstTile = factory[0] || 'B';
+                return [...factory, ...Array(4 - factory.length).fill(firstTile)];
+            } else {
+                // Truncate to 4 tiles if more than 4
+                return factory.slice(0, 4);
+            }
+        });
+    };
+
     // Load position with validation
     const loadPosition = useCallback(async (position) => {
         try {
             const newState = position.generate();
             
+            // Normalize factories to ensure exactly 4 tiles per factory
+            if (newState.factories) {
+                newState.factories = normalizeFactories(newState.factories);
+            }
+            
+            // Filter out red tiles from center pool to avoid tile type confusion
+            if (newState.center && Array.isArray(newState.center)) {
+                newState.center = newState.center.filter(tile => tile !== 'R');
+                console.log('DEBUG: Filtered center pool (removed red tiles):', newState.center);
+            }
+            
+            console.log('DEBUG: Position data generated:', newState);
+            console.log('DEBUG: Factories:', newState.factories);
+            console.log('DEBUG: Center:', newState.center);
+            console.log('DEBUG: Players:', newState.players);
+            
             // For local development, skip validation if no session token
             if (!sessionToken) {
-                setGameState(newState);
+                // Get proper FEN string from backend for the generated state
+                try {
+                    const response = await fetch('/api/v1/game_state', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            fen_string: 'initial',
+                            game_state: newState
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        // Get the updated state with proper FEN string
+                        const stateWithFen = await fetch('/api/v1/game_state?fen_string=initial').then(r => r.json());
+                        setGameState(stateWithFen.game_state || stateWithFen);
+                    } else {
+                        // Fallback to direct state setting
+                        setGameState(newState);
+                    }
+                } catch (fenError) {
+                    console.warn('Failed to get FEN string, using direct state:', fenError);
+                    setGameState(newState);
+                }
+                
                 setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
                 
                 // Set flag to prevent automatic refresh from overwriting the loaded position
@@ -238,7 +294,31 @@ const PositionLibrary = React.memo(function PositionLibrary({
                 return;
             }
             
-            setGameState(newState);
+            // Get proper FEN string from backend for the generated state
+            try {
+                const response = await fetch('/api/v1/game_state', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fen_string: 'initial',
+                        game_state: newState
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    // Get the updated state with proper FEN string
+                    const stateWithFen = await fetch('/api/v1/game_state?fen_string=initial').then(r => r.json());
+                    setGameState(stateWithFen.game_state || stateWithFen);
+                } else {
+                    // Fallback to direct state setting
+                    setGameState(newState);
+                }
+            } catch (fenError) {
+                console.warn('Failed to get FEN string, using direct state:', fenError);
+                setGameState(newState);
+            }
+            
             setStatusMessage(`✅ Loaded position: ${position.name} (auto-refresh disabled - use 🔄 Refresh to resume)`);
             
             // Set flag to prevent automatic refresh from overwriting the loaded position
@@ -254,7 +334,32 @@ const PositionLibrary = React.memo(function PositionLibrary({
             // For local development, try to load the position anyway
             try {
                 const newState = position.generate();
-                setGameState(newState);
+                
+                // Get proper FEN string from backend for the generated state
+                try {
+                    const response = await fetch('/api/v1/game_state', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            fen_string: 'initial',
+                            game_state: newState
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        // Get the updated state with proper FEN string
+                        const stateWithFen = await fetch('/api/v1/game_state?fen_string=initial').then(r => r.json());
+                        setGameState(stateWithFen.game_state || stateWithFen);
+                    } else {
+                        // Fallback to direct state setting
+                        setGameState(newState);
+                    }
+                } catch (fenError) {
+                    console.warn('Failed to get FEN string, using direct state:', fenError);
+                    setGameState(newState);
+                }
+                
                 setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
                 
                 // Set flag to prevent automatic refresh from overwriting the loaded position

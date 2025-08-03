@@ -79,7 +79,7 @@ function BoardEditor({
             newGameState.agents[playerIndex].lines_tile[lineIndex] = newColor;
             newGameState.agents[playerIndex].lines_number[lineIndex] = newCount;
             
-            setGameState(newGameState);
+            await setGameState(newGameState);
             setStatusMessage(`✅ Pattern line ${lineIndex + 1} updated`);
             return true;
             
@@ -129,7 +129,7 @@ function BoardEditor({
             // Update total count
             newGameState.factories[factoryIndex].total = Object.values(newGameState.factories[factoryIndex].tiles).reduce((sum, count) => sum + count, 0);
             
-            setGameState(newGameState);
+            await setGameState(newGameState);
             setStatusMessage(`✅ Factory ${factoryIndex + 1} updated`);
             return true;
             
@@ -149,7 +149,7 @@ function BoardEditor({
         const newGameState = JSON.parse(JSON.stringify(gameState));
         newGameState.agents[playerIndex].grid_state[row][col] = shouldPlace ? 1 : 0;
         
-        setGameState(newGameState);
+        await setGameState(newGameState);
         setStatusMessage(`✅ Wall tile ${shouldPlace ? 'placed' : 'removed'}`);
         return true;
     }, [gameState, validationEnabled, saveToUndoStack, setGameState, setStatusMessage]);

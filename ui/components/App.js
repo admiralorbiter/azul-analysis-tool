@@ -15,6 +15,8 @@ const ValidationFeedback = window.ValidationFeedback;
 const PositionLibrary = window.PositionLibrary;
 const PatternAnalysis = window.PatternAnalysis;
 const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
+const AnalysisResults = window.AnalysisResults;
+const ContextMenu = window.ContextMenu;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -57,8 +59,35 @@ function App() {
     const [gameState, setGameState] = useState(null);
     
     // Debug setGameState calls
-    const debugSetGameState = useCallback((newState) => {
+    const debugSetGameState = useCallback(async (newState) => {
         console.log('App: setGameState called with:', newState);
+        
+        // If the new state doesn't have a proper fen_string, get one from the backend
+        if (newState && (!newState.fen_string || newState.fen_string === 'initial')) {
+            try {
+                // Send the state to backend to get a proper FEN string
+                const response = await fetch('/api/v1/game_state', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fen_string: 'initial',
+                        game_state: newState
+                    })
+                });
+                
+                if (response.ok) {
+                    // Get the updated state with proper FEN string
+                    const stateWithFen = await fetch('/api/v1/game_state?fen_string=initial').then(r => r.json());
+                    const updatedState = stateWithFen.game_state || stateWithFen;
+                    console.log('App: Updated state with FEN:', updatedState);
+                    setGameState(updatedState);
+                    return;
+                }
+            } catch (error) {
+                console.warn('Failed to get FEN string for state, using original:', error);
+            }
+        }
+        
         setGameState(newState);
     }, []);
     
@@ -94,8 +123,8 @@ function App() {
     const manualRefresh = useCallback(() => {
         if (sessionStatus === 'connected' && !loading) {
             setLoading(true);
-            getGameState('saved').catch(() => getGameState('initial')).then(data => {
-                debugSetGameState(data);
+            getGameState('saved').catch(() => getGameState('initial')).then(async data => {
+                await debugSetGameState(data);
                 setStatusMessage('Game state refreshed manually');
                 setLastStateHash(createStateHash(data));
             }).catch(error => {
@@ -173,9 +202,9 @@ function App() {
                     return getGameState('initial');
                 });
             })
-            .then(data => {
+            .then(async data => {
                 console.log('Game state loaded:', data);
-                debugSetGameState(data);
+                await debugSetGameState(data);
                 setStatusMessage('Game loaded');
                 setHasStableState(true);
                 setLastStateHash(createStateHash(data));
@@ -209,13 +238,13 @@ function App() {
                                
             if (shouldRefresh) {
                 // Try to load saved state first, fall back to initial state
-                getGameState('saved').catch(() => getGameState('initial')).then(data => {
+                getGameState('saved').catch(() => getGameState('initial')).then(async data => {
                     const newStateHash = createStateHash(data);
                     
                     // Only update if the state has actually changed
                     if (newStateHash !== lastStateHash) {
                         console.log('State changed, updating...');
-                        debugSetGameState(data);
+                        await debugSetGameState(data);
                         setLastStateHash(newStateHash);
                     } else {
                         console.log('State unchanged, skipping update');
@@ -274,7 +303,7 @@ function App() {
     }, [editMode]);
 
     // Apply tile color to selected elements
-    const applyTileColor = useCallback((colorKey) => {
+    const applyTileColor = useCallback(async (colorKey) => {
         if (!editMode || selectedElements.length === 0) return;
 
         const colorMap = { '1': 'B', '2': 'Y', '3': 'R', '4': 'K', '5': 'W' };
@@ -311,7 +340,7 @@ function App() {
             }
         });
         
-        debugSetGameState(newGameState);
+        await debugSetGameState(newGameState);
         setStatusMessage(`Applied ${color} tiles to ${selectedElements.length} location(s)`);
         
         saveGameState(newGameState).then(() => {
@@ -325,7 +354,7 @@ function App() {
     }, [editMode, selectedElements, gameState]);
 
     // Remove tiles from selected elements
-    const removeSelectedTiles = useCallback(() => {
+    const removeSelectedTiles = useCallback(async () => {
         if (!editMode || selectedElements.length === 0) return;
 
         console.log('Removing tiles from:', selectedElements);
@@ -357,7 +386,7 @@ function App() {
             }
         });
         
-        debugSetGameState(newGameState);
+        await debugSetGameState(newGameState);
         setStatusMessage(`Removed tiles from ${selectedElements.length} location(s)`);
         
         saveGameState(newGameState).then(() => {
@@ -379,7 +408,7 @@ function App() {
     }, [editMode, selectedElements]);
 
     // Paste clipboard to selected location
-    const pasteSelection = useCallback(() => {
+    const pasteSelection = useCallback(async () => {
         if (!editMode || !clipboard || selectedElements.length !== 1) {
             setStatusMessage('Select exactly one location to paste to');
             return;
@@ -417,7 +446,7 @@ function App() {
             }
         });
         
-        debugSetGameState(newGameState);
+        await debugSetGameState(newGameState);
         setStatusMessage(`Pasted ${clipboard.length} element(s)`);
         
         saveGameState(newGameState).then(() => {
@@ -444,8 +473,9 @@ function App() {
             const result = await executeMove(currentFen, move, currentPlayer);
             
             if (result.success) {
-                const newGameState = await getGameState(result.new_fen);
-                debugSetGameState(newGameState);
+                // Use the game state returned directly from execute_move
+                const newGameState = result.game_state || await getGameState(result.new_fen);
+                await debugSetGameState(newGameState);
                 
                 setMoveHistory(prev => [...prev, {
                     move: move,
@@ -475,8 +505,8 @@ function App() {
                 console.error('Move failed:', result);
                 setStatusMessage(`Move failed: ${result.error || 'Unknown error'}`);
                 
-                getGameState().then(freshState => {
-                    debugSetGameState(freshState);
+                getGameState().then(async freshState => {
+                    await debugSetGameState(freshState);
                     console.log('Game state refreshed after failed move');
                 });
             }
@@ -611,8 +641,8 @@ function App() {
             try {
                 const data = JSON.parse(e.target.result);
                 
-                getGameState(data.fen).then(newGameState => {
-                    debugSetGameState(newGameState);
+                getGameState(data.fen).then(async newGameState => {
+                    await debugSetGameState(newGameState);
                     
                     if (data.moveHistory) {
                         setMoveHistory(data.moveHistory);

@@ -1106,7 +1106,7 @@ class AzulGameRule(GameRule):
 
                 # All remaining tiles on the factory display go into the 
                 # centre!
-                for tile in utils.Tile:
+                for tile in fac.tiles.keys():
                     num_on_fd = fac.tiles[tile]
                     if num_on_fd > 0:
                         state.centre_pool.AddTiles(num_on_fd, tile)

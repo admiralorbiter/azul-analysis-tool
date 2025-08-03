@@ -28,11 +28,11 @@ window.midgamePositions = (() => {
         tags: ["midgame", "scoring", "multiplier", "row-completion", "2-player"],
         generate: () => ({
             factories: [
-                ['B', 'Y'],
-                ['Y', 'R'],
-                ['R', 'K'],
-                ['K', 'W'],
-                ['W', 'B']
+                ['B', 'B', 'Y', 'Y'],
+                ['Y', 'Y', 'R', 'R'],
+                ['R', 'R', 'K', 'K'],
+                ['K', 'K', 'W', 'W'],
+                ['W', 'W', 'B', 'B']
             ],
             center: ['B', 'Y'],
             players: Array(2).fill().map((_, playerIdx) => 
@@ -53,11 +53,11 @@ window.midgamePositions = (() => {
         tags: ["midgame", "scoring", "color-race", "competitive", "2-player"],
         generate: () => ({
             factories: [
-                ['B', 'R', 'W'],
-                ['Y', 'K', 'B'],
-                ['R', 'W', 'Y'],
-                ['K', 'B', 'R'],
-                ['W', 'Y', 'K']
+                ['B', 'B', 'R', 'W'],
+                ['Y', 'Y', 'K', 'B'],
+                ['R', 'R', 'W', 'Y'],
+                ['K', 'K', 'B', 'R'],
+                ['W', 'W', 'Y', 'K']
             ],
             center: ['B', 'B', 'R', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
@@ -82,11 +82,11 @@ window.midgamePositions = (() => {
         tags: ["midgame", "scoring", "row-bonus", "column-bonus", "2-player"],
         generate: () => ({
             factories: [
-                ['B', 'Y'],
-                ['R', 'K'],
-                ['W', 'B'],
-                ['Y', 'R'],
-                ['K', 'W']
+                ['B', 'B', 'Y', 'Y'],
+                ['R', 'R', 'K', 'K'],
+                ['W', 'W', 'B', 'B'],
+                ['Y', 'Y', 'R', 'R'],
+                ['K', 'K', 'W', 'W']
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
@@ -114,11 +114,11 @@ window.midgamePositions = (() => {
         tags: ["midgame", "blocking", "defensive", "prevention", "2-player"],
         generate: () => ({
             factories: [
-                ['B', 'Y', 'R'],
-                ['K', 'W', 'B'],
-                ['Y', 'R', 'K'],
-                ['W', 'B', 'Y'],
-                ['R', 'K', 'W']
+                ['B', 'B', 'Y', 'R'],
+                ['K', 'K', 'W', 'B'],
+                ['Y', 'Y', 'R', 'K'],
+                ['W', 'W', 'B', 'Y'],
+                ['R', 'R', 'K', 'W']
             ],
             center: ['B', 'Y', 'R', 'K'],
             players: Array(2).fill().map((_, playerIdx) => 
@@ -141,11 +141,11 @@ window.midgamePositions = (() => {
         tags: ["midgame", "blocking", "resource-denial", "control", "2-player"],
         generate: () => ({
             factories: [
-                ['B', 'B'],
-                ['Y', 'Y'],
-                ['R', 'R'],
-                ['K', 'K'],
-                ['W', 'W']
+                ['B', 'B', 'B', 'B'],
+                ['Y', 'Y', 'Y', 'Y'],
+                ['R', 'R', 'R', 'R'],
+                ['K', 'K', 'K', 'K'],
+                ['W', 'W', 'W', 'W']
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
@@ -200,11 +200,11 @@ window.midgamePositions = (() => {
         tags: ["midgame", "efficiency", "optimization", "points-per-tile", "2-player"],
         generate: () => ({
             factories: [
-                ['B', 'Y'],
-                ['R', 'K'],
-                ['W', 'B'],
-                ['Y', 'R'],
-                ['K', 'W']
+                ['B', 'B', 'Y', 'Y'],
+                ['R', 'R', 'K', 'K'],
+                ['W', 'W', 'B', 'B'],
+                ['Y', 'Y', 'R', 'R'],
+                ['K', 'K', 'W', 'W']
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
