@@ -10,7 +10,9 @@ import tempfile
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
-from .routes import api_bp
+from .main_routes import api_bp
+from .routes.positions import positions_bp
+from .routes.analysis import analysis_bp
 from .auth import auth_bp, session_manager
 from .rate_limiter import RateLimiter
 from core.azul_database import AzulDatabase
@@ -64,6 +66,8 @@ def create_app(config=None):
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(positions_bp)
+    app.register_blueprint(analysis_bp)
     
     # Serve static files from ui directory
     @app.route('/ui/<path:filename>')
