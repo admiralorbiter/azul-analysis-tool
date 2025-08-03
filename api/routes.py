@@ -249,6 +249,54 @@ def parse_fen_string(fen_string: str):
             
             random.seed()  # Reset seed
             return test_state
+        elif fen_string == "simple_blue_blocking":
+            # Create simple blue blocking test position
+            print("DEBUG: Creating simple blue blocking position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up simple blue blocking position
+            # Player 2 has blue tiles in pattern line 0, needs 0 more tiles
+            test_state.agents[1].lines_number[0] = 1  # 1 blue tile in line 0
+            test_state.agents[1].lines_tile[0] = 0   # Blue color
+            test_state.agents[1].grid_state[0][0] = 0  # Blue not on wall yet
+            
+            # Add blue tiles to factories
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            test_state.factories[2].tiles[0] = 1  # 1 blue tile in factory 2
+            test_state.factories[3].tiles[0] = 1  # 1 blue tile in factory 3
+            test_state.factories[4].tiles[0] = 1  # 1 blue tile in factory 4
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "high_urgency_red_blocking":
+            # Create high urgency red blocking test position
+            print("DEBUG: Creating high urgency red blocking position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up high urgency red blocking position
+            # Player 2 has red tiles in pattern line 2, needs 1 more tile
+            test_state.agents[1].lines_number[2] = 2  # 2 red tiles in line 2
+            test_state.agents[1].lines_tile[2] = 2   # Red color
+            test_state.agents[1].grid_state[2][2] = 0  # Red not on wall yet
+            
+            # Add red tiles to factories
+            test_state.factories[0].tiles[2] = 1  # 1 red tile in factory 0
+            test_state.factories[1].tiles[2] = 3  # 3 red tiles in factory 1
+            test_state.factories[2].tiles[2] = 1  # 1 red tile in factory 2
+            test_state.factories[3].tiles[2] = 1  # 1 red tile in factory 3
+            test_state.factories[4].tiles[2] = 1  # 1 red tile in factory 4
+            
+            # Add red tiles to center pool
+            test_state.centre_pool.tiles[2] = 2  # 2 red tiles in center
+            
+            random.seed()  # Reset seed
+            return test_state
         else:
             raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', 'test_blocking_position', or state identifiers.")
     except Exception as e:

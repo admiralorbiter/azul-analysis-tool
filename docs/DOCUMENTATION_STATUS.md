@@ -81,6 +81,19 @@
   - MCTS integration with neural rollout policy
   - CLI training command with config options
 
+### Pattern Detection Documentation (Recent)
+- **Status**: ✅ Complete
+- **New Documentation**:
+  - `docs/PATTERN_DETECTION_GUIDE.md` - Comprehensive implementation guide
+  - `core/azul_patterns.py` - Pattern detection engine with blocking analysis
+  - `ui/components/PatternAnalysis.js` - Frontend display component
+  - `tests/test_pattern_detection.py` - Unit tests for pattern detection
+- **Features**:
+  - Tile blocking detection with urgency scoring
+  - Real-time pattern analysis with API integration
+  - Move suggestion generation with specific recommendations
+  - Test positions for validation and development
+
 ### Web UI Integration Documentation (Recent)
 - **Status**: ✅ Complete
 - **New Documentation**:

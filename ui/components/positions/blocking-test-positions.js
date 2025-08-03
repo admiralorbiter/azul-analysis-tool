@@ -54,7 +54,7 @@ window.blockingTestPositions = (() => {
             factories: convertedFactories,
             center: convertedCenter,
             players: convertedPlayers,
-            fen_string: "test_blocking_position"  // Add FEN string for pattern detection
+            fen_string: positionData.fen_string || "test_blocking_position"  // Use specific FEN string for each position
         };
     };
 
@@ -65,6 +65,7 @@ window.blockingTestPositions = (() => {
         difficulty: "beginner",
         tags: ["blocking", "blue", "simple", "testing", "pattern-detection"],
         generate: () => createGameState({
+            fen_string: "simple_blue_blocking",
             gameState: {
                 players: [
                     {
@@ -129,6 +130,7 @@ window.blockingTestPositions = (() => {
         difficulty: "intermediate",
         tags: ["blocking", "red", "high-urgency", "testing", "pattern-detection"],
         generate: () => createGameState({
+            fen_string: "high_urgency_red_blocking",
             gameState: {
                 players: [
                     {

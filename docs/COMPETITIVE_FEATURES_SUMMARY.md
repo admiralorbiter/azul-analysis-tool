@@ -84,6 +84,7 @@
     - [x] **Urgency calculation**: Scores blocking opportunities by importance (HIGH/MEDIUM/LOW)
     - [x] **Factory and center pool detection**: Identifies where blocking tiles are available
     - [x] **Move suggestion generation**: Provides specific moves to execute blocking
+    - 📖 **Documentation**: See [PATTERN_DETECTION_GUIDE.md](./PATTERN_DETECTION_GUIDE.md) for implementation details
   - [ ] Scoring optimization patterns
   - [ ] Floor line management patterns
 - [ ] **Strategic Pattern Analysis**
