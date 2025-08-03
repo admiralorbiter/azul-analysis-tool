@@ -13,6 +13,7 @@ from flask_cors import CORS
 from .main_routes import api_bp
 from .routes.positions import positions_bp
 from .routes.analysis import analysis_bp
+from .routes.game import game_bp
 from .routes.neural import neural_bp
 from .auth import auth_bp, session_manager
 from .rate_limiter import RateLimiter
@@ -69,6 +70,7 @@ def create_app(config=None):
     app.register_blueprint(api_bp)
     app.register_blueprint(positions_bp)
     app.register_blueprint(analysis_bp)
+    app.register_blueprint(game_bp)
     app.register_blueprint(neural_bp, url_prefix='/api/v1')
     
     # Serve static files from ui directory

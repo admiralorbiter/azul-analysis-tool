@@ -447,7 +447,10 @@ class AzulScoringOptimizationDetector:
             proximity_factor = 0.4
         
         # Adjust for tile availability
-        availability_factor = min(1.0, tiles_available / tiles_needed)
+        if tiles_needed > 0:
+            availability_factor = min(1.0, tiles_available / tiles_needed)
+        else:
+            availability_factor = 0.0  # No urgency if no tiles needed
         
         # Reduce for overflow risk
         risk_factor = 1.0 - overflow_risk
