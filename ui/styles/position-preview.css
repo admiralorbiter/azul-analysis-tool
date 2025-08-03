@@ -254,23 +254,23 @@
 }
 
 .tile-b {
-    background-color: #3b82f6;
+    background-color: #06b6d4; /* Bright teal/cyan blue (BGA style) */
 }
 
 .tile-y {
-    background-color: #eab308;
+    background-color: #f59e0b; /* Yellow with orange tint (BGA style) */
 }
 
 .tile-r {
-    background-color: #ef4444;
+    background-color: #dc2626; /* Bright vibrant red (BGA style) */
 }
 
 .tile-k {
-    background-color: #1f2937;
+    background-color: #0f172a; /* Very dark teal/black (BGA style) */
 }
 
 .tile-w {
-    background-color: #f3f4f6;
+    background-color: #f8fafc; /* Light off-white/cream (BGA style) */
     border: 1px solid #d1d5db;
 }
 

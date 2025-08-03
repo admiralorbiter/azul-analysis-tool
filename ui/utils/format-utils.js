@@ -1,10 +1,14 @@
 // Format utility functions for Azul Solver & Analysis Toolkit
 // Extracted from main.js for modularity
 
-// Tile color constants
+// Tile color mapping - Updated to match BGA colors
 const TILE_COLORS = {
-    'R': '#ef4444', 'Y': '#eab308', 'B': '#3b82f6', 
-    'W': '#f8fafc', 'K': '#8b5cf6'
+    'R': '#dc2626', // Bright vibrant red (BGA style)
+    'Y': '#f59e0b', // Yellow with orange tint (BGA style)
+    'B': '#06b6d4', // Bright teal/cyan blue (BGA style)
+    'W': '#f8fafc', // Light off-white/cream (BGA style)
+    'K': '#0f172a', // Very dark teal/black (BGA style)
+    'W': '#f1f5f9'  // White (empty) - lighter gray
 };
 
 // Get tile color based on tile type

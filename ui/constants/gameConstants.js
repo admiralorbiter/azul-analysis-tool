@@ -10,14 +10,14 @@ export const TILE_TYPES = {
     EMPTY: 'W'
 };
 
-// Tile colors mapping
+// Tile colors mapping - Updated to match BGA colors
 export const TILE_COLORS = {
-    'R': '#ef4444', // Red
-    'Y': '#eab308', // Yellow
-    'B': '#3b82f6', // Blue
-    'W': '#ffffff', // White
-    'K': '#000000', // Black
-    'W': '#f3f4f6'  // White (empty)
+    'R': '#dc2626', // Bright vibrant red (BGA style)
+    'Y': '#f59e0b', // Yellow with orange tint (BGA style)
+    'B': '#06b6d4', // Bright teal/cyan blue (BGA style)
+    'W': '#f8fafc', // Light off-white/cream (BGA style)
+    'K': '#0f172a', // Very dark teal/black (BGA style)
+    'W': '#f1f5f9'  // White (empty) - lighter gray
 };
 
 // Game modes
@@ -90,6 +90,6 @@ export const VISUAL_CONFIG = {
     TRANSITION_DURATION: '0.2s',
     HIGHLIGHT_COLOR: '#f59e0b',
     SUCCESS_COLOR: '#10b981',
-    ERROR_COLOR: '#ef4444',
-    INFO_COLOR: '#3b82f6'
+    ERROR_COLOR: '#dc2626', // Updated to match BGA red
+    INFO_COLOR: '#06b6d4'  // Updated to match BGA blue
 }; 

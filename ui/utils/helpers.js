@@ -1,13 +1,13 @@
 // Helper Utility Functions
 
-// Tile color mapping
+// Tile color mapping - Updated to match BGA colors
 const TILE_COLORS = {
-    'R': '#ef4444', // Red
-    'Y': '#eab308', // Yellow
-    'B': '#3b82f6', // Blue
-    'W': '#ffffff', // White
-    'K': '#000000', // Black
-    'W': '#f3f4f6'  // White (empty)
+    'R': '#dc2626', // Bright vibrant red (BGA style)
+    'Y': '#f59e0b', // Yellow with orange tint (BGA style)
+    'B': '#06b6d4', // Bright teal/cyan blue (BGA style)
+    'W': '#f8fafc', // Light off-white/cream (BGA style)
+    'K': '#0f172a', // Very dark teal/black (BGA style)
+    'W': '#f1f5f9'  // White (empty) - lighter gray
 };
 
 // Get tile color
