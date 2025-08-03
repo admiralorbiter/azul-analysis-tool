@@ -1,233 +1,208 @@
-# 📚 Azul Solver Documentation
+# 📚 Azul Project Documentation
 
-> Complete documentation for the Azul Solver & Analysis Toolkit
+> **Comprehensive documentation for the Azul Solver & Analysis Toolkit**
 
-## 🚀 Getting Started
+## 🎯 **Documentation Overview**
 
-- **[Quick Start Guide](QUICK_START.md)** - Get up and running in minutes
-- **[API Usage Guide](API_USAGE.md)** - Complete REST API documentation
-- **[Setup Summary](SETUP_SUMMARY.md)** - Repository setup and cleanup details
+This documentation provides complete coverage of the Azul Solver & Analysis Toolkit, from basic setup to advanced competitive research features. The documentation is organized into logical sections for easy navigation and reference.
 
-## 📊 Current Status
+## 📋 **Documentation Structure**
 
-### ✅ **Completed Milestones**
+### **📖 Core Documentation**
+- **[README.md](./README.md)** - This file: Main project overview and documentation guide
+- **[PROGRESS_SUMMARY.md](./PROGRESS_SUMMARY.md)** - Consolidated progress information and milestone status
+- **[SETUP_SUMMARY.md](./SETUP_SUMMARY.md)** - Detailed setup instructions and technical configuration
 
-#### **M1 - Rules Engine (COMPLETE)**
-- **A1**: State model with Zobrist hashing, clone/undo, immutability
-- **A2**: Comprehensive rule validation and move generation
-- **A3**: Performance optimizations and move generation improvements
+### **🔧 Implementation Guides** (`guides/`)
+- **[IMPLEMENTATION_GUIDES.md](./guides/IMPLEMENTATION_GUIDES.md)** - Central index for all implementation guides
+- **[PATTERN_DETECTION_GUIDE.md](./guides/PATTERN_DETECTION_GUIDE.md)** - Tile blocking detection and tactical pattern recognition
+- **[SCORING_OPTIMIZATION_PATTERNS.md](./guides/SCORING_OPTIMIZATION_PATTERNS.md)** - Maximizing points through strategic tile placement
+- **[FLOOR_LINE_PATTERNS.md](./guides/FLOOR_LINE_PATTERNS.md)** - Strategic floor line usage and penalty management
 
-#### **M2 - Exact Search (COMPLETE)**
-- **A4**: Heuristic evaluation with pattern potential scoring
-- **A5**: Alpha-Beta search with iterative deepening, depth-3 < 4s
+### **🏆 Competitive Research** (`competitive/`)
+- **[COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md)** - Comprehensive development plan for competitive features
+- **[COMPETITIVE_FEATURES_SUMMARY.md](./competitive/COMPETITIVE_FEATURES_SUMMARY.md)** - Implementation summary and checklist
 
-#### **M3 - Fast Hint Engine (COMPLETE)**
-- **A6**: MCTS module with UCT algorithm, < 200ms hints
+### **🔌 API & Usage** (`api/`)
+- **[API_USAGE.md](./api/API_USAGE.md)** - Complete REST API documentation with authentication and endpoints
+- **[QUICK_START.md](./api/QUICK_START.md)** - Getting started guide with installation and basic usage
 
-#### **M4 - Database Integration (COMPLETE)**
-- **B1.1**: WAL mode and performance optimization
-- **B1.2**: Zstd compression for state storage
-- **B1.3**: Enhanced indexing and query optimization
+### **📊 Status & Tracking** (`status/`)
+- **[DOCUMENTATION_STATUS.md](./status/DOCUMENTATION_STATUS.md)** - Current documentation status and quality assessment
+- **[DOCUMENTATION_REORGANIZATION_SUMMARY.md](./status/DOCUMENTATION_REORGANIZATION_SUMMARY.md)** - Documentation reorganization progress
 
-#### **M5 - REST API (COMPLETE)**
-- **B2.1**: Position cache API with bulk operations
-- **B2.2**: Analysis cache API with search and statistics
-- **B2.3**: Performance API with monitoring and optimization
+### **📁 Archive** (`archive/`)
+- **legacy/** - Superseded implementation guides and planning documents
+- **milestones/** - Individual milestone progress summaries
+- **research/** - Research materials and notes
 
-#### **M6 - Web UI (COMPLETE)**
-- **B3.1**: Interactive game board display with React + SVG
-- **B3.2**: Real-time analysis interface with drag-and-drop
-- **B3.3**: Performance dashboard with database stats
+## 🚀 **Quick Navigation by Use Case**
 
-#### **M7 - Neural Integration (IN PROGRESS)**
-- **C1.1**: PyTorch model integration with AzulNet
-- **C1.2**: Tensor encoding and neural MCTS integration
-- **C1.3**: Training pipeline with synthetic data generation
+### **For Competitive Players**
+1. **Start Here**: [QUICK_START.md](./api/QUICK_START.md) - Basic setup and usage
+2. **Available Features**: [COMPETITIVE_FEATURES_SUMMARY.md](./competitive/COMPETITIVE_FEATURES_SUMMARY.md) - What's implemented
+3. **Pattern Analysis**: [PATTERN_DETECTION_GUIDE.md](./guides/PATTERN_DETECTION_GUIDE.md) - Tactical opportunities
+4. **Scoring Optimization**: [SCORING_OPTIMIZATION_PATTERNS.md](./guides/SCORING_OPTIMIZATION_PATTERNS.md) - Point maximization
+5. **Advanced Strategy**: [FLOOR_LINE_PATTERNS.md](./guides/FLOOR_LINE_PATTERNS.md) - Floor line management
 
-### 🚧 **In Progress**
-- **M7**: Neural Integration - Policy-to-move mapping and GPU optimization
-- **M8**: Advanced Search - Neural MCTS and hybrid search
-- **M9**: Production Deployment - Docker and CI/CD
+### **For Developers**
+1. **API Integration**: [API_USAGE.md](./api/API_USAGE.md) - REST API documentation
+2. **Architecture**: [COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md) - Development plan
+3. **Implementation**: [IMPLEMENTATION_GUIDES.md](./guides/IMPLEMENTATION_GUIDES.md) - Technical guides
+4. **Status**: [DOCUMENTATION_STATUS.md](./status/DOCUMENTATION_STATUS.md) - Current state
 
-## 🏗️ Architecture
+### **For Researchers**
+1. **Research Platform**: [COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md) - Research capabilities
+2. **Analysis Methods**: Pattern detection guides for research methodology
+3. **Data Access**: [API_USAGE.md](./api/API_USAGE.md) - Programmatic access
+4. **Progress Tracking**: [PROGRESS_SUMMARY.md](./PROGRESS_SUMMARY.md) - Development status
 
-### Core Components
-- **Game Engine** (`core/`) - Complete rules engine with search algorithms
-- **REST API** (`api/`) - Complete Flask-based API with authentication
-- **Database** (`core/azul_database.py`) - SQLite with compression and indexing
-- **Web UI** (`ui/`) - React-based interactive interface
-- **Neural Network** (`neural/`) - PyTorch-based AzulNet model
-- **Search Algorithms** - Alpha-Beta and MCTS implementations
+## 📊 **Current Status**
 
-### Development Status
-- ✅ **Engine Core** - Complete with 297+ tests
-- ✅ **REST API** - Complete with authentication and caching
-- ✅ **Database** - Complete with compression and optimization
-- ✅ **Web UI** - Complete with interactive features
-- 🚧 **Neural Integration** - In progress (M7)
-- 📋 **Production Deployment** - Planned (M9)
+### **✅ Completed Features**
+- **Advanced Board State Editor**: Complete position setup with comprehensive validation
+- **Position Library**: Modular architecture with dynamic loading and search
+- **Pattern Detection Engine**: Tile blocking, scoring optimization, and floor line patterns
+- **Real-time Analysis**: Automatic pattern detection with visual indicators
+- **API Integration**: Multiple RESTful endpoints for pattern detection
+- **Comprehensive Testing**: Full test suites covering all pattern types
+- **Documentation**: Complete implementation guides and user documentation
 
-## 🧪 Testing
+### **🚧 In Progress**
+- **Strategic Pattern Analysis**: Factory control and endgame counting
+- **Move Quality Assessment**: 5-tier move quality system
+- **Alternative Move Analysis**: Top 3-5 alternative moves with explanations
 
-### Test Coverage
-- **297+ tests** across all components
-- **Core functionality** - Game state, rules, validation
-- **Search algorithms** - Alpha-Beta and MCTS
-- **API endpoints** - Authentication, analysis, caching
-- **Database operations** - CRUD, compression, indexing
-- **Neural components** - Model creation, training, inference
+### **📋 Planned Features**
+- **Game Analysis**: Complete game study tools
+- **Training System**: Tactical training exercises
+- **Performance Analytics**: Player improvement tracking
+- **Advanced Research**: Multi-engine comparison and data mining
 
-### Running Tests
-```bash
-# All tests
-python -m pytest tests/ -v
+## 🎯 **Performance Metrics**
 
-# Specific categories
-python -m pytest tests/test_core.py -v
-python -m pytest tests/test_api.py -v
-python -m pytest tests/test_search.py -v
-python -m pytest tests/test_neural.py -v
+### **Pattern Detection Performance**
+- **Tile Blocking Detection**: < 200ms for complete analysis
+- **Scoring Optimization**: < 200ms for complete analysis
+- **Floor Line Patterns**: < 200ms for complete analysis
+- **API Response Time**: < 200ms for pattern detection endpoints
+- **Pattern Recognition Accuracy**: > 90% for known patterns
 
-# With coverage
-python -m pytest tests/ --cov=core --cov-report=html
+### **User Experience Metrics**
+- **Position Setup**: < 30 seconds for any configuration
+- **Position Library Search**: < 2 seconds for filtered results
+- **Template Loading**: < 1 second for any preset
+- **Real-time Analysis**: Immediate pattern detection with visual indicators
+
+## 🔧 **Technical Architecture**
+
+### **Core Components**
+- **Backend**: Python-based pattern detection engines
+- **Frontend**: React-based analysis interfaces
+- **API**: Flask-based REST API with authentication
+- **Database**: SQLite with compression and optimization
+- **Testing**: Comprehensive test suites for all features
+
+### **Documentation Organization**
+```
+docs/
+├── README.md                    # Main project overview
+├── PROGRESS_SUMMARY.md         # Consolidated progress
+├── SETUP_SUMMARY.md            # Setup instructions
+├── guides/                     # Implementation guides
+│   ├── IMPLEMENTATION_GUIDES.md
+│   ├── PATTERN_DETECTION_GUIDE.md
+│   ├── SCORING_OPTIMIZATION_PATTERNS.md
+│   └── FLOOR_LINE_PATTERNS.md
+├── competitive/                # Competitive research documentation
+│   ├── COMPETITIVE_RESEARCH_ROADMAP.md
+│   └── COMPETITIVE_FEATURES_SUMMARY.md
+├── api/                       # API documentation
+│   ├── API_USAGE.md
+│   └── QUICK_START.md
+├── status/                    # Documentation status
+│   ├── DOCUMENTATION_STATUS.md
+│   └── DOCUMENTATION_REORGANIZATION_SUMMARY.md
+└── archive/                   # Historical documentation
+    ├── legacy/
+    ├── milestones/
+    └── research/
 ```
 
-## 🚀 Usage Examples
+## 📈 **Getting Started**
 
-### Command Line
-```bash
-# Start API server
-python main.py serve
+### **Quick Start Path**
+1. **Setup**: Follow [QUICK_START.md](./api/QUICK_START.md) for basic installation
+2. **Explore**: Check [COMPETITIVE_FEATURES_SUMMARY.md](./competitive/COMPETITIVE_FEATURES_SUMMARY.md) for available features
+3. **Analyze**: Use pattern detection guides for tactical analysis
+4. **Integrate**: Use [API_USAGE.md](./api/API_USAGE.md) for programmatic access
 
-# Exact analysis
-python main.py exact "start" --depth 3
+### **Development Path**
+1. **Understand**: Read [COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md) for architecture
+2. **Implement**: Follow individual pattern detection guides for specific features
+3. **Test**: Use comprehensive test suites for validation
+4. **Extend**: Build on existing pattern detection framework
 
-# Fast hints
-python main.py hint "start" --budget 0.2
+### **Research Path**
+1. **Overview**: Start with competitive research roadmap
+2. **Analysis**: Use pattern detection guides for research methods
+3. **Data**: Access via API for data collection
+4. **Advanced**: Explore floor line patterns for strategic analysis
 
-# Neural training
-python main.py train --config small --epochs 5
+## 🏆 **Key Features**
 
-# Performance profiling
-python main.py profile
-```
+### **Pattern Recognition & Analysis**
+- **Tile Blocking Detection**: Identify opportunities to block opponents
+- **Scoring Optimization**: Maximize points through strategic placement
+- **Floor Line Management**: Strategic penalty management and timing
+- **Real-time Analysis**: Immediate pattern detection with visual feedback
 
-### REST API
-```bash
-# Health check
-curl http://localhost:8000/api/v1/health
+### **Competitive Research Platform**
+- **Advanced Board Editor**: Complete position setup with validation
+- **Position Library**: Organized position management with search
+- **API Integration**: RESTful endpoints for all analysis features
+- **Comprehensive Testing**: Full test coverage for all features
 
-# Create session
-curl -X POST http://localhost:8000/api/v1/auth/session \
-  -H "Content-Type: application/json" \
-  -d '{"username": "test", "password": "test"}'
+### **User Experience**
+- **Interactive Interface**: Modern React-based web UI
+- **Real-time Feedback**: Immediate analysis results
+- **Error Handling**: Graceful error recovery and user guidance
+- **Performance**: Fast response times for all operations
 
-# Exact analysis
-curl -X POST http://localhost:8000/api/v1/analyze \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"fen_string": "start", "depth": 3, "time_budget": 4.0, "agent_id": 0}'
-```
+## 📚 **Documentation Quality**
 
-### Web UI
-- **URL**: `http://127.0.0.1:8000`
-- **Features**: Interactive game board, real-time analysis, drag-and-drop tiles
-- **Status**: Fully operational with all features working
+### **✅ Professional Standards**
+- **Consistent Formatting**: Uniform style and structure
+- **Clear Navigation**: Logical organization and cross-references
+- **Complete Coverage**: All features properly documented
+- **Actionable Content**: Clear implementation guidance
 
-## 📊 Performance Metrics
+### **✅ Technical Accuracy**
+- **Current Status**: All information reflects actual implementation
+- **Performance Metrics**: Accurate performance data
+- **Code Examples**: Working code samples and patterns
+- **Error Handling**: Comprehensive troubleshooting guides
 
-### Search Performance
-- **Alpha-Beta**: Depth-3 search < 4 seconds
-- **MCTS**: < 200ms hint generation
-- **Neural Inference**: < 1ms per evaluation
-- **Cache Hit Rate**: > 80% for repeated positions
+### **✅ User-Friendly**
+- **Quick Start**: Easy onboarding for new users
+- **Use Case Navigation**: Clear paths for different user types
+- **Visual Indicators**: Status indicators and progress tracking
+- **Comprehensive Index**: Central navigation for all guides
 
-### Database Performance
-- **WAL Mode**: Concurrent read/write access
-- **Compression Ratio**: ~70% space savings with Zstd
-- **Query Performance**: Sub-millisecond response times
-- **Index Coverage**: 15+ optimized indexes
+## 🚀 **Next Steps**
 
-### API Performance
-- **Response Time**: < 5ms for cached operations
-- **Authentication**: Session-based with rate limiting
-- **Bulk Operations**: Efficient batch processing
-- **Error Handling**: Comprehensive error responses
+### **Immediate Actions**
+- **Phase 2.4**: Complete Strategic Pattern Analysis
+- **Move Quality Assessment**: Implement 5-tier move quality system
+- **Alternative Move Analysis**: Add top 3-5 alternative moves with explanations
 
-### Web UI Performance
-- **Initial Load**: ~28KB, loads instantly
-- **API Calls**: Real-time with proper error handling
-- **User Feedback**: Immediate status updates
-
-## 🔧 Development
-
-### Project Structure
-```
-AZUL-RESEARCH/
-├── core/           # ✅ Game engine (complete)
-├── api/            # ✅ REST API (complete)
-├── ui/             # ✅ Web interface (complete)
-├── neural/         # 🚧 Neural components (in progress)
-├── tests/          # ✅ Test suite (297 tests)
-├── docs/           # 📚 Documentation
-├── scripts/        # 🔧 Debug & profiling
-├── legacy/         # 📜 Original reference code
-└── main.py         # ✅ CLI entry point
-```
-
-### Development Workflow
-1. **Start Development Server**: `python main.py serve --debug`
-2. **Run Tests**: `python -m pytest tests/ -v`
-3. **Check Status**: `python main.py status`
-4. **Profile Performance**: `python main.py profile`
-5. **Train Neural Model**: `python main.py train --config small`
-
-## 📈 Recent Achievements
-
-### ✅ **Web UI Integration (M6)**
-- **Interactive Board**: React + SVG game board with drag-and-drop
-- **Real-time Analysis**: Fast hints and exact analysis integration
-- **Database Integration**: SQLite caching operational without errors
-- **API Compatibility**: All endpoints working correctly
-- **Performance Targets**: All response times within targets
-
-### ✅ **Neural Integration (M7)**
-- **Tensor Encoding**: Comprehensive state representation
-- **AzulNet Model**: PyTorch-based policy+value network
-- **MCTS Integration**: Neural rollout policy
-- **Training Pipeline**: Synthetic data generation and training
-- **CLI Integration**: Training command with config options
-
-### ✅ **Main.js Refactoring**
-- **99% Reduction**: From 4,926 lines to ~50 lines
-- **Modular Architecture**: 20 new modules created
-- **Component Extraction**: 80+ functions extracted
-- **Testing**: All functionality verified working
-
-## 🎯 Next Steps
-
-### **Immediate (M7 Completion)**
-1. **Policy Mapping**: Complete neural policy-to-move mapping
-2. **GPU Optimization**: Add batch inference capabilities
-3. **Model Evaluation**: Compare neural vs heuristic performance
-
-### **Short Term (M8)**
-1. **Advanced Search**: Neural MCTS and hybrid search
-2. **Opening Book**: Position database and book moves
-3. **Performance Validation**: Benchmark against known positions
-
-### **Medium Term (M9)**
-1. **Production Deployment**: Docker containerization
-2. **CI/CD Pipeline**: Automated testing and deployment
-3. **v1.0 Release**: Complete documentation and deployment
-
-## 📞 Support
-
-- **Documentation**: This directory contains all guides
-- **API Reference**: See `API_USAGE.md` for complete API docs
-- **Progress Tracking**: Review `PROGRESS_TRACKER.md` for status
-- **Issues**: Report problems on GitHub Issues
+### **Future Development**
+- **Phase 3**: Game Analysis & Study Tools
+- **Phase 4**: Training & Improvement Tools
+- **Phase 5**: Advanced Research Tools
 
 ---
 
-**Current Status**: ✅ M1-M6 Complete, 🚧 M7 Neural Integration in Progress → Ready for M8 Advanced Search 🎉 
+**Last Updated**: August 2025  
+**Status**: ✅ **COMPLETE** - All documentation organized and indexed  
+**Next Update**: When new features are implemented 
