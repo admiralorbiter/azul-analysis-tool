@@ -22,141 +22,46 @@ from .auth import require_session
 from .rate_limiter import RateLimiter
 from core.azul_database import AzulDatabase
 
+# Import models from the new modular structure
+from .models import (
+    # Analysis models
+    AnalysisRequest,
+    HintRequest,
+    AnalysisCacheRequest,
+    AnalysisSearchRequest,
+    
+    # Position models
+    PositionCacheRequest,
+    BulkPositionRequest,
+    PositionDatabaseRequest,
+    SimilarPositionRequest,
+    ContinuationRequest,
+    
+    # Neural models
+    NeuralTrainingRequest,
+    NeuralEvaluationRequest,
+    NeuralConfigRequest,
+    
+    # Game models
+    GameCreationRequest,
+    GameAnalysisRequest,
+    GameLogUploadRequest,
+    GameAnalysisSearchRequest,
+    MoveExecutionRequest,
+    
+    # Validation models
+    BoardValidationRequest,
+    PatternDetectionRequest,
+    ScoringOptimizationRequest,
+    FloorLinePatternRequest,
+    
+    # Performance models
+    PerformanceStatsRequest,
+    SystemHealthRequest,
+)
+
 # Initialize database connection
 db = AzulDatabase()
-
-
-class AnalysisRequest(BaseModel):
-    """Request model for analysis endpoints."""
-    fen_string: str
-    agent_id: int = 0
-    depth: Optional[int] = None
-    time_budget: Optional[float] = None
-    rollouts: Optional[int] = None
-
-
-class HintRequest(BaseModel):
-    """Request model for hint endpoints."""
-    fen_string: str
-    agent_id: int = 0
-    budget: float = 0.2
-    rollouts: int = 100
-
-
-class PositionCacheRequest(BaseModel):
-    """Request model for position cache endpoints."""
-    model_config = ConfigDict(extra="forbid")
-    
-    fen_string: str
-    player_count: int = 2
-    compressed_state: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-
-
-class BulkPositionRequest(BaseModel):
-    """Request model for bulk position operations."""
-    positions: list[PositionCacheRequest]
-    overwrite: bool = False
-
-
-class AnalysisCacheRequest(BaseModel):
-    """Request model for analysis cache endpoints."""
-    fen_string: str
-    agent_id: int = 0
-    search_type: str  # 'mcts', 'alpha_beta', 'neural_mcts'
-    best_move: Optional[str] = None
-    best_score: float = 0.0
-    search_time: float = 0.0
-    nodes_searched: int = 0
-    rollout_count: int = 0
-    depth_reached: Optional[int] = None
-    principal_variation: Optional[list[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
-
-
-class AnalysisSearchRequest(BaseModel):
-    """Request model for analysis search."""
-    search_type: Optional[str] = None
-    agent_id: Optional[int] = None
-    min_score: Optional[float] = None
-    max_score: Optional[float] = None
-    limit: int = 50
-    offset: int = 0
-
-
-class PerformanceStatsRequest(BaseModel):
-    """Request model for performance statistics."""
-    search_type: Optional[str] = None
-    time_range_hours: Optional[int] = None
-    include_query_stats: bool = True
-    include_index_stats: bool = True
-
-
-class SystemHealthRequest(BaseModel):
-    """Request model for system health checks."""
-    include_database_health: bool = True
-    include_performance_metrics: bool = True
-    include_cache_analytics: bool = True
-
-
-class MoveExecutionRequest(BaseModel):
-    """Request model for move execution."""
-    fen_string: str
-    move: Dict[str, Any]  # Move data from frontend
-    agent_id: int = 0
-
-
-class GameCreationRequest(BaseModel):
-    """Request model for game creation."""
-    player_count: int = 2  # Only 2-player games supported
-    seed: Optional[int] = None
-
-
-# Add these new request models after the existing ones (around line 100)
-
-class GameAnalysisRequest(BaseModel):
-    """Request model for game analysis."""
-    game_data: Dict[str, Any]  # Game log data
-    include_blunder_analysis: bool = True
-    include_position_analysis: bool = True
-    analysis_depth: int = 3
-
-
-class GameLogUploadRequest(BaseModel):
-    """Request model for game log upload."""
-    game_format: str = 'json'  # 'json', 'text', 'pgn'
-    game_content: str
-    game_metadata: Optional[Dict[str, Any]] = None
-
-
-class GameAnalysisSearchRequest(BaseModel):
-    """Request model for searching game analyses."""
-    player_names: Optional[List[str]] = None
-    min_blunder_count: Optional[int] = None
-    max_blunder_count: Optional[int] = None
-    date_range: Optional[Dict[str, str]] = None
-    limit: int = 50
-    offset: int = 0
-
-
-class PositionDatabaseRequest(BaseModel):
-    """Request model for position database operations."""
-    fen_string: str
-    metadata: Optional[Dict[str, Any]] = None
-    frequency: int = 1
-
-
-class SimilarPositionRequest(BaseModel):
-    """Request model for finding similar positions."""
-    fen_string: str
-    similarity_threshold: float = 0.8
-    limit: int = 10
-
-
-class ContinuationRequest(BaseModel):
-    """Request model for getting popular continuations."""
-    fen_string: str
-    limit: int = 5
 
 
 # Create Flask blueprint for API endpoints
@@ -4006,39 +3911,7 @@ def calculate_position_similarity(hash1: str, hash2: str) -> float:
 
 
 # Neural Training Request Models
-class NeuralTrainingRequest(BaseModel):
-    """Request model for neural training."""
-    config: str = 'small'  # 'small', 'medium', 'large'
-    modelSize: Optional[str] = None  # Frontend sends this field name
-    device: str = 'cpu'  # 'cpu', 'cuda'
-    epochs: int = 5
-    samples: int = 500
-    batch_size: int = 16
-    learning_rate: float = 0.001
-    
-    def __init__(self, **data):
-        super().__init__(**data)
-        # Handle field name mismatch between frontend and backend
-        if self.modelSize and not data.get('config'):
-            self.config = self.modelSize
 
-
-class NeuralEvaluationRequest(BaseModel):
-    """Request model for neural evaluation."""
-    model: str = 'models/azul_net_small.pth'
-    positions: int = 50
-    games: int = 20
-    device: str = 'cpu'
-
-
-class NeuralConfigRequest(BaseModel):
-    """Request model for neural configuration."""
-    config: Optional[str] = None
-    device: Optional[str] = None
-    epochs: Optional[int] = None
-    samples: Optional[int] = None
-    batch_size: Optional[int] = None
-    learning_rate: Optional[float] = None
 
 
 # Neural Training API Endpoints
@@ -5174,47 +5047,7 @@ def get_neural_models():
 # Board State Validation Endpoints
 # ================================
 
-class BoardValidationRequest(BaseModel):
-    """Request model for board state validation."""
-    game_state: Dict[str, Any]
-    validation_type: str = "complete"  # "complete", "pattern_line", "wall", "floor"
-    player_id: Optional[int] = None
-    element_id: Optional[str] = None
 
-
-class PatternDetectionRequest(BaseModel):
-    """Request model for pattern detection."""
-    fen_string: str
-    current_player: int = 0
-    include_blocking_opportunities: bool = True
-    include_move_suggestions: bool = True
-    urgency_threshold: float = 0.7
-
-
-class ScoringOptimizationRequest(BaseModel):
-    """Request model for scoring optimization detection."""
-    fen_string: str
-    current_player: int = 0
-    include_wall_completion: bool = True
-    include_pattern_line_optimization: bool = True
-    include_floor_line_optimization: bool = True
-    include_multiplier_setup: bool = True
-    include_move_suggestions: bool = True
-    urgency_threshold: float = 0.7
-
-
-class FloorLinePatternRequest(BaseModel):
-    """Request model for floor line pattern detection."""
-    fen_string: str
-    current_player: int = 0
-    include_risk_mitigation: bool = True
-    include_timing_optimization: bool = True
-    include_trade_offs: bool = True
-    include_endgame_management: bool = True
-    include_blocking_opportunities: bool = True
-    include_efficiency_opportunities: bool = True
-    include_move_suggestions: bool = True
-    urgency_threshold: float = 0.7
 
 
 @api_bp.route('/validate-board-state', methods=['POST'])
