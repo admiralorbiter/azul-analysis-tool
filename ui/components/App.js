@@ -117,10 +117,14 @@ function App() {
             .then(() => {
                 setSessionStatus('connected');
                 setStatusMessage('Connected to server');
-                return getGameState();
+                // Try to load saved state first, fall back to initial state
+                return getGameState('saved').catch(() => {
+                    console.log('No saved state found, loading initial state');
+                    return getGameState('initial');
+                });
             })
             .then(data => {
-                console.log('Initial game state:', data);
+                console.log('Game state loaded:', data);
                 debugSetGameState(data);
                 setStatusMessage('Game loaded');
             })
@@ -134,7 +138,8 @@ function App() {
     useEffect(() => {
         const interval = setInterval(() => {
             if (sessionStatus === 'connected' && !loading && !editMode && !positionJustLoaded) {
-                getGameState().then(data => {
+                // Try to load saved state first, fall back to initial state
+                getGameState('saved').catch(() => getGameState('initial')).then(data => {
                     debugSetGameState(data);
                 }).catch(error => {
                     console.error('Failed to refresh game state:', error);
@@ -707,21 +712,19 @@ function App() {
                             }, '📚 Position Library'),
                             React.createElement('button', {
                                 className: 'btn-success',
-                                onClick: () => getGameState().then(setGameState)
-                            }, '🔄 Reset Game'),
-                            React.createElement('button', {
-                                className: 'btn-primary btn-sm',
                                 onClick: () => {
-                                    // Reset the position loaded flag to allow automatic refresh to resume
-                                    setPositionJustLoaded(false);
-                                    getGameState().then(data => {
-                                        debugSetGameState(data);
-                                        setStatusMessage('Game state refreshed');
-                                    }).catch(error => {
-                                        setStatusMessage(`Refresh failed: ${error.message}`);
-                                    });
-                                }
-                            }, '🔄 Refresh'),
+                                    if (gameState) {
+                                        saveGameState(gameState, 'saved').then(() => {
+                                            setStatusMessage('✅ Board position saved successfully');
+                                        }).catch(error => {
+                                            setStatusMessage(`❌ Failed to save: ${error.message}`);
+                                        });
+                                    } else {
+                                        setStatusMessage('❌ No game state to save');
+                                    }
+                                },
+                                disabled: !gameState
+                            }, '💾 Save Position'),
                             React.createElement('div', {
                                 className: 'btn-group'
                             },
