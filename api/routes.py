@@ -297,8 +297,148 @@ def parse_fen_string(fen_string: str):
             
             random.seed()  # Reset seed
             return test_state
+        elif fen_string == "simple_row_completion":
+            # Create simple row completion test position
+            print("DEBUG: Creating simple row completion position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up simple row completion position
+            # Player 0 has 4 tiles in row 0, needs 1 more to complete
+            test_state.agents[0].grid_state[0][0] = 1  # Blue tile at (0,0)
+            test_state.agents[0].grid_state[0][1] = 1  # Yellow tile at (0,1)
+            test_state.agents[0].grid_state[0][2] = 1  # Red tile at (0,2)
+            test_state.agents[0].grid_state[0][3] = 1  # Black tile at (0,3)
+            # Missing white tile at (0,4) - this is the opportunity
+            
+            # Add white tiles to factories for completion
+            test_state.factories[0].tiles[4] = 2  # 2 white tiles in factory 0
+            test_state.factories[1].tiles[4] = 1  # 1 white tile in factory 1
+            test_state.factories[2].tiles[4] = 1  # 1 white tile in factory 2
+            
+            # Add white tiles to center pool
+            test_state.centre_pool.tiles[4] = 1  # 1 white tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "simple_column_completion":
+            # Create simple column completion test position
+            print("DEBUG: Creating simple column completion position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up simple column completion position
+            # Player 0 has 4 tiles in column 0, needs 1 more to complete
+            test_state.agents[0].grid_state[0][0] = 1  # Blue tile at (0,0)
+            test_state.agents[0].grid_state[1][0] = 1  # Yellow tile at (1,0)
+            test_state.agents[0].grid_state[2][0] = 1  # Red tile at (2,0)
+            test_state.agents[0].grid_state[3][0] = 1  # Black tile at (3,0)
+            # Missing white tile at (4,0) - this is the opportunity
+            
+            # Add white tiles to factories for completion
+            test_state.factories[0].tiles[4] = 2  # 2 white tiles in factory 0
+            test_state.factories[1].tiles[4] = 1  # 1 white tile in factory 1
+            test_state.factories[2].tiles[4] = 1  # 1 white tile in factory 2
+            
+            # Add white tiles to center pool
+            test_state.centre_pool.tiles[4] = 1  # 1 white tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "color_set_completion":
+            # Create color set completion test position
+            print("DEBUG: Creating color set completion position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up color set completion position (blue tiles)
+            # Player 0 has 4 blue tiles, needs 1 more to complete set
+            test_state.agents[0].grid_state[0][0] = 1  # Blue at (0,0)
+            test_state.agents[0].grid_state[1][1] = 1  # Blue at (1,1)
+            test_state.agents[0].grid_state[2][2] = 1  # Blue at (2,2)
+            test_state.agents[0].grid_state[3][3] = 1  # Blue at (3,3)
+            # Missing blue tile at (4,4) - this is the opportunity
+            
+            # Add blue tiles to factories for completion
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            test_state.factories[2].tiles[0] = 1  # 1 blue tile in factory 2
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "pattern_line_optimization":
+            # Create pattern line optimization test position
+            print("DEBUG: Creating pattern line optimization position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up pattern line optimization position
+            # Player 0 has 2 tiles in pattern line 2 (capacity 3), needs 1 more
+            test_state.agents[0].lines_number[2] = 2  # 2 tiles in line 2
+            test_state.agents[0].lines_tile[2] = 0   # Blue color
+            
+            # Add blue tiles to factories for completion
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "floor_line_optimization":
+            # Create floor line optimization test position
+            print("DEBUG: Creating floor line optimization position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up floor line optimization position
+            # Player 0 has 3 tiles in floor line (penalty -4)
+            test_state.agents[0].floor_tiles = [0, 1, 2]  # 3 tiles in floor
+            
+            # Add tiles to factories for wall placement
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "multiplier_setup":
+            # Create multiplier setup test position
+            print("DEBUG: Creating multiplier setup position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up multiplier setup position
+            # Player 0 has 4 tiles in row 0 and 4 tiles in column 0
+            # Placing at (0,0) would complete both row and column
+            test_state.agents[0].grid_state[0][1] = 1  # Tile at (0,1)
+            test_state.agents[0].grid_state[0][2] = 1  # Tile at (0,2)
+            test_state.agents[0].grid_state[0][3] = 1  # Tile at (0,3)
+            test_state.agents[0].grid_state[0][4] = 1  # Tile at (0,4)
+            test_state.agents[0].grid_state[1][0] = 1  # Tile at (1,0)
+            test_state.agents[0].grid_state[2][0] = 1  # Tile at (2,0)
+            test_state.agents[0].grid_state[3][0] = 1  # Tile at (3,0)
+            test_state.agents[0].grid_state[4][0] = 1  # Tile at (4,0)
+            # Missing tile at (0,0) - this would complete both row and column
+            
+            # Add blue tiles to factories (blue goes at (0,0))
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
         else:
-            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', 'test_blocking_position', or state identifiers.")
+            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', 'test_blocking_position', 'simple_row_completion', 'simple_column_completion', 'color_set_completion', 'pattern_line_optimization', 'floor_line_optimization', 'multiplier_setup', or state identifiers.")
     except Exception as e:
         print(f"DEBUG: Exception in parse_fen_string: {e}")
         import traceback
@@ -4362,6 +4502,18 @@ class PatternDetectionRequest(BaseModel):
     urgency_threshold: float = 0.7
 
 
+class ScoringOptimizationRequest(BaseModel):
+    """Request model for scoring optimization detection."""
+    fen_string: str
+    current_player: int = 0
+    include_wall_completion: bool = True
+    include_pattern_line_optimization: bool = True
+    include_floor_line_optimization: bool = True
+    include_multiplier_setup: bool = True
+    include_move_suggestions: bool = True
+    urgency_threshold: float = 0.7
+
+
 @api_bp.route('/validate-board-state', methods=['POST'])
 @require_session
 def validate_board_state():
@@ -4587,5 +4739,136 @@ def detect_patterns():
         
     except Exception as e:
         return jsonify({'error': f'Pattern detection error: {str(e)}'}), 500
+
+
+@api_bp.route('/detect-scoring-optimization', methods=['POST'])
+def detect_scoring_optimization():
+    """Detect scoring optimization opportunities in the current position."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Parse the request
+        try:
+            request_model = ScoringOptimizationRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
+        
+        # Parse FEN string to get game state
+        try:
+            state = parse_fen_string(request_model.fen_string)
+        except Exception as e:
+            return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
+        
+        # Import and use the scoring optimization detector
+        from core.azul_scoring_optimization import AzulScoringOptimizationDetector
+        detector = AzulScoringOptimizationDetector()
+        
+        # Detect scoring optimization opportunities
+        optimization_detection = detector.detect_scoring_optimization(state, request_model.current_player)
+        
+        # Prepare response
+        response = {
+            'total_opportunities': optimization_detection.total_opportunities,
+            'total_potential_bonus': optimization_detection.total_potential_bonus,
+            'confidence_score': optimization_detection.confidence_score,
+            'opportunities_detected': True if optimization_detection.total_opportunities > 0 else False
+        }
+        
+        # Add wall completion opportunities if requested
+        if request_model.include_wall_completion:
+            wall_opportunities = []
+            for opp in optimization_detection.wall_completion_opportunities:
+                wall_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}"),
+                    'bonus_value': opp.bonus_value,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'tiles_needed': opp.tiles_needed,
+                    'tiles_available': opp.tiles_available,
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description
+                })
+            response['wall_completion_opportunities'] = wall_opportunities
+        
+        # Add pattern line optimization opportunities if requested
+        if request_model.include_pattern_line_optimization:
+            pattern_line_opportunities = []
+            for opp in optimization_detection.pattern_line_opportunities:
+                pattern_line_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}"),
+                    'bonus_value': opp.bonus_value,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'tiles_needed': opp.tiles_needed,
+                    'tiles_available': opp.tiles_available,
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description
+                })
+            response['pattern_line_opportunities'] = pattern_line_opportunities
+        
+        # Add floor line optimization opportunities if requested
+        if request_model.include_floor_line_optimization:
+            floor_line_opportunities = []
+            for opp in optimization_detection.floor_line_opportunities:
+                floor_line_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}"),
+                    'bonus_value': opp.bonus_value,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'tiles_needed': opp.tiles_needed,
+                    'tiles_available': opp.tiles_available,
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description
+                })
+            response['floor_line_opportunities'] = floor_line_opportunities
+        
+        # Add multiplier setup opportunities if requested
+        if request_model.include_multiplier_setup:
+            multiplier_opportunities = []
+            for opp in optimization_detection.multiplier_opportunities:
+                multiplier_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}"),
+                    'bonus_value': opp.bonus_value,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'tiles_needed': opp.tiles_needed,
+                    'tiles_available': opp.tiles_available,
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description
+                })
+            response['multiplier_opportunities'] = multiplier_opportunities
+        
+        # Add move suggestions if requested
+        if request_model.include_move_suggestions:
+            all_opportunities = (optimization_detection.wall_completion_opportunities + 
+                               optimization_detection.pattern_line_opportunities + 
+                               optimization_detection.floor_line_opportunities + 
+                               optimization_detection.multiplier_opportunities)
+            
+            move_suggestions = []
+            for opp in all_opportunities:
+                if opp.move_suggestions:
+                    move_suggestions.extend(opp.move_suggestions)
+            
+            response['move_suggestions'] = move_suggestions
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': f'Scoring optimization detection error: {str(e)}'}), 500
 
 

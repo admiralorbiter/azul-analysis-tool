@@ -14,6 +14,7 @@ const BoardEditor = window.BoardEditor;
 const ValidationFeedback = window.ValidationFeedback;
 const PositionLibrary = window.PositionLibrary;
 const PatternAnalysis = window.PatternAnalysis;
+const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -1000,6 +1001,24 @@ function App() {
                                     onPatternDetected: (patterns) => {
                                         if (patterns.patterns_detected) {
                                             setStatusMessage(`🎯 ${patterns.total_patterns} tactical pattern${patterns.total_patterns !== 1 ? 's' : ''} detected`);
+                                        }
+                                    }
+                                })
+                            ),
+                            
+                            // Scoring Optimization Analysis Section (R2.2)
+                            React.createElement('div', {
+                                className: 'mb-4'
+                            },
+                                React.createElement('h4', {
+                                    className: 'font-medium text-sm mb-2 text-gray-700'
+                                }, '🎯 Scoring Optimization Analysis'),
+                                React.createElement(ScoringOptimizationAnalysis, {
+                                    gameState: gameState,
+                                    currentPlayer: currentPlayer,
+                                    onOptimizationDetected: (optimizations) => {
+                                        if (optimizations.opportunities_detected) {
+                                            setStatusMessage(`🎯 ${optimizations.total_opportunities} scoring optimization opportunity${optimizations.total_opportunities !== 1 ? 'ies' : 'y'} detected`);
                                         }
                                     }
                                 })

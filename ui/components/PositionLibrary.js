@@ -27,8 +27,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
             const hasEducational = window.educationalPositions && Object.keys(window.educationalPositions).length > 0;
             const hasCustom = window.customPositions && Object.keys(window.customPositions).length > 0;
             const hasBlockingTest = window.blockingTestPositions && Object.keys(window.blockingTestPositions).length > 0;
+            const hasScoringOptimization = window.scoringOptimizationTestPositions && Object.keys(window.scoringOptimizationTestPositions).length > 0;
             
-            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest) {
+            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization) {
                 setModulesLoaded(true);
             } else {
                 // Check again in 100ms if modules aren't loaded yet
@@ -46,6 +47,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const educationalPositions = window.educationalPositions || {};
     const customPositionsModule = window.customPositions || {};
     const blockingTestPositions = window.blockingTestPositions || {};
+    const scoringOptimizationTestPositions = window.scoringOptimizationTestPositions || {};
 
     // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
@@ -153,12 +155,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
             name: "Testing Positions",
             description: "Positions designed for testing specific features",
             icon: "🧪",
-            subcategories: blockingTestPositions || {
-                "blocking": {
-                    name: "Blocking Detection Tests",
-                    description: "Positions designed to test tile blocking detection",
-                    positions: []
-                }
+            subcategories: {
+                ...blockingTestPositions,
+                ...scoringOptimizationTestPositions
             }
         }
     };
@@ -172,7 +171,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
         "balanced", "aggressive", "color-focus", "high-interaction",
         "multiplier", "color-race", "floor-line", "final-round",
         "tie-breaker", "conservation", "pattern-lines", "wall-strategy",
-        "pattern-detection", "simple", "complex", "multiple", "no-blocking"
+        "pattern-detection", "simple", "complex", "multiple", "no-blocking",
+        "scoring-optimization", "row-completion", "column-completion", "color-set-completion",
+        "pattern-line", "multiplier-setup", "overflow-risk", "multiple-opportunities"
     ];
 
     // Load position with validation
