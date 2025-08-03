@@ -16,6 +16,7 @@ from .routes.neural import neural_bp, init_neural_routes
 from .routes.validation import validation_bp
 from .routes.performance import performance_bp
 from .routes.core import core_bp
+from .routes.move_analysis import move_analysis_bp
 
 # Initialize database connection
 db = AzulDatabase()
@@ -34,6 +35,7 @@ api_bp.register_blueprint(neural_bp)
 api_bp.register_blueprint(validation_bp)
 api_bp.register_blueprint(performance_bp)
 api_bp.register_blueprint(core_bp)
+api_bp.register_blueprint(move_analysis_bp)
 
 
 # Global state variables moved to api/utils/state_parser.py

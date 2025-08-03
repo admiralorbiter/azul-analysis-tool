@@ -29,7 +29,7 @@ def parse_fen_string(fen_string: str):
     print(f"DEBUG: _current_editable_game_state is None: {_current_editable_game_state is None}")
     
     try:
-        if fen_string.lower() == "initial":
+        if fen_string.lower() in ["initial", "start"]:
             # Use a consistent initial state with fixed seed for reproducibility
             if _initial_game_state is None:
                 print("DEBUG: Creating initial game state")

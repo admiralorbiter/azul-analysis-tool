@@ -205,6 +205,26 @@ window.GameControls = function GameControls({
                 })
             ),
             
+            // Move Quality Analysis Section (R2.2)
+            React.createElement('div', {
+                className: 'mb-4'
+            },
+                React.createElement('h4', {
+                    className: 'font-medium text-sm mb-2 text-gray-700'
+                }, '🎯 Move Quality Assessment'),
+                React.createElement(MoveQualityAnalysis, {
+                    gameState: gameState,
+                    currentPlayer: currentPlayer,
+                    onMoveRecommendation: (analysis) => {
+                        if (analysis.success && analysis.primary_recommendation) {
+                            const tier = analysis.primary_recommendation.quality_tier;
+                            const score = analysis.primary_recommendation.quality_score;
+                            setStatusMessage(`🎯 Best move: ${tier} (${score.toFixed(1)}/100)`);
+                        }
+                    }
+                })
+            ),
+            
             // Quick Actions Section
             React.createElement('div', {
                 className: 'mb-4'
