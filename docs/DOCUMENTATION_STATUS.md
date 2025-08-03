@@ -94,6 +94,24 @@
   - Move suggestion generation with specific recommendations
   - Test positions for validation and development
 
+### Floor Line Patterns Documentation (Recent)
+- **Status**: ✅ Complete
+- **New Documentation**:
+  - `docs/FLOOR_LINE_PATTERNS.md` - Comprehensive floor line management patterns guide
+  - `core/azul_floor_line_patterns.py` - Floor line pattern detection engine
+  - `ui/components/FloorLinePatternAnalysis.js` - Frontend display component
+  - `tests/test_floor_line_patterns.py` - Unit tests for floor line patterns
+  - `ui/components/positions/floor-line-test-positions.js` - Test positions for floor line scenarios
+- **Features**:
+  - Risk mitigation detection (critical, high, medium, low risk scenarios)
+  - Timing optimization patterns (early, mid, endgame floor timing)
+  - Trade-off analysis (wall completion vs floor penalty)
+  - Endgame management strategies (penalty minimization)
+  - Blocking opportunities (opponent pattern line blocking)
+  - Efficiency optimization (efficient floor clearance)
+  - Comprehensive FEN string support for all test positions
+  - Common pitfalls and solutions documentation
+
 ### Web UI Integration Documentation (Recent)
 - **Status**: ✅ Complete
 - **New Documentation**:

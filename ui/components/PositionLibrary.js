@@ -28,8 +28,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
             const hasCustom = window.customPositions && Object.keys(window.customPositions).length > 0;
             const hasBlockingTest = window.blockingTestPositions && Object.keys(window.blockingTestPositions).length > 0;
             const hasScoringOptimization = window.scoringOptimizationTestPositions && Object.keys(window.scoringOptimizationTestPositions).length > 0;
+            const hasFloorLineTest = window.floorLineTestPositions && Object.keys(window.floorLineTestPositions).length > 0;
             
-            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization) {
+            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization || hasFloorLineTest) {
                 setModulesLoaded(true);
             } else {
                 // Check again in 100ms if modules aren't loaded yet
@@ -48,6 +49,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const customPositionsModule = window.customPositions || {};
     const blockingTestPositions = window.blockingTestPositions || {};
     const scoringOptimizationTestPositions = window.scoringOptimizationTestPositions || {};
+    const floorLineTestPositions = window.floorLineTestPositions || {};
 
     // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
@@ -157,7 +159,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
             icon: "🧪",
             subcategories: {
                 ...blockingTestPositions,
-                ...scoringOptimizationTestPositions
+                ...scoringOptimizationTestPositions,
+                ...floorLineTestPositions
             }
         }
     };
@@ -173,7 +176,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
         "tie-breaker", "conservation", "pattern-lines", "wall-strategy",
         "pattern-detection", "simple", "complex", "multiple", "no-blocking",
         "scoring-optimization", "row-completion", "column-completion", "color-set-completion",
-        "pattern-line", "multiplier-setup", "overflow-risk", "multiple-opportunities"
+        "pattern-line", "multiplier-setup", "overflow-risk", "multiple-opportunities",
+        "risk-mitigation", "timing-optimization", "trade-off", "endgame-management", "efficiency"
     ];
 
     // Load position with validation

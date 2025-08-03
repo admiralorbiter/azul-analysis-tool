@@ -437,8 +437,241 @@ def parse_fen_string(fen_string: str):
             
             random.seed()  # Reset seed
             return test_state
+        # Floor Line Management Test Positions
+        elif fen_string == "critical_floor_risk":
+            # Create critical floor risk test position
+            print("DEBUG: Creating critical floor risk position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up critical floor risk position - Player 0 has 6 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1, 2, 3, 4, 5]  # 6 tiles on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            test_state.factories[2].tiles[2] = 2  # 2 red tiles in factory 2
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            test_state.centre_pool.tiles[2] = 1  # 1 red tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "high_floor_risk":
+            # Create high floor risk test position
+            print("DEBUG: Creating high floor risk position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up high floor risk position - Player 0 has 4 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1, 2, 3]  # 4 tiles on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "medium_floor_risk":
+            # Create medium floor risk test position
+            print("DEBUG: Creating medium floor risk position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up medium floor risk position - Player 0 has 2 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1]  # 2 tiles on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "early_game_floor_timing":
+            # Create early game floor timing test position
+            print("DEBUG: Creating early game floor timing position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up early game floor timing position - Player 0 has 1 tile on floor line
+            test_state.agents[0].floor_tiles = [0]  # 1 tile on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "mid_game_floor_timing":
+            # Create mid game floor timing test position
+            print("DEBUG: Creating mid game floor timing position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up mid game floor timing position - Player 0 has 3 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1, 2]  # 3 tiles on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "endgame_floor_timing":
+            # Create endgame floor timing test position
+            print("DEBUG: Creating endgame floor timing position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up endgame floor timing position - Player 0 has 5 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1, 2, 3, 4]  # 5 tiles on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "wall_completion_trade_off":
+            # Create wall completion trade-off test position
+            print("DEBUG: Creating wall completion trade-off position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up wall completion trade-off position - Player 0 has 2 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1]  # 2 tiles on floor line
+            
+            # Player 0 has 4 tiles in row 0, needs 1 more to complete
+            test_state.agents[0].grid_state[0][1] = 1  # Tile at (0,1)
+            test_state.agents[0].grid_state[0][2] = 1  # Tile at (0,2)
+            test_state.agents[0].grid_state[0][3] = 1  # Tile at (0,3)
+            test_state.agents[0].grid_state[0][4] = 1  # Tile at (0,4)
+            # Missing tile at (0,0) - this would complete the row
+            
+            # Add blue tiles to factories (blue goes at (0,0))
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "endgame_penalty_minimization":
+            # Create endgame penalty minimization test position
+            print("DEBUG: Creating endgame penalty minimization position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up endgame penalty minimization position - Player 0 has 3 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1, 2]  # 3 tiles on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "opponent_blocking_opportunity":
+            # Create opponent blocking opportunity test position
+            print("DEBUG: Creating opponent blocking opportunity position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up opponent blocking opportunity position - Player 0 has 2 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1]  # 2 tiles on floor line
+            
+            # Player 1 has blue tiles in pattern line 0, needs 1 more tile
+            test_state.agents[1].lines_number[0] = 1  # 1 blue tile in line 0
+            test_state.agents[1].lines_tile[0] = 0   # Blue color
+            test_state.agents[1].grid_state[0][0] = 0  # Blue not on wall yet
+            
+            # Add blue tiles to factories for blocking
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "efficient_floor_clearance":
+            # Create efficient floor clearance test position
+            print("DEBUG: Creating efficient floor clearance position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up efficient floor clearance position - Player 0 has 1 tile on floor line
+            test_state.agents[0].floor_tiles = [0]  # 1 tile on floor line
+            
+            # Add tiles to factories for wall placement opportunities
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[1] = 2  # 2 yellow tiles in factory 1
+            
+            # Add tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            test_state.centre_pool.tiles[1] = 1  # 1 yellow tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
+        elif fen_string == "complex_risk_reward":
+            # Create complex risk reward test position
+            print("DEBUG: Creating complex risk reward position")
+            random.seed(42)  # Use fixed seed for reproducibility
+            test_state = AzulState(2)
+            
+            # Set up complex risk reward position - Player 0 has 4 tiles on floor line
+            test_state.agents[0].floor_tiles = [0, 1, 2, 3]  # 4 tiles on floor line
+            
+            # Player 0 has 4 tiles in row 0, needs 1 more to complete
+            test_state.agents[0].grid_state[0][1] = 1  # Tile at (0,1)
+            test_state.agents[0].grid_state[0][2] = 1  # Tile at (0,2)
+            test_state.agents[0].grid_state[0][3] = 1  # Tile at (0,3)
+            test_state.agents[0].grid_state[0][4] = 1  # Tile at (0,4)
+            # Missing tile at (0,0) - this would complete the row
+            
+            # Player 1 has blue tiles in pattern line 0, needs 1 more tile
+            test_state.agents[1].lines_number[0] = 1  # 1 blue tile in line 0
+            test_state.agents[1].lines_tile[0] = 0   # Blue color
+            test_state.agents[1].grid_state[0][0] = 0  # Blue not on wall yet
+            
+            # Add blue tiles to factories for wall placement and blocking
+            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
+            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
+            
+            # Add blue tiles to center pool
+            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            
+            random.seed()  # Reset seed
+            return test_state
         else:
-            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', 'test_blocking_position', 'simple_row_completion', 'simple_column_completion', 'color_set_completion', 'pattern_line_optimization', 'floor_line_optimization', 'multiplier_setup', or state identifiers.")
+            raise ValueError(f"Unsupported FEN format: {fen_string}. Use 'initial', 'saved', 'test_blocking_position', 'simple_row_completion', 'simple_column_completion', 'color_set_completion', 'pattern_line_optimization', 'floor_line_optimization', 'multiplier_setup', 'critical_floor_risk', 'high_floor_risk', 'medium_floor_risk', 'early_game_floor_timing', 'mid_game_floor_timing', 'endgame_floor_timing', 'wall_completion_trade_off', 'endgame_penalty_minimization', 'opponent_blocking_opportunity', 'efficient_floor_clearance', 'complex_risk_reward', or state identifiers.")
     except Exception as e:
         print(f"DEBUG: Exception in parse_fen_string: {e}")
         import traceback
@@ -4514,6 +4747,20 @@ class ScoringOptimizationRequest(BaseModel):
     urgency_threshold: float = 0.7
 
 
+class FloorLinePatternRequest(BaseModel):
+    """Request model for floor line pattern detection."""
+    fen_string: str
+    current_player: int = 0
+    include_risk_mitigation: bool = True
+    include_timing_optimization: bool = True
+    include_trade_offs: bool = True
+    include_endgame_management: bool = True
+    include_blocking_opportunities: bool = True
+    include_efficiency_opportunities: bool = True
+    include_move_suggestions: bool = True
+    urgency_threshold: float = 0.7
+
+
 @api_bp.route('/validate-board-state', methods=['POST'])
 @require_session
 def validate_board_state():
@@ -4870,5 +5117,182 @@ def detect_scoring_optimization():
         
     except Exception as e:
         return jsonify({'error': f'Scoring optimization detection error: {str(e)}'}), 500
+
+
+@api_bp.route('/detect-floor-line-patterns', methods=['POST'])
+def detect_floor_line_patterns():
+    """Detect floor line management patterns in the current position."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Parse the request
+        try:
+            request_model = FloorLinePatternRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
+        
+        # Parse FEN string to get game state
+        try:
+            state = parse_fen_string(request_model.fen_string)
+        except Exception as e:
+            return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
+        
+        # Import and use the floor line pattern detector
+        from core.azul_floor_line_patterns import AzulFloorLinePatternDetector
+        detector = AzulFloorLinePatternDetector()
+        
+        # Detect floor line patterns
+        pattern_detection = detector.detect_floor_line_patterns(state, request_model.current_player)
+        
+        # Prepare response
+        response = {
+            'total_opportunities': pattern_detection.total_opportunities,
+            'total_penalty_risk': pattern_detection.total_penalty_risk,
+            'confidence_score': pattern_detection.confidence_score,
+            'patterns_detected': True if pattern_detection.total_opportunities > 0 else False
+        }
+        
+        # Add risk mitigation opportunities if requested
+        if request_model.include_risk_mitigation:
+            risk_mitigation_opportunities = []
+            for opp in pattern_detection.risk_mitigation_opportunities:
+                risk_mitigation_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}") if opp.target_color else None,
+                    'current_floor_tiles': opp.current_floor_tiles,
+                    'potential_penalty': opp.potential_penalty,
+                    'penalty_reduction': opp.penalty_reduction,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description,
+                    'strategic_value': opp.strategic_value
+                })
+            response['risk_mitigation_opportunities'] = risk_mitigation_opportunities
+        
+        # Add timing optimization opportunities if requested
+        if request_model.include_timing_optimization:
+            timing_optimization_opportunities = []
+            for opp in pattern_detection.timing_optimization_opportunities:
+                timing_optimization_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}") if opp.target_color else None,
+                    'current_floor_tiles': opp.current_floor_tiles,
+                    'potential_penalty': opp.potential_penalty,
+                    'penalty_reduction': opp.penalty_reduction,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description,
+                    'strategic_value': opp.strategic_value
+                })
+            response['timing_optimization_opportunities'] = timing_optimization_opportunities
+        
+        # Add trade-off opportunities if requested
+        if request_model.include_trade_offs:
+            trade_off_opportunities = []
+            for opp in pattern_detection.trade_off_opportunities:
+                trade_off_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}") if opp.target_color else None,
+                    'current_floor_tiles': opp.current_floor_tiles,
+                    'potential_penalty': opp.potential_penalty,
+                    'penalty_reduction': opp.penalty_reduction,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description,
+                    'strategic_value': opp.strategic_value
+                })
+            response['trade_off_opportunities'] = trade_off_opportunities
+        
+        # Add endgame management opportunities if requested
+        if request_model.include_endgame_management:
+            endgame_management_opportunities = []
+            for opp in pattern_detection.endgame_management_opportunities:
+                endgame_management_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}") if opp.target_color else None,
+                    'current_floor_tiles': opp.current_floor_tiles,
+                    'potential_penalty': opp.potential_penalty,
+                    'penalty_reduction': opp.penalty_reduction,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description,
+                    'strategic_value': opp.strategic_value
+                })
+            response['endgame_management_opportunities'] = endgame_management_opportunities
+        
+        # Add blocking opportunities if requested
+        if request_model.include_blocking_opportunities:
+            blocking_opportunities = []
+            for opp in pattern_detection.blocking_opportunities:
+                blocking_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}") if opp.target_color else None,
+                    'current_floor_tiles': opp.current_floor_tiles,
+                    'potential_penalty': opp.potential_penalty,
+                    'penalty_reduction': opp.penalty_reduction,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description,
+                    'strategic_value': opp.strategic_value
+                })
+            response['blocking_opportunities'] = blocking_opportunities
+        
+        # Add efficiency opportunities if requested
+        if request_model.include_efficiency_opportunities:
+            efficiency_opportunities = []
+            for opp in pattern_detection.efficiency_opportunities:
+                efficiency_opportunities.append({
+                    'opportunity_type': opp.opportunity_type,
+                    'target_position': opp.target_position,
+                    'target_color': opp.target_color,
+                    'target_color_name': detector.color_names.get(opp.target_color, f"color {opp.target_color}") if opp.target_color else None,
+                    'current_floor_tiles': opp.current_floor_tiles,
+                    'potential_penalty': opp.potential_penalty,
+                    'penalty_reduction': opp.penalty_reduction,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "CRITICAL" if opp.urgency_score >= 9.0 else "HIGH" if opp.urgency_score >= 7.0 else "MEDIUM" if opp.urgency_score >= 4.0 else "LOW",
+                    'risk_assessment': opp.risk_assessment,
+                    'description': opp.description,
+                    'strategic_value': opp.strategic_value
+                })
+            response['efficiency_opportunities'] = efficiency_opportunities
+        
+        # Add move suggestions if requested
+        if request_model.include_move_suggestions:
+            all_opportunities = (pattern_detection.risk_mitigation_opportunities + 
+                               pattern_detection.timing_optimization_opportunities + 
+                               pattern_detection.trade_off_opportunities + 
+                               pattern_detection.endgame_management_opportunities + 
+                               pattern_detection.blocking_opportunities + 
+                               pattern_detection.efficiency_opportunities)
+            
+            move_suggestions = []
+            for opp in all_opportunities:
+                if opp.move_suggestions:
+                    move_suggestions.extend(opp.move_suggestions)
+            
+            response['move_suggestions'] = move_suggestions
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': f'Floor line pattern detection error: {str(e)}'}), 500
 
 

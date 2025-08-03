@@ -36,7 +36,8 @@ const {
     Wall,
     PlayerBoard,
     PatternAnalysis,
-    ScoringOptimizationAnalysis
+    ScoringOptimizationAnalysis,
+    FloorLinePatternAnalysis
 } = {
     ValidationFeedback: window.ValidationFeedback || (() => React.createElement('div', null, 'ValidationFeedback not loaded')),
     BoardEditor: window.BoardEditor || (() => React.createElement('div', null, 'BoardEditor not loaded')),
@@ -60,7 +61,8 @@ const {
     Wall: window.Wall || (() => React.createElement('div', null, 'Wall not loaded')),
     PlayerBoard: window.PlayerBoard || (() => React.createElement('div', null, 'PlayerBoard not loaded')),
     PatternAnalysis: window.PatternAnalysis || (() => React.createElement('div', null, 'PatternAnalysis not loaded')),
-    ScoringOptimizationAnalysis: window.ScoringOptimizationAnalysis || (() => React.createElement('div', null, 'ScoringOptimizationAnalysis not loaded'))
+    ScoringOptimizationAnalysis: window.ScoringOptimizationAnalysis || (() => React.createElement('div', null, 'ScoringOptimizationAnalysis not loaded')),
+    FloorLinePatternAnalysis: window.FloorLinePatternAnalysis || (() => React.createElement('div', null, 'FloorLinePatternAnalysis not loaded'))
 };
 
 // Import App component from window with fallback
@@ -76,7 +78,8 @@ const loadPositionModules = () => {
             'components/positions/educational-positions.js',
             'components/positions/custom-positions.js',
             'components/positions/blocking-test-positions.js',
-            'components/positions/scoring-optimization-test-positions.js'
+            'components/positions/scoring-optimization-test-positions.js',
+            'components/positions/floor-line-test-positions.js'
         ];
         
         let loadedCount = 0;

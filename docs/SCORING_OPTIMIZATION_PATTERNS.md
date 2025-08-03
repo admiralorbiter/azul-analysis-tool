@@ -291,6 +291,107 @@ class ScoringOptimizationAnalysis extends React.Component {
 }
 ```
 
+## ⚠️ **Common Pitfalls & Solutions**
+
+### **1. FEN String Integration Issues**
+
+**Problem**: New test positions not recognized by backend API
+```python
+# ERROR: ValueError: Unsupported FEN format: your_new_position
+```
+
+**Solution**: Always add FEN string handlers in `api/routes.py`
+```python
+# api/routes.py - Add to parse_fen_string function
+elif fen_string == "your_new_position":
+    # Create test position
+    test_state = AzulState(2)
+    # Set up position-specific state
+    return test_state
+```
+
+**Best Practice**: 
+- Add FEN handlers immediately when creating new test positions
+- Test API endpoints with new FEN strings before frontend integration
+- Update error messages to include new FEN strings
+
+### **2. TileDisplay Count Method Issues**
+
+**Problem**: `'TileDisplay' object has no attribute 'count'`
+```python
+# INCORRECT
+total_available += factory.count(color)
+total_available += state.center_pool.count(color)
+```
+
+**Solution**: Use dictionary access pattern
+```python
+# CORRECT
+if color in factory.tiles:
+    total_available += factory.tiles[color]
+if color in state.centre_pool.tiles:
+    total_available += state.centre_pool.tiles[color]
+```
+
+**Best Practice**: 
+- Always check if color exists in tiles dictionary before accessing
+- Use `centre_pool` (not `center_pool`) for center pool access
+- Follow the pattern established in `azul_scoring_optimization.py`
+
+### **3. AgentState Attribute Issues**
+
+**Problem**: `'AgentState' object has no attribute 'pattern_lines'`
+```python
+# INCORRECT
+if len(opponent_state.pattern_lines[pattern_line]) > 0:
+    color_in_line = opponent_state.pattern_lines[pattern_line][0]
+```
+
+**Solution**: Use correct attribute names
+```python
+# CORRECT
+if opponent_state.lines_number[pattern_line] > 0:
+    color_in_line = opponent_state.lines_tile[pattern_line]
+```
+
+**Best Practice**:
+- Use `lines_number` for tile count in pattern lines
+- Use `lines_tile` for color in pattern lines
+- Reference existing working code in `azul_scoring_optimization.py`
+
+### **4. Frontend Module Loading Issues**
+
+**Problem**: New test positions not appearing in position library
+
+**Solution**: Update module loading in `ui/main.js`
+```javascript
+// ui/main.js
+const modules = [
+    'components/positions/blocking-test-positions.js',
+    'components/positions/scoring-optimization-test-positions.js',
+    'components/positions/floor-line-test-positions.js',  // Add new module
+    // ... other modules
+];
+```
+
+**Best Practice**:
+- Add new position modules to the modules array
+- Update `PositionLibrary.js` to recognize new modules
+- Use window-based pattern for test position files
+
+### **5. React Key Duplication Issues**
+
+**Problem**: React warnings about duplicate keys in position library
+
+**Solution**: Remove duplicate entries from availableTags array
+```javascript
+// ui/components/PositionLibrary.js
+const availableTags = [
+    "opening", "midgame", "endgame", "blocking", "scoring", "floor-line",
+    // Remove duplicates like "blocking" and "floor-line" if already present
+];
+```
+
 ## 🎯 **Success Criteria**
 
 ### **Detection Accuracy**
