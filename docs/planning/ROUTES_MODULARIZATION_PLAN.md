@@ -440,17 +440,28 @@ The main `api/main_routes.py` file has been updated with:
 - **Testing**: Game blueprint imports successfully, app creation works
 - **Status**: ✅ **COMPLETE**
 
-#### Phase 3, Step 3: Validation & Patterns (HIGH PRIORITY)
-- **Target**: Lines 2505-3063 in current `api/main_routes.py`
-- **Endpoints to extract**:
-  - `/validate-board-state`
-  - `/validate-pattern-line-edit`
-  - `/validate-tile-count`
-  - `/detect-patterns`
-  - `/detect-scoring-optimization`
-  - `/detect-floor-line-patterns`
-- **File to create**: `api/routes/validation.py`
-- **Dependencies**: Already available - models from `api.models`, utilities from `api.utils`
+#### ✅ Phase 3, Step 3: Validation & Patterns - COMPLETED
+- **Location**: `api/routes/validation.py`
+- **Endpoints Extracted**:
+  - `/validate-board-state` (POST)
+  - `/validate-pattern-line-edit` (POST)
+  - `/validate-tile-count` (POST)
+  - `/detect-patterns` (POST)
+  - `/detect-scoring-optimization` (POST)
+  - `/detect-floor-line-patterns` (POST)
+- **Testing**: All validation endpoints working correctly, API blueprint loads successfully
+- **Status**: ✅ **COMPLETE**
+
+#### ✅ Phase 3, Step 4: Performance Monitoring - COMPLETED
+- **Location**: `api/routes/performance.py`
+- **Endpoints Extracted**:
+  - `/performance/stats` (GET)
+  - `/performance/health` (GET)
+  - `/performance/optimize` (POST)
+  - `/performance/analytics` (GET)
+  - `/performance/monitoring` (GET)
+- **Testing**: All performance endpoints working correctly, API blueprint loads successfully
+- **Status**: ✅ **COMPLETE**
 
 ### Testing Strategy for Phase 2
 
@@ -495,15 +506,16 @@ The main `api/main_routes.py` file has been updated with:
 
 - [x] Neural training routes extracted and working
 - [x] Game management routes extracted and working
-- [ ] Validation routes extracted and working
-- [ ] Performance monitoring routes extracted and working
+- [x] Validation routes extracted and working
+- [x] Performance monitoring routes extracted and working
 - [x] No breaking changes to existing API functionality
 - [x] API server starts successfully after each extraction
 
-**Phase 3 Step 2 is complete! Ready for Step 3: Validation & Patterns** 🚀
+**Phase 3 Step 4 is complete! Ready for final cleanup and middleware extraction** 🚀
 
-### Critical Bug Fix ✅ COMPLETED
+### Critical Bug Fixes ✅ COMPLETED
 
+#### Bug Fix 1: Duplicate parse_fen_string Function
 **Issue**: Duplicate `parse_fen_string` function in `api/main_routes.py` was shadowing the imported version from `api.utils`, causing 500 Internal Server Error for `/detect-scoring-optimization` endpoint.
 
 **Root Cause**: The local `parse_fen_string` function (lines 104-633) was not properly integrated with the new modular state management system in `api/utils/state_parser.py`.
@@ -518,7 +530,30 @@ The main `api/main_routes.py` file has been updated with:
 - ✅ All endpoints now use the properly modularized state parsing utilities
 - ✅ Improved consistency and maintainability
 
+#### Bug Fix 2: Missing Blueprint Registration
+**Issue**: Validation endpoints (`/detect-patterns`, `/detect-scoring-optimization`) returning 405 (METHOD NOT ALLOWED) errors after modularization.
+
+**Root Cause**: Blueprints were imported but not registered with the main `api_bp` blueprint, making their routes inaccessible.
+
+**Fix Applied**:
+- Added blueprint registration in `api/main_routes.py`:
+  ```python
+  # Register all route blueprints
+  api_bp.register_blueprint(positions_bp)
+  api_bp.register_blueprint(game_bp)
+  api_bp.register_blueprint(neural_bp)
+  api_bp.register_blueprint(validation_bp)
+  api_bp.register_blueprint(performance_bp)
+  ```
+
+**Impact**:
+- ✅ Fixed 405 errors for pattern detection and scoring optimization analysis
+- ✅ All modularized endpoints now accessible
+- ✅ Frontend analysis components working correctly
+
 **Verification**: 
 - ✅ `parse_fen_string` imported successfully from `api.utils`
 - ✅ Function returns valid results for test FEN strings
-- ✅ API server starts without errors 
+- ✅ API server starts without errors
+- ✅ `/detect-patterns` endpoint returns 200 OK with valid JSON
+- ✅ `/detect-scoring-optimization` endpoint returns 200 OK with valid JSON 
