@@ -17,6 +17,7 @@ const PatternAnalysis = window.PatternAnalysis;
 const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
 const AnalysisResults = window.AnalysisResults;
 const ContextMenu = window.ContextMenu;
+const NeuralTrainingPage = window.NeuralTrainingPage;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -1209,6 +1210,17 @@ function App() {
                 )
             )
         ),
+        
+        // Neural Training Page
+        currentPage === 'neural' && React.createElement(NeuralTrainingPage, {
+            loading: loading,
+            setLoading: setLoading,
+            setStatusMessage: setStatusMessage,
+            trainingConfig: trainingConfig,
+            setTrainingConfig: setTrainingConfig,
+            neuralExpanded: neuralExpanded,
+            setNeuralExpanded: setNeuralExpanded
+        }),
         
         // Context menu - moved to correct level
         React.createElement(ContextMenu, {
