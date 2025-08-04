@@ -72,7 +72,7 @@ class TestPositionLibraryAPI:
         }
         
         # Mock the game state retrieval
-        with patch('api.routes.get_game_state') as mock_get_state:
+        with patch('api.routes.game.get_game_state') as mock_get_state:
             mock_get_state.return_value = position_data
             
             response = self.client.post('/api/v1/execute_move', 
@@ -129,7 +129,7 @@ class TestPositionLibraryAPI:
             "agent_id": 0
         }
         
-        with patch('api.routes.get_game_state') as mock_get_state:
+        with patch('api.routes.game.get_game_state') as mock_get_state:
             mock_get_state.return_value = invalid_position_data
             
             response = self.client.post('/api/v1/execute_move', 
@@ -180,7 +180,7 @@ class TestPositionLibraryAPI:
             "agent_id": 0
         }
         
-        with patch('api.routes.get_game_state') as mock_get_state:
+        with patch('api.routes.game.get_game_state') as mock_get_state:
             mock_get_state.return_value = position_data
             
             response = self.client.post('/api/v1/execute_move', 
@@ -236,7 +236,7 @@ class TestPositionLibraryAPI:
             "agent_id": 0
         }
         
-        with patch('api.routes.get_game_state') as mock_get_state:
+        with patch('api.routes.game.get_game_state') as mock_get_state:
             mock_get_state.return_value = position_data
             
             response = self.client.post('/api/v1/execute_move', 

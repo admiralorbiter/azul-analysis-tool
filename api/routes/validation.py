@@ -9,12 +9,14 @@ from ..models.validation import (
     FloorLinePatternRequest
 )
 from ..utils import parse_fen_string
+from ..auth import require_session
 
 # Create blueprint for validation routes
 validation_bp = Blueprint('validation', __name__)
 
 
 @validation_bp.route('/validate-board-state', methods=['POST'])
+@require_session
 def validate_board_state():
     """
     Validate a complete board state for rule compliance.
@@ -196,8 +198,12 @@ def detect_patterns():
         # Parse FEN string to get game state
         try:
             state = parse_fen_string(request_model.fen_string)
+            if state is None:
+                return jsonify({'error': 'Invalid FEN string', 'message': 'Could not parse game state from FEN string'}), 400
+        except ValueError as e:
+            return jsonify({'error': 'Invalid FEN string', 'message': str(e)}), 400
         except Exception as e:
-            return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
+            return jsonify({'error': 'FEN parsing error', 'message': str(e)}), 400
         
         # Import and use the pattern detector
         from core.azul_patterns import AzulPatternDetector
@@ -287,7 +293,8 @@ def detect_scoring_optimization():
             'total_opportunities': optimization_detection.total_opportunities,
             'total_potential_bonus': optimization_detection.total_potential_bonus,
             'confidence_score': optimization_detection.confidence_score,
-            'opportunities_detected': True if optimization_detection.total_opportunities > 0 else False
+            'opportunities_detected': True if optimization_detection.total_opportunities > 0 else False,
+            'multiplier_opportunities': []  # Add empty list for multiplier opportunities
         }
         # Add wall completion opportunities if requested
         if request_model.include_wall_completion:

@@ -1496,6 +1496,7 @@ class TestInteractiveGameAPI:
         """Create a deterministic game state for testing."""
         import random
         from core.azul_model import AzulState
+        import copy
         
         # Set a fixed seed for reproducible tests
         random.seed(42)
@@ -1503,10 +1504,11 @@ class TestInteractiveGameAPI:
         # Create a new state
         state = AzulState(2)
         
-        # Reset the global state in the API
-        from api.routes import _current_game_state
-        import api.routes
-        api.routes._current_game_state = state
+        # Reset the global state in the API - use the correct module
+        from api.utils.state_parser import _current_game_state, _initial_game_state
+        import api.utils.state_parser
+        api.utils.state_parser._current_game_state = state
+        api.utils.state_parser._initial_game_state = copy.deepcopy(state)
         
         return state
     

@@ -81,7 +81,7 @@ class TestNeuralAPIIntegration:
         self.db.save_neural_training_session(self.test_session)
         
         # Mock the database connection in the API
-        with patch('api.routes.db', self.db):
+        with patch('api.routes.neural.db', self.db):
             # Test basic history retrieval
             # This would normally be done with a Flask test client
             # For now, we'll test the database integration directly

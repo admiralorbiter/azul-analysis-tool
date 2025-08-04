@@ -11,7 +11,7 @@ from core.azul_database import AzulDatabase
 # All models and utilities are now imported in their respective route modules
 
 # Import route blueprints from the new modular structure
-from .routes import positions_bp, game_bp
+from .routes import positions_bp, game_bp, analysis_bp
 from .routes.neural import neural_bp, init_neural_routes
 from .routes.validation import validation_bp
 from .routes.performance import performance_bp
@@ -31,6 +31,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 # Register all route blueprints
 api_bp.register_blueprint(positions_bp)
 api_bp.register_blueprint(game_bp)
+api_bp.register_blueprint(analysis_bp)
 api_bp.register_blueprint(neural_bp)
 api_bp.register_blueprint(validation_bp)
 api_bp.register_blueprint(performance_bp)

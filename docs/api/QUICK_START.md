@@ -194,7 +194,7 @@ python -m pytest tests/test_search.py -v
 python main.py test
 
 # API functionality test
-python -m pytest tests/test_api.py::test_health_endpoint -v
+python -m pytest tests/test_api.py::test_health_endpoint -sts
 ```
 
 ## 🔧 Development

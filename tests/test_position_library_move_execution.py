@@ -311,7 +311,7 @@ class TestPositionLibraryIntegration:
         }
         
         # Mock the position loading and move execution
-        with patch('api.routes.get_game_state') as mock_get_state:
+        with patch('api.routes.game.get_game_state') as mock_get_state:
             mock_get_state.return_value = position_data
             
             response = self.client.post('/api/v1/execute_move', 

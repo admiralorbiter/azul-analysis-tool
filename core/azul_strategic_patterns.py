@@ -111,7 +111,7 @@ class StrategicPatternDetector:
             confidence_score=confidence_score
         )
     
-    def get_strategic_move_suggestions(self, state: AzulState, player_id: int) -> List[Dict]:
+    def get_strategic_move_suggestions(self, state: AzulState, player_id: int) -> List[str]:
         """
         Get strategic move suggestions based on detected patterns.
         
@@ -120,27 +120,47 @@ class StrategicPatternDetector:
             player_id: Player to analyze for
             
         Returns:
-            List of strategic move suggestions
+            List of strategic move suggestions as strings
         """
         patterns = self.detect_strategic_patterns(state, player_id)
         suggestions = []
+        suggestion_data = []  # For sorting
         
         # Factory control suggestions
         for opportunity in patterns.factory_control_opportunities:
-            suggestions.extend(opportunity.move_suggestions)
+            for suggestion in opportunity.move_suggestions:
+                suggestions.append(suggestion)
+                suggestion_data.append({
+                    'suggestion': suggestion,
+                    'strategic_value': opportunity.strategic_value,
+                    'urgency_score': opportunity.urgency_score
+                })
         
         # Endgame suggestions
         for scenario in patterns.endgame_scenarios:
-            suggestions.extend(scenario.optimal_sequence)
+            for suggestion in scenario.optimal_sequence:
+                suggestions.append(suggestion)
+                suggestion_data.append({
+                    'suggestion': suggestion,
+                    'strategic_value': scenario.scoring_potential,
+                    'urgency_score': scenario.urgency_score if hasattr(scenario, 'urgency_score') else 0.0
+                })
         
         # Risk/reward suggestions
         for scenario in patterns.risk_reward_scenarios:
-            suggestions.extend(scenario.move_suggestions)
+            for suggestion in scenario.move_suggestions:
+                suggestions.append(suggestion)
+                suggestion_data.append({
+                    'suggestion': suggestion,
+                    'strategic_value': scenario.expected_value,
+                    'urgency_score': scenario.urgency_score if hasattr(scenario, 'urgency_score') else 0.0
+                })
         
-        # Sort by strategic value and urgency
-        suggestions.sort(key=lambda x: x.get('strategic_value', 0) + x.get('urgency_score', 0), reverse=True)
+        # Sort by strategic value and urgency using the data list
+        suggestion_data.sort(key=lambda x: x.get('strategic_value', 0) + x.get('urgency_score', 0), reverse=True)
         
-        return suggestions[:10]  # Return top 10 suggestions
+        # Return the sorted suggestions as strings
+        return [item['suggestion'] for item in suggestion_data[:10]]
     
     def analyze_strategic_position(self, state: AzulState, player_id: int) -> Dict:
         """

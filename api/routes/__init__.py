@@ -1,7 +1,7 @@
 """
 API Routes Package
 
-This package contains all modularized route blueprints for the Azul Solver & Analysis Toolkit.
+This module contains all modularized route blueprints for the Azul Solver & Analysis Toolkit.
 """
 
 from .positions import positions_bp
@@ -17,11 +17,18 @@ from .validation import validation_bp
 # Import utility functions that tests need
 from ..utils import get_system_resources, get_process_resources
 
+# Import global state variables that tests need
+from ..utils.state_parser import _current_game_state, _initial_game_state, _current_editable_game_state
+
+# Import modules that tests need to patch
+import os
+import psutil
+
 # Register all blueprints here
 __all__ = [
-    'positions_bp', 
+    'positions_bp',
     'analysis_bp', 
-    'game_bp', 
+    'game_bp',
     'neural_bp',
     'core_bp',
     'move_analysis_bp',
@@ -30,5 +37,10 @@ __all__ = [
     'validation_bp',
     'evaluate_neural_model',
     'get_system_resources',
-    'get_process_resources'
+    'get_process_resources',
+    '_current_game_state',
+    '_initial_game_state', 
+    '_current_editable_game_state',
+    'os',
+    'psutil'
 ] 

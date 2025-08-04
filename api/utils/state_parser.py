@@ -482,9 +482,9 @@ def parse_fen_string(fen_string: str):
             random.seed()  # Reset seed
             return test_state
         else:
-            # Unknown FEN string - return None
+            # Unknown FEN string - raise ValueError
             print(f"DEBUG: Unknown FEN string: {fen_string}")
-            return None
+            raise ValueError(f"Unknown FEN string: {fen_string}")
             
     except Exception as e:
         print(f"DEBUG: Error parsing FEN string '{fen_string}': {e}")

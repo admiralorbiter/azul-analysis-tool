@@ -151,7 +151,10 @@ class TestDevelopmentToolsPanelSimple(unittest.TestCase):
         if not self.create_session():
             self.skipTest("Could not create session for API testing")
             
-        response = self.session.post(f"{self.api_base_url}/performance/optimize")
+        response = self.session.post(
+            f"{self.api_base_url}/performance/optimize",
+            json={'vacuum': True, 'analyze': True, 'reindex': False}
+        )
         self.assertEqual(response.status_code, 200)
         
         data = response.json()

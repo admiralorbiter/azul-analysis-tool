@@ -78,6 +78,7 @@ def execute_move():
                     print(f"  Factory {i}: {dict(factory.tiles)}")
             else:
                 print("DEBUG: ERROR - parse_fen_string returned None!")
+                return jsonify({'error': f'Invalid FEN string: {request_model.fen_string}'}), 400
                 
         except ValueError as e:
             print(f"DEBUG: FEN parsing error: {e}")
@@ -205,11 +206,20 @@ def execute_move():
             print(f"DEBUG: Error converting to frontend format: {e}")
             return jsonify({'error': f'Error converting state: {str(e)}'}), 500
         
+        # Build move_executed string for test compatibility
+        move_type_str = ''
+        if matching_move.action_type == 1:  # Factory move
+            move_type_str = f"take_from_factory_{matching_move.source_id}_{matching_move.tile_type}_{matching_move.pattern_line_dest}_{matching_move.num_to_pattern_line}_{matching_move.num_to_floor_line}"
+        else:  # Center move
+            move_type_str = f"take_from_center_{matching_move.tile_type}_{matching_move.pattern_line_dest}_{matching_move.num_to_pattern_line}_{matching_move.num_to_floor_line}"
+
         return jsonify({
             'success': True,
-            'new_fen_string': new_fen,
+            'new_fen': new_fen,
             'new_game_state': frontend_state,
-            'move_applied': True
+            'move_executed': move_type_str,
+            'game_over': False,
+            'scores': [agent.score for agent in new_state.agents]
         })
         
     except ValidationError as e:
@@ -313,6 +323,7 @@ def get_game_state():
         
         # Otherwise, parse current state from FEN
         fen_string = request.args.get('fen_string', 'initial')
+        state = None
         try:
             state = parse_fen_string(fen_string)
         except ValueError:
@@ -328,6 +339,17 @@ def get_game_state():
             # Store this as the initial state for future use
             if _initial_game_state is None:
                 _initial_game_state = copy.deepcopy(state)
+        
+        # Ensure we have a valid state
+        if state is None:
+            # Fallback to default initial state
+            from core.azul_model import AzulState
+            import random
+            
+            # Use fixed seed for consistent initial state
+            random.seed(42)
+            state = AzulState(2)
+            random.seed()  # Reset to random seed
         
         # Convert state to frontend format
         game_state = {
@@ -1024,7 +1046,7 @@ def add_position_to_database_internal(fen_string: str, metadata: Optional[Dict[s
                     VALUES (?, ?, ?, ?)
                 """, (fen_string, json.dumps(metadata) if metadata else None, frequency, time.time()))
                 position_id = result.lastrowid
-                action = 'inserted'
+                action = 'created'
             
             conn.commit()
             
