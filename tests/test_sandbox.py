@@ -17,7 +17,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 
 from api.app import create_test_app
-from api.routes import api_bp
+from api.routes import game_bp
 from core.azul_model import AzulState
 
 

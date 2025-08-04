@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from unittest.mock import patch, MagicMock
 
-from api.routes import api_bp
+from api.routes import neural_bp
 from core.azul_database import AzulDatabase, NeuralTrainingSession, NeuralConfiguration, NeuralModel
 
 
