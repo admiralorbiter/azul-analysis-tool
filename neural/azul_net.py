@@ -327,27 +327,41 @@ class AzulNeuralRolloutPolicy:
         with torch.no_grad():
             policy_probs, _ = self.model.get_policy_and_value(state_tensor)
         
-        # Map policy to moves using move encoding
-        move_scores = self._encode_moves_for_policy(moves, state, agent_id)
+        # Use policy mapper to select move from policy
+        from neural.policy_mapping import create_policy_mapper, SelectionMethod
+        policy_mapper = create_policy_mapper()
         
-        # Select move based on policy probabilities
-        # For now, use a simple heuristic: prefer moves that complete patterns
-        # In the future, this could be a learned mapping
-        best_move = self._select_best_move_heuristic(moves, state, agent_id)
+        # Select move using policy probabilities
+        selected_move = policy_mapper.select_move(
+            policy_probs, moves, method=SelectionMethod.STOCHASTIC, temperature=1.0
+        )
         
-        return best_move
+        # Get confidence in the selected move
+        confidence = policy_mapper.get_move_confidence(policy_probs, selected_move, moves)
+        
+        # Fallback to heuristic if neural selection fails or confidence is low
+        if selected_move is None or policy_mapper.should_use_fallback(confidence):
+            selected_move = self._select_best_move_heuristic(moves, state, agent_id)
+        
+        return selected_move
     
     def _encode_moves_for_policy(self, moves: list, state: AzulState, agent_id: int) -> torch.Tensor:
-        """Encode moves for policy mapping."""
-        # This is a simplified encoding - in a full implementation,
-        # you would create a learned mapping from moves to policy indices
+        """Encode moves for policy mapping (legacy method - now using MoveEncoder)."""
+        # This method is kept for backward compatibility
+        # The actual encoding is now handled by the MoveEncoder class
+        from neural.move_encoding import create_move_encoder
+        move_encoder = create_move_encoder()
+        
+        # Get policy indices for legal moves
+        indices = move_encoder.get_legal_move_indices(moves)
+        
+        # Create encoding tensor
         num_moves = len(moves)
         move_encoding = torch.zeros(num_moves, self.encoder.config.num_actions)
         
-        for i, move in enumerate(moves):
-            # Simple encoding: assign each move to a different policy index
-            if i < self.encoder.config.num_actions:
-                move_encoding[i, i] = 1.0
+        for i, (move, index) in enumerate(zip(moves, indices)):
+            if 0 <= index < self.encoder.config.num_actions:
+                move_encoding[i, index] = 1.0
         
         return move_encoding
     
