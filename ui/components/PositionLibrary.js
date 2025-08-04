@@ -199,31 +199,58 @@ const PositionLibrary = React.memo(function PositionLibrary({
         });
     };
 
+    // Helper function to convert backend format to frontend format
+    const convertBackendToFrontendFormat = (gameState) => {
+        const converted = { ...gameState };
+        
+        // Convert centre_pool to center if it exists
+        if (converted.centre_pool) {
+            const centerTiles = [];
+            const tileColors = { 0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W' };
+            
+            // Convert the tiles object to an array
+            for (const [tileType, count] of Object.entries(converted.centre_pool.tiles)) {
+                const tileColor = tileColors[parseInt(tileType)] || 'W';
+                for (let i = 0; i < count; i++) {
+                    centerTiles.push(tileColor);
+                }
+            }
+            
+            converted.center = centerTiles;
+            delete converted.centre_pool;
+        }
+        
+        return converted;
+    };
+
     // Load position with validation
     const loadPosition = useCallback(async (position) => {
         try {
             const newState = position.generate();
             
+            // Convert backend format to frontend format if needed
+            const convertedState = convertBackendToFrontendFormat(newState);
+            
             // Normalize factories to ensure exactly 4 tiles per factory
-            if (newState.factories) {
-                newState.factories = normalizeFactories(newState.factories);
+            if (convertedState.factories) {
+                convertedState.factories = normalizeFactories(convertedState.factories);
             }
             
             // Filter out red tiles from center pool to avoid tile type confusion
-            if (newState.center && Array.isArray(newState.center)) {
-                newState.center = newState.center.filter(tile => tile !== 'R');
-                console.log('DEBUG: Filtered center pool (removed red tiles):', newState.center);
+            if (convertedState.center && Array.isArray(convertedState.center)) {
+                convertedState.center = convertedState.center.filter(tile => tile !== 'R');
+                console.log('DEBUG: Filtered center pool (removed red tiles):', convertedState.center);
             }
             
-            console.log('DEBUG: Position data generated:', newState);
-            console.log('DEBUG: Factories:', newState.factories);
-            console.log('DEBUG: Center:', newState.center);
-            console.log('DEBUG: Players:', newState.players);
+            console.log('DEBUG: Position data generated:', convertedState);
+            console.log('DEBUG: Factories:', convertedState.factories);
+            console.log('DEBUG: Center:', convertedState.center);
+            console.log('DEBUG: Players:', convertedState.players);
             
             // For local development, skip validation if no session token
             if (!sessionToken) {
                 // Set the state directly without backend processing
-                setGameState(newState);
+                setGameState(convertedState);
                 setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
                 
                 // Set flag to prevent automatic refresh from overwriting the loaded position
@@ -254,7 +281,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
             if (!response.ok) {
                 if (response.status === 401) {
                     // Unauthorized - load position without validation for local development
-                    setGameState(newState);
+                    setGameState(convertedState);
                     setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
                     
                     // Set flag to prevent automatic refresh from overwriting the loaded position
@@ -287,7 +314,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         fen_string: 'initial',
-                        game_state: newState
+                        game_state: convertedState
                     })
                 });
                 

@@ -82,6 +82,19 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                         removed++;
                     }
                 }
+                
+                // Handle first player marker - if this is the first time taking from center pool
+                if (!newState.first_player_taken) {
+                    newState.first_player_taken = true;
+                    console.log('First player marker taken from center pool');
+                    
+                    // Add first player marker to player's floor line
+                    const player = newState.players[playerIndex];
+                    if (!player.floor) {
+                        player.floor = [];
+                    }
+                    player.floor.push('FP'); // First Player marker
+                }
             }
             
             // Add tiles to pattern line
