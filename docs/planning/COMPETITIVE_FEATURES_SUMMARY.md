@@ -84,7 +84,7 @@
     - [x] **Urgency calculation**: Scores blocking opportunities by importance (HIGH/MEDIUM/LOW)
     - [x] **Factory and center pool detection**: Identifies where blocking tiles are available
     - [x] **Move suggestion generation**: Provides specific moves to execute blocking
-    - 📖 **Documentation**: See [PATTERN_DETECTION_GUIDE.md](./PATTERN_DETECTION_GUIDE.md) for implementation details
+    - 📖 **Documentation**: See [Pattern Detection Guide](../guides/analysis/pattern-detection.md) for implementation details
   - [x] **Scoring optimization patterns** ✅ **IMPLEMENTED**
     - [x] **Wall completion opportunities**: Detects row, column, and color set completion opportunities
     - [x] **Pattern line optimization**: Identifies high-value pattern line completion opportunities
@@ -96,7 +96,7 @@
     - [x] **UI Component**: Modern, responsive scoring optimization analysis interface with loading states
     - [x] **Bug Fixes**: Resolved TileDisplay iteration issues and React rendering errors
     - [x] **Test Positions**: Complete set of scoring optimization test positions with custom FEN support
-    - 📖 **Documentation**: See [SCORING_OPTIMIZATION_PATTERNS.md](./SCORING_OPTIMIZATION_PATTERNS.md) for implementation details
+    - 📖 **Documentation**: See [Scoring Optimization Guide](../guides/analysis/scoring-optimization.md) for implementation details
   - [x] **Floor line management patterns** ✅ **IMPLEMENTED & TESTED**
     - [x] **Risk mitigation opportunities**: Detects critical, high, medium, and low risk floor line scenarios
     - [x] **Timing optimization patterns**: Analyzes early, mid, and endgame floor line timing strategies
@@ -115,13 +115,13 @@
     - [x] **Bug Fixes**: Resolved TileDisplay count method issues and AgentState pattern_lines attribute errors
     - [x] **API Testing**: Verified both floor line patterns and scoring optimization APIs work with new test positions
     - [x] **Documentation**: Complete implementation guide and user documentation
-    - 📖 **Documentation**: See [FLOOR_LINE_PATTERNS.md](./FLOOR_LINE_PATTERNS.md) for implementation details
+    - 📖 **Documentation**: See [Floor Line Patterns Guide](../guides/analysis/floor-line-patterns.md) for implementation details
 - [x] **Strategic Pattern Analysis** ✅ **IMPLEMENTATION COMPLETE**
   - [x] Factory control positions - Detailed plan created
   - [x] Endgame counting scenarios - Detailed plan created  
   - [x] Risk/reward calculations - Detailed plan created
-  - 📖 **Documentation**: See [STRATEGIC_PATTERN_ANALYSIS_PLAN.md](./STRATEGIC_PATTERN_ANALYSIS_PLAN.md) for implementation plan
-  - 📖 **Notes**: See [STRATEGIC_PATTERN_ANALYSIS_NOTES.md](./STRATEGIC_PATTERN_ANALYSIS_NOTES.md) for technical details
+  - 📖 **Documentation**: See [Strategic Pattern Analysis Plan](../planning/strategic-pattern-analysis.md) for implementation plan
+  - 📖 **Notes**: See [Strategic Pattern Analysis Notes](../planning/strategic-pattern-analysis-notes.md) for technical details
 - [x] **Real-time Pattern Alerts**
   - [x] **Pattern highlighting during analysis**: Visual indicators for blocking opportunities
   - [x] **Pattern-based move suggestions**: Specific move recommendations with urgency levels

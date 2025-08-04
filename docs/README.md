@@ -10,26 +10,26 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 
 ### **📖 Core Documentation**
 - **[README.md](./README.md)** - This file: Main project overview and documentation guide
-- **[PROGRESS_SUMMARY.md](./PROGRESS_SUMMARY.md)** - Consolidated progress information and milestone status
-- **[SETUP_SUMMARY.md](./SETUP_SUMMARY.md)** - Detailed setup instructions and technical configuration
+- **[QUICK_START.md](./QUICK_START.md)** - Quick setup and usage guide
+- **[STATUS.md](./STATUS.md)** - Current project status and achievements
 
-### **🔧 Implementation Guides** (`guides/`)
-- **[IMPLEMENTATION_GUIDES.md](./guides/IMPLEMENTATION_GUIDES.md)** - Central index for all implementation guides
-- **[PATTERN_DETECTION_GUIDE.md](./guides/PATTERN_DETECTION_GUIDE.md)** - Tile blocking detection and tactical pattern recognition
-- **[SCORING_OPTIMIZATION_PATTERNS.md](./guides/SCORING_OPTIMIZATION_PATTERNS.md)** - Maximizing points through strategic tile placement
-- **[FLOOR_LINE_PATTERNS.md](./guides/FLOOR_LINE_PATTERNS.md)** - Strategic floor line usage and penalty management
+### **📚 User Guides** (`guides/`)
+- **[Guides Index](guides/index.md)** - Complete navigation for all user guides
+- **[Getting Started](guides/getting-started/)** - Installation and basic usage
+- **[Analysis Guides](guides/analysis/)** - Pattern detection and strategic analysis
+- **[Competitive Guides](guides/competitive/)** - Advanced competitive features
+- **[Neural Guides](guides/neural/)** - Neural model training and evaluation
 
-### **🏆 Competitive Research** (`competitive/`)
-- **[COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md)** - Comprehensive development plan for competitive features
-- **[COMPETITIVE_FEATURES_SUMMARY.md](./competitive/COMPETITIVE_FEATURES_SUMMARY.md)** - Implementation summary and checklist
+### **🔧 Technical Documentation** (`technical/`)
+- **[API Reference](technical/api/)** - Complete API documentation
+- **[Architecture](technical/architecture.md)** - System architecture overview
+- **[Development Setup](technical/development/setup.md)** - Development environment setup
+- **[Implementation Guides](technical/implementation/)** - Technical implementation details
 
-### **🔌 API & Usage** (`api/`)
-- **[API_USAGE.md](./api/API_USAGE.md)** - Complete REST API documentation with authentication and endpoints
-- **[QUICK_START.md](./api/QUICK_START.md)** - Getting started guide with installation and basic usage
-
-### **📊 Status & Tracking** (`status/`)
-- **[DOCUMENTATION_STATUS.md](./status/DOCUMENTATION_STATUS.md)** - Current documentation status and quality assessment
-- **[DOCUMENTATION_REORGANIZATION_SUMMARY.md](./status/DOCUMENTATION_REORGANIZATION_SUMMARY.md)** - Documentation reorganization progress
+### **📋 Planning & Status** (`planning/`)
+- **[Roadmap](planning/roadmap.md)** - Development roadmap and milestones
+- **[Competitive Features](planning/competitive-features.md)** - Feature planning and status
+- **[Documentation Status](DOCUMENTATION_STATUS.md)** - Documentation organization status
 
 ### **📁 Archive** (`archive/`)
 - **legacy/** - Superseded implementation guides and planning documents
@@ -39,23 +39,23 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 ## 🚀 **Quick Navigation by Use Case**
 
 ### **For Competitive Players**
-1. **Start Here**: [QUICK_START.md](./api/QUICK_START.md) - Basic setup and usage
-2. **Available Features**: [COMPETITIVE_FEATURES_SUMMARY.md](./competitive/COMPETITIVE_FEATURES_SUMMARY.md) - What's implemented
-3. **Pattern Analysis**: [PATTERN_DETECTION_GUIDE.md](./guides/PATTERN_DETECTION_GUIDE.md) - Tactical opportunities
-4. **Scoring Optimization**: [SCORING_OPTIMIZATION_PATTERNS.md](./guides/SCORING_OPTIMIZATION_PATTERNS.md) - Point maximization
-5. **Advanced Strategy**: [FLOOR_LINE_PATTERNS.md](./guides/FLOOR_LINE_PATTERNS.md) - Floor line management
+1. **Start Here**: [Quick Start](QUICK_START.md) - Basic setup and usage
+2. **Available Features**: [Competitive Features](planning/competitive-features.md) - What's implemented
+3. **Pattern Analysis**: [Pattern Detection](guides/analysis/pattern-detection.md) - Tactical opportunities
+4. **Scoring Optimization**: [Scoring Optimization](guides/analysis/scoring-optimization.md) - Point maximization
+5. **Advanced Strategy**: [Floor Line Patterns](guides/analysis/floor-line-patterns.md) - Floor line management
 
 ### **For Developers**
-1. **API Integration**: [API_USAGE.md](./api/API_USAGE.md) - REST API documentation
-2. **Architecture**: [COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md) - Development plan
-3. **Implementation**: [IMPLEMENTATION_GUIDES.md](./guides/IMPLEMENTATION_GUIDES.md) - Technical guides
-4. **Status**: [DOCUMENTATION_STATUS.md](./status/DOCUMENTATION_STATUS.md) - Current state
+1. **API Integration**: [API Reference](technical/api/endpoints.md) - REST API documentation
+2. **Architecture**: [System Architecture](technical/architecture.md) - System architecture overview
+3. **Development**: [Development Setup](technical/development/setup.md) - Development environment
+4. **Implementation**: [Technical Guides](technical/implementation/) - Technical implementation details
 
 ### **For Researchers**
-1. **Research Platform**: [COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md) - Research capabilities
-2. **Analysis Methods**: Pattern detection guides for research methodology
-3. **Data Access**: [API_USAGE.md](./api/API_USAGE.md) - Programmatic access
-4. **Progress Tracking**: [PROGRESS_SUMMARY.md](./PROGRESS_SUMMARY.md) - Development status
+1. **Research Platform**: [Roadmap](planning/roadmap.md) - Development roadmap
+2. **Analysis Methods**: [Analysis Guides](guides/analysis/) - Pattern detection and analysis
+3. **Data Access**: [API Reference](technical/api/endpoints.md) - Programmatic access
+4. **Neural Models**: [Neural Guides](guides/neural/) - AI model training and evaluation
 
 ## 📊 **Current Status**
 
@@ -132,14 +132,14 @@ docs/
 ## 📈 **Getting Started**
 
 ### **Quick Start Path**
-1. **Setup**: Follow [QUICK_START.md](./api/QUICK_START.md) for basic installation
-2. **Explore**: Check [COMPETITIVE_FEATURES_SUMMARY.md](./competitive/COMPETITIVE_FEATURES_SUMMARY.md) for available features
-3. **Analyze**: Use pattern detection guides for tactical analysis
-4. **Integrate**: Use [API_USAGE.md](./api/API_USAGE.md) for programmatic access
+1. **Setup**: Follow [Quick Start](QUICK_START.md) for basic installation
+2. **Explore**: Check [Competitive Features](planning/competitive-features.md) for available features
+3. **Analyze**: Use [Analysis Guides](guides/analysis/) for tactical analysis
+4. **Integrate**: Use [API Reference](technical/api/endpoints.md) for programmatic access
 
 ### **Development Path**
-1. **Understand**: Read [COMPETITIVE_RESEARCH_ROADMAP.md](./competitive/COMPETITIVE_RESEARCH_ROADMAP.md) for architecture
-2. **Implement**: Follow individual pattern detection guides for specific features
+1. **Understand**: Read [System Architecture](technical/architecture.md) for architecture
+2. **Implement**: Follow [Technical Guides](technical/implementation/) for specific features
 3. **Test**: Use comprehensive test suites for validation
 4. **Extend**: Build on existing pattern detection framework
 

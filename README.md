@@ -245,11 +245,12 @@ python main.py test
 
 ## 📚 Documentation
 
-- [Project Plan](docs/planning/project_plan.md) - Detailed roadmap and milestones
-- [Progress Tracker](PROGRESS_TRACKER.md) - Current status and achievements
-- [API Documentation](docs/progress/M5_PROGRESS_SUMMARY.md) - REST API details
-- [Database Integration](docs/progress/M4_PROGRESS_SUMMARY.md) - Database features
-- [Search Algorithms](docs/progress/A5_PROGRESS_SUMMARY.md) - Alpha-Beta and MCTS
+- [Quick Start](docs/QUICK_START.md) - Get up and running quickly
+- [Project Status](docs/STATUS.md) - Current project status and achievements
+- [API Reference](docs/technical/api/endpoints.md) - Complete API documentation
+- [Development Setup](docs/technical/development/setup.md) - Development environment setup
+- [System Architecture](docs/technical/architecture.md) - System architecture overview
+- [Guides Index](docs/guides/index.md) - All user guides and tutorials
 
 ## 🤝 Contributing
 
