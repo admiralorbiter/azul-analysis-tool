@@ -114,7 +114,9 @@ const loadPositionModules = () => {
             'components/positions/custom-positions.js',
             'components/positions/blocking-test-positions.js',
             'components/positions/scoring-optimization-test-positions.js',
-            'components/positions/floor-line-test-positions.js'
+            'components/positions/floor-line-test-positions.js',
+            'components/positions/strategic-pattern-test-positions.js',
+            'components/positions/ui-testing-positions.js'
         ];
         
         let loadedCount = 0;

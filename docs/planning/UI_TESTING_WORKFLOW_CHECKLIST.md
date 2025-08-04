@@ -44,15 +44,15 @@ This checklist helps systematically test all implemented features to identify co
 
 - [x] **Player Boards**
   - [x] Pattern lines show correct capacities (1,2,3,4,5)
-  - [x] Wall displays proper color patterns ✅ **ENHANCED**
+  - [x] Wall displays proper color patterns
     - [x] Color pattern indicators show expected tile colors
     - [x] Placed tiles display clearly with proper contrast
     - [x] Wall grid layout is compact and organized
     - [x] Column and row labels are clear and informative
     - [x] Visual feedback for hover and selection states
     - [x] Completion tips provide helpful guidance
-    - [x] Tile colors properly loaded and displayed ✅ **FIXED**
-  - [ ] Floor line shows penalty values
+    - [x] Tile colors properly loaded and displayed 
+  - [x] Floor line shows penalty values 
   - [ ] Score displays accurately
   - [ ] All interactive elements respond
 
@@ -61,7 +61,7 @@ This checklist helps systematically test all implemented features to identify co
 ### **✅ Position Library (R1.2)**
 - [ ] **Library Access**
   - [ ] "Position Library" button opens modal
-  - [ ] Categories load correctly (opening, midgame, endgame, educational)
+  - [ ] Categories load correctly (opening, midgame, endgame, educational, testing)
   - [ ] Search/filter functionality works
   - [ ] Position previews display properly
   - [ ] Loading states show appropriate feedback
@@ -79,6 +79,11 @@ This checklist helps systematically test all implemented features to identify co
   - [ ] **Endgame Positions**: Scoring optimization scenarios
   - [ ] **Educational Positions**: Learning-focused setups
   - [ ] **Custom Positions**: User-created scenarios
+  - [ ] **Testing Positions**: Floor line penalties, board display, UI functionality
+    - [x] **Floor Line Penalty Testing**: 1-6 tiles with correct penalty display ✅ **COMPLETED**
+    - [ ] **Board Display Testing**: Pattern lines, wall completion, factory display
+    - [ ] **Score Display Testing**: Various point values and visual feedback
+    - [ ] **Center Pool Testing**: First player marker and tile display
 
 ### **✅ Board Editor (R1.1)**
 - [ ] **Edit Mode Toggle**

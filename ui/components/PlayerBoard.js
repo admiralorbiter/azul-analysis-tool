@@ -72,37 +72,54 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
             )
         ),
         React.createElement('div', {
-            className: 'floor-line mt-3'
+            className: 'floor-line mt-3 bg-gray-100 p-3 rounded-lg border border-gray-300'
         },
-            React.createElement('h4', {
-                className: 'text-sm font-medium mb-2 text-gray-700'
-            }, 'Floor Line'),
             React.createElement('div', {
-                className: 'flex flex-wrap gap-1'
+                className: 'flex justify-between items-center mb-3'
             },
-                (player.floor || []).map((tile, index) => 
+                React.createElement('h4', {
+                    className: 'text-sm font-semibold text-gray-800'
+                }, 'Floor Line'),
+                React.createElement('div', {
+                    className: 'flex items-center gap-2'
+                },
+                    React.createElement('span', {
+                        className: 'text-xs text-gray-600'
+                    }, 'Penalty:'),
+                                    React.createElement('span', {
+                    className: 'text-sm font-bold text-red-600 bg-red-100 px-2 py-1 rounded'
+                }, `-${(player.floor_line || player.floor || []).length}`),
+                React.createElement('span', {
+                    className: 'text-xs text-gray-500 ml-2'
+                }, `(${(player.floor_line || player.floor || []).length} tiles)`)
+                )
+            ),
+            React.createElement('div', {
+                className: 'flex flex-wrap gap-2'
+            },
+                (player.floor_line || player.floor || []).map((tile, index) => 
                     tile === 'FP' ? 
                         // First player marker
                         React.createElement('div', {
                             key: index,
-                            className: 'w-5 h-5 bg-yellow-100 border-2 border-yellow-400 rounded flex items-center justify-center',
+                            className: 'w-8 h-8 bg-yellow-200 border-2 border-yellow-500 rounded-lg flex items-center justify-center shadow-sm',
                             title: 'First Player Marker (-1 penalty)'
                         },
                             React.createElement('span', {
-                                className: 'text-xs text-yellow-600 font-bold'
+                                className: 'text-sm text-yellow-700 font-bold'
                             }, '⭐')
                         ) :
                         // Regular tile
                         React.createElement(window.Tile, {
                             key: index,
                             color: tile,
-                            className: 'w-5 h-5'
+                            className: 'w-8 h-8 shadow-sm'
                         })
                 ),
-                Array.from({ length: 7 - (player.floor || []).length }, (_, index) => 
+                Array.from({ length: 7 - (player.floor_line || player.floor || []).length }, (_, index) => 
                     React.createElement('div', {
                         key: `empty-floor-${index}`,
-                        className: 'w-5 h-5 border border-gray-300 rounded',
+                        className: 'w-8 h-8 border-2 border-dashed border-gray-400 rounded-lg bg-gray-50',
                         onContextMenu: (e) => {
                             e.preventDefault();
                             if (editMode && window.showContextMenu) {

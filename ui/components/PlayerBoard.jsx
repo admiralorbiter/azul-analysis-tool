@@ -94,14 +94,33 @@ function PlayerBoard({
         ),
         
         // Floor
-        React.createElement('div', {},
-            React.createElement('h5', {
-                className: 'text-sm font-medium mb-2'
-            }, 'Floor'),
+        React.createElement('div', {
+            className: 'bg-gray-100 p-3 rounded-lg border border-gray-300'
+        },
             React.createElement('div', {
-                className: 'flex gap-1'
+                className: 'flex justify-between items-center mb-3'
             },
-                (player.floor || []).map((tile, index) => {
+                React.createElement('h5', {
+                    className: 'text-sm font-semibold text-gray-800'
+                }, 'Floor Line'),
+                React.createElement('div', {
+                    className: 'flex items-center gap-2'
+                },
+                    React.createElement('span', {
+                        className: 'text-xs text-gray-600'
+                    }, 'Penalty:'),
+                    React.createElement('span', {
+                        className: 'text-sm font-bold text-red-600 bg-red-100 px-2 py-1 rounded'
+                    }, `-${(player.floor_line || player.floor || []).length}`),
+                    React.createElement('span', {
+                        className: 'text-xs text-gray-500 ml-2'
+                    }, `(${(player.floor_line || player.floor || []).length} tiles)`)
+                )
+            ),
+            React.createElement('div', {
+                className: 'flex gap-2'
+            },
+                (player.floor_line || player.floor || []).map((tile, index) => {
                     const isValidDestination = selectedTile && onDestinationClick;
                     
                     return React.createElement('div', {
@@ -113,9 +132,18 @@ function PlayerBoard({
                             }
                         }
                     },
-                        tile && React.createElement(window.Tile, { color: tile })
+                        tile && React.createElement(window.Tile, { 
+                            color: tile,
+                            className: 'w-8 h-8 shadow-sm'
+                        })
                     );
-                })
+                }),
+                Array.from({ length: 7 - (player.floor_line || player.floor || []).length }, (_, index) => 
+                    React.createElement('div', {
+                        key: `empty-floor-${index}`,
+                        className: 'w-8 h-8 border-2 border-dashed border-gray-400 rounded-lg bg-gray-50'
+                    })
+                )
             )
         )
     );

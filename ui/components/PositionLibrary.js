@@ -30,8 +30,9 @@ const PositionLibrary = React.memo(function PositionLibrary({
             const hasScoringOptimization = window.scoringOptimizationTestPositions && Object.keys(window.scoringOptimizationTestPositions).length > 0;
             const hasFloorLineTest = window.floorLineTestPositions && Object.keys(window.floorLineTestPositions).length > 0;
             const hasStrategicPattern = window.strategicPatternTestPositions && Object.keys(window.strategicPatternTestPositions).length > 0;
+            const hasUITesting = window.uiTestingPositions && Object.keys(window.uiTestingPositions).length > 0;
             
-            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization || hasFloorLineTest || hasStrategicPattern) {
+            if (hasOpening || hasMidgame || hasEndgame || hasEducational || hasCustom || hasBlockingTest || hasScoringOptimization || hasFloorLineTest || hasStrategicPattern || hasUITesting) {
                 setModulesLoaded(true);
             } else {
                 // Check again in 100ms if modules aren't loaded yet
@@ -52,6 +53,7 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const scoringOptimizationTestPositions = window.scoringOptimizationTestPositions || {};
     const floorLineTestPositions = window.floorLineTestPositions || {};
     const strategicPatternTestPositions = window.strategicPatternTestPositions || {};
+    const uiTestingPositions = window.uiTestingPositions || {};
 
     // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
@@ -163,7 +165,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
                 ...blockingTestPositions,
                 ...scoringOptimizationTestPositions,
                 ...floorLineTestPositions,
-                ...strategicPatternTestPositions
+                ...strategicPatternTestPositions,
+                ...uiTestingPositions
             }
         }
     };
