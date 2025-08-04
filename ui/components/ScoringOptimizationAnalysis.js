@@ -14,6 +14,19 @@ function ScoringOptimizationAnalysis({ gameState, currentPlayer = 0, onOptimizat
             return;
         }
         
+        // Skip API calls for local position library states
+        if (gameState.fen_string.startsWith('local_')) {
+            setOptimizations({
+                message: 'Scoring optimization analysis not available for position library states',
+                wall_completion_opportunities: [],
+                pattern_line_optimizations: [],
+                floor_line_optimizations: [],
+                multiplier_setups: [],
+                move_suggestions: []
+            });
+            return;
+        }
+        
         setLoading(true);
         setError(null);
         

@@ -10,6 +10,13 @@ window.blockingTestPositions = (() => {
         score: 0
     });
 
+    const createPlayer = (patternLines, wallState, floorLine, score) => ({
+        pattern_lines: patternLines,
+        wall: wallState,
+        floor: floorLine,
+        score: score
+    });
+
     // Helper function to create game state from position data
     const createGameState = (positionData) => {
         const { players, factories, centerPool } = positionData.gameState;
@@ -27,7 +34,7 @@ window.blockingTestPositions = (() => {
                 return Array(count).fill(colorString);
             }),
             wall: player.wall,
-            floor_line: player.floorTiles || [],
+            floor: player.floorTiles || [],
             score: player.score
         }));
         

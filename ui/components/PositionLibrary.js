@@ -222,31 +222,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
             
             // For local development, skip validation if no session token
             if (!sessionToken) {
-                // Get proper FEN string from backend for the generated state
-                try {
-                    const response = await fetch('/api/v1/game_state', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            fen_string: 'initial',
-                            game_state: newState
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        // Get the updated state with proper FEN string
-                        const stateWithFen = await fetch('/api/v1/game_state?fen_string=initial').then(r => r.json());
-                        setGameState(stateWithFen.game_state || stateWithFen);
-                    } else {
-                        // Fallback to direct state setting
-                        setGameState(newState);
-                    }
-                } catch (fenError) {
-                    console.warn('Failed to get FEN string, using direct state:', fenError);
-                    setGameState(newState);
-                }
-                
+                // Set the state directly without backend processing
+                setGameState(newState);
                 setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
                 
                 // Set flag to prevent automatic refresh from overwriting the loaded position
@@ -254,7 +231,10 @@ const PositionLibrary = React.memo(function PositionLibrary({
                     window.setPositionJustLoaded(true);
                 }
                 
-                onClose();
+                // Add delay to allow UI to update before closing modal
+                setTimeout(() => {
+                    onClose();
+                }, 100);
                 return;
             }
             
@@ -282,7 +262,10 @@ const PositionLibrary = React.memo(function PositionLibrary({
                         window.setPositionJustLoaded(true);
                     }
                     
-                    onClose();
+                    // Add delay to allow UI to update before closing modal
+                    setTimeout(() => {
+                        onClose();
+                    }, 100);
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -330,7 +313,10 @@ const PositionLibrary = React.memo(function PositionLibrary({
                 // Don't reset the flag automatically - let user manually refresh when needed
             }
             
-            onClose();
+            // Add delay to allow UI to update before closing modal
+            setTimeout(() => {
+                onClose();
+            }, 100);
             
         } catch (error) {
             console.error('Position loading error:', error);
@@ -370,7 +356,10 @@ const PositionLibrary = React.memo(function PositionLibrary({
                     window.setPositionJustLoaded(true);
                 }
                 
-                onClose();
+                // Add delay to allow UI to update before closing modal
+                setTimeout(() => {
+                    onClose();
+                }, 100);
             } catch (fallbackError) {
                 setStatusMessage(`⚠️ Failed to load position: ${error.message}`);
             }

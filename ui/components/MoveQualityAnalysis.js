@@ -49,6 +49,18 @@ function MoveQualityAnalysis({ gameState, currentPlayer = 0, onMoveRecommendatio
             return;
         }
 
+        // Skip API calls for local position library states
+        if (gameState.fen_string.startsWith('local_')) {
+            setMoveAnalysis({
+                message: 'Move quality analysis not available for position library states',
+                best_move: null,
+                alternatives: [],
+                quality_tier: '=',
+                score: 0
+            });
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -245,126 +257,23 @@ function MoveQualityAnalysis({ gameState, currentPlayer = 0, onMoveRecommendatio
         ]);
     }
 
-    // No analysis yet
-    if (!moveAnalysis) {
-        return React.createElement('div', {
-            className: 'move-quality-analysis empty',
-            style: { 
-                padding: '16px', 
-                textAlign: 'center',
-                color: '#6c757d',
-                fontSize: '12px'
-            }
-        }, 'Move quality analysis will appear when a position is loaded');
+    // Show message if present (e.g., for local_ FEN)
+    if (moveAnalysis && moveAnalysis.message) {
+        return React.createElement('div', { className: 'move-quality-analysis info' }, moveAnalysis.message);
     }
 
-    return React.createElement('div', {
-        className: 'move-quality-analysis'
-    }, [
-        // Header
-        React.createElement('div', {
-            key: 'header',
-            style: {
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '12px'
-            }
-        }, [
-            React.createElement('h4', {
-                key: 'title',
-                style: { 
-                    margin: 0, 
-                    fontSize: '14px', 
-                    fontWeight: '600',
-                    color: '#495057'
-                }
-            }, '🎯 Move Quality Analysis'),
-            React.createElement('span', {
-                key: 'stats',
-                style: { 
-                    fontSize: '11px', 
-                    color: '#6c757d'
-                }
-            }, `${moveAnalysis.total_moves_analyzed} moves analyzed`)
-        ]),
+    // Only render MoveRecommendationCard if best_move is valid
+    if (moveAnalysis && moveAnalysis.best_move) {
+        return React.createElement('div', { className: 'move-quality-analysis' }, [
+            React.createElement(MoveRecommendationCard, { move: moveAnalysis.best_move, isAlternative: false, key: 'best' }),
+            ...(moveAnalysis.alternatives || []).map((alt, idx) =>
+                React.createElement(MoveRecommendationCard, { move: alt, isAlternative: true, index: idx, key: `alt-${idx}` })
+            )
+        ]);
+    }
 
-        // Primary recommendation
-        React.createElement('div', {
-            key: 'primary',
-            style: { marginBottom: '16px' }
-        }, [
-            React.createElement('div', {
-                key: 'primary-label',
-                style: {
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: '#495057',
-                    marginBottom: '8px'
-                }
-            }, 'Recommended Move:'),
-            React.createElement(MoveRecommendationCard, {
-                key: 'primary-card',
-                move: moveAnalysis.primary_recommendation,
-                isAlternative: false
-            })
-        ]),
-
-        // Alternatives toggle
-        moveAnalysis.alternatives && moveAnalysis.alternatives.length > 0 && React.createElement('div', {
-            key: 'alternatives-section'
-        }, [
-            React.createElement('button', {
-                key: 'toggle',
-                onClick: () => setShowAlternatives(!showAlternatives),
-                style: {
-                    width: '100%',
-                    padding: '8px',
-                    fontSize: '12px',
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginBottom: showAlternatives ? '12px' : '0'
-                }
-            }, `${showAlternatives ? '▼' : '▶'} Show ${moveAnalysis.alternatives.length} Alternative${moveAnalysis.alternatives.length !== 1 ? 's' : ''}`),
-
-            // Alternatives list
-            showAlternatives && React.createElement('div', {
-                key: 'alternatives-list',
-                style: { maxHeight: '300px', overflowY: 'auto' }
-            }, moveAnalysis.alternatives.map((alt, index) => 
-                React.createElement(MoveRecommendationCard, {
-                    key: `alt-${index}`,
-                    move: alt,
-                    isAlternative: true,
-                    index: index
-                })
-            ))
-        ]),
-
-        // Analysis summary
-        React.createElement('div', {
-            key: 'summary',
-            style: {
-                marginTop: '12px',
-                padding: '8px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                fontSize: '11px',
-                color: '#6c757d'
-            }
-        }, [
-            React.createElement('div', {
-                key: 'summary-text',
-                style: { marginBottom: '4px' }
-            }, moveAnalysis.analysis_summary),
-            moveAnalysis.analysis_time_ms && React.createElement('div', {
-                key: 'timing',
-                style: { fontSize: '10px', color: '#adb5bd' }
-            }, `Analysis completed in ${moveAnalysis.analysis_time_ms}ms`)
-        ])
-    ]);
+    // Fallback: nothing to show
+    return null;
 }
 
 // Export for use in other components

@@ -39,6 +39,20 @@ window.useGameState = function useGameState() {
     const debugSetGameState = useCallback(async (newState) => {
         console.log('App: setGameState called with:', newState);
         
+        // For position library data, handle it locally without backend processing
+        if (newState && newState.factories && newState.center && newState.players) {
+            console.log('App: Position library data detected, handling locally');
+            // Generate a local FEN string for position library data
+            const stateHash = btoa(JSON.stringify(newState)).slice(0, 8);
+            const localFen = `local_${stateHash}`;
+            
+            // Add FEN string to the state
+            const stateWithFen = { ...newState, fen_string: localFen };
+            console.log('App: Setting position library state locally:', stateWithFen);
+            setGameState(stateWithFen);
+            return;
+        }
+        
         // If the new state doesn't have a proper fen_string, get one from the backend
         if (newState && (!newState.fen_string || newState.fen_string === 'initial')) {
             try {

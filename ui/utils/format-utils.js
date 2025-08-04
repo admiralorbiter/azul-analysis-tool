@@ -1,19 +1,9 @@
 // Format utility functions for Azul Solver & Analysis Toolkit
 // Extracted from main.js for modularity
 
-// Tile color mapping - Updated to match BGA colors
-const TILE_COLORS = {
-    'R': '#dc2626', // Bright vibrant red (BGA style)
-    'Y': '#f59e0b', // Yellow with orange tint (BGA style)
-    'B': '#06b6d4', // Bright teal/cyan blue (BGA style)
-    'W': '#f8fafc', // Light off-white/cream (BGA style)
-    'K': '#0f172a', // Very dark teal/black (BGA style)
-    'W': '#f1f5f9'  // White (empty) - lighter gray
-};
-
-// Get tile color based on tile type
+// Get tile color based on tile type - use global TILE_COLORS from gameConstants
 function getTileColor(tile) {
-    return TILE_COLORS[tile] || '#6b7280';
+    return window.gameConstants?.TILE_COLORS?.[tile] || '#6b7280';
 }
 
 // Format move description for display
@@ -50,7 +40,6 @@ function getMenuOptions(elementType, elementData) {
 
 // Export format utilities to global scope
 window.formatUtils = {
-    TILE_COLORS,
     getTileColor,
     formatMoveDescription,
     formatSelectedElement,

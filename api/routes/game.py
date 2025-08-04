@@ -295,6 +295,11 @@ def get_game_state():
         from ..utils import _current_editable_game_state, _initial_game_state
         
         if _current_editable_game_state is not None:
+            print("DEBUG: Returning stored editable game state")
+            print(f"DEBUG: Stored state keys: {list(_current_editable_game_state.keys())}")
+            print(f"DEBUG: Stored state center: {_current_editable_game_state.get('center', 'NOT_FOUND')}")
+            print(f"DEBUG: Stored state factories: {_current_editable_game_state.get('factories', 'NOT_FOUND')}")
+            
             # Generate a unique FEN string for this state
             import hashlib
             import json
@@ -309,6 +314,7 @@ def get_game_state():
                 game_state_with_fen = _current_editable_game_state.copy()
                 game_state_with_fen['fen_string'] = unique_fen
                 
+                print(f"DEBUG: Returning game state with FEN: {unique_fen}")
                 return jsonify({
                     'success': True,
                     'game_state': game_state_with_fen
@@ -321,8 +327,15 @@ def get_game_state():
                     'game_state': _current_editable_game_state
                 })
         
+        print("DEBUG: No stored editable game state, parsing FEN")
         # Otherwise, parse current state from FEN
         fen_string = request.args.get('fen_string', 'initial')
+        
+        # Only parse FEN if we don't have a stored editable state
+        if fen_string.startswith('state_') and _current_editable_game_state is None:
+            print("DEBUG: State identifier but no stored editable state, using initial")
+            fen_string = 'initial'
+        
         state = None
         try:
             state = parse_fen_string(fen_string)
@@ -381,6 +394,20 @@ def put_game_state():
         if not game_state:
             return jsonify({'error': 'No game_state provided'}), 400
         
+        # Convert frontend state to backend format if it's position library data
+        from ..utils import convert_frontend_state_to_azul_state, convert_azul_state_to_frontend
+        
+        # Check if this looks like position library data (has factories, center, players)
+        if 'factories' in game_state and 'center' in game_state and 'players' in game_state:
+            print("DEBUG: Position library data detected, storing directly")
+            print(f"DEBUG: Input game_state: {game_state}")
+            # For now, store the position library data directly without conversion
+            converted_game_state = game_state
+        else:
+            # Not position library data, use as-is
+            print("DEBUG: Not position library data, using as-is")
+            converted_game_state = game_state
+        
         # Generate a unique FEN string for this state
         import hashlib
         import json
@@ -388,7 +415,7 @@ def put_game_state():
         
         try:
             # Create a hash of the game state
-            state_json = json.dumps(game_state, sort_keys=True)
+            state_json = json.dumps(converted_game_state, sort_keys=True)
             state_hash = hashlib.md5(state_json.encode('utf-8')).hexdigest()[:8]
             unique_fen = f"state_{state_hash}"
         except Exception as e:
@@ -396,9 +423,9 @@ def put_game_state():
             timestamp = int(time.time() * 1000) % 1000000
             unique_fen = f"state_{timestamp}"
         
-        # Store the game state for future retrieval
+        # Store the converted game state for future retrieval
         from ..utils import _current_editable_game_state
-        _current_editable_game_state = game_state
+        _current_editable_game_state = converted_game_state
         
         return jsonify({
             'success': True,

@@ -3,10 +3,10 @@
 
 window.customPositions = (() => {
     // Helper function to create custom player
-    const createCustomPlayer = (patternLines, wallState, floorLine, score) => ({
+    const createPlayer = (patternLines, wallState, floorLine, score) => ({
         pattern_lines: patternLines,
         wall: wallState,
-        floor_line: floorLine,
+        floor: floorLine,
         score: score
     });
 
@@ -35,7 +35,7 @@ window.customPositions = (() => {
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createCustomPlayer(
+                createPlayer(
                     [['B'], ['Y'], ['R'], [], []],
                     createCustomWall([[0, 0, 'B'], [1, 1, 'Y']]),
                     [],

@@ -12,6 +12,9 @@ def convert_frontend_state_to_azul_state(frontend_state):
     try:
         from core.azul_model import AzulState
         
+        print(f"DEBUG: Starting frontend state conversion")
+        print(f"DEBUG: Frontend state keys: {list(frontend_state.keys())}")
+        
         # Create a new AzulState
         state = AzulState(2)  # 2-player game
         
@@ -45,6 +48,7 @@ def convert_frontend_state_to_azul_state(frontend_state):
         
         # Convert center pool
         if 'center' in frontend_state:
+            print(f"DEBUG: Converting center pool: {frontend_state['center']}")
             state.centre_pool.tiles.clear()
             center_data = frontend_state['center']
             if isinstance(center_data, dict):
@@ -59,12 +63,16 @@ def convert_frontend_state_to_azul_state(frontend_state):
                     tile_type = convert_tile_string_to_type(tile)
                     tile_counts[tile_type] = tile_counts.get(tile_type, 0) + 1
                 state.centre_pool.tiles.update(tile_counts)
+                print(f"DEBUG: Center pool converted: {center_data} -> {tile_counts}")
+            print(f"DEBUG: Final center pool state: {dict(state.centre_pool.tiles)}")
         
         # Convert players/agents
         if 'players' in frontend_state:
+            print(f"DEBUG: Converting players: {len(frontend_state['players'])} players")
             for i, player in enumerate(frontend_state['players']):
                 if i < len(state.agents):
                     agent = state.agents[i]
+                    print(f"DEBUG: Converting player {i}: {list(player.keys())}")
                     
                     # Convert pattern lines
                     if 'pattern_lines' in player:
@@ -98,6 +106,14 @@ def convert_frontend_state_to_azul_state(frontend_state):
                     # Convert floor tiles
                     if 'floor_tiles' in player:
                         agent.floor_tiles = player['floor_tiles']
+                    elif 'floor' in player:
+                        # Convert floor tile strings to tile types
+                        floor_tiles = []
+                        for tile_string in player['floor']:
+                            tile_type = convert_tile_string_to_type(tile_string)
+                            floor_tiles.append(tile_type)
+                        agent.floor_tiles = floor_tiles
+                        print(f"DEBUG: Player {i} floor tiles converted: {player['floor']} -> {floor_tiles}")
                     
                     # Convert score
                     if 'score' in player:
@@ -135,6 +151,9 @@ def convert_tile_string_to_type(tile_string):
 def convert_azul_state_to_frontend(azul_state):
     """Convert AzulState object to frontend format."""
     try:
+        print(f"DEBUG: Starting azul state to frontend conversion")
+        print(f"DEBUG: Azul state center pool: {dict(azul_state.centre_pool.tiles)}")
+        
         frontend_state = {
             'factories': [],
             'center': [],
@@ -144,7 +163,7 @@ def convert_azul_state_to_frontend(azul_state):
         }
         
         # Convert factories
-        for factory in azul_state.factories:
+        for i, factory in enumerate(azul_state.factories):
             factory_tiles = []
             for tile_type, count in factory.tiles.items():
                 for _ in range(count):
@@ -152,6 +171,7 @@ def convert_azul_state_to_frontend(azul_state):
                     tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
                     factory_tiles.append(tile_colors.get(tile_type, 'W'))
             frontend_state['factories'].append(factory_tiles)
+            print(f"DEBUG: Factory {i} converted: {dict(factory.tiles)} -> {factory_tiles}")
         
         # Convert center pool
         center_tiles = []
@@ -160,6 +180,7 @@ def convert_azul_state_to_frontend(azul_state):
                 tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
                 center_tiles.append(tile_colors.get(tile_type, 'W'))
         frontend_state['center'] = center_tiles
+        print(f"DEBUG: Center pool converted: {dict(azul_state.centre_pool.tiles)} -> {center_tiles}")
         
         # Convert player states
         for agent in azul_state.agents:
@@ -217,10 +238,13 @@ def convert_azul_state_to_frontend(azul_state):
             
             frontend_state['players'].append(player)
         
+        print(f"DEBUG: Final frontend state center: {frontend_state['center']}")
+        print(f"DEBUG: Final frontend state factories: {frontend_state['factories']}")
+        
         return frontend_state
         
     except Exception as e:
-        print(f"DEBUG: Error converting AzulState to frontend: {e}")
+        print(f"DEBUG: Error converting azul state to frontend: {e}")
         import traceback
         print(f"DEBUG: Traceback: {traceback.format_exc()}")
         return None 

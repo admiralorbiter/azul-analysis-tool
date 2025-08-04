@@ -6,7 +6,7 @@ window.openingPositions = (() => {
     const createEmptyPlayer = () => ({
         pattern_lines: [[], [], [], [], []],
         wall: Array(5).fill().map(() => Array(5).fill(null)),
-        floor_line: [],
+        floor: [],
         score: 0
     });
 

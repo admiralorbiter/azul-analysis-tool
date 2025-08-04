@@ -14,6 +14,18 @@ function StrategicPatternAnalysis({ gameState, currentPlayer = 0, onStrategicAna
             return;
         }
         
+        // Skip API calls for local position library states
+        if (gameState.fen_string.startsWith('local_')) {
+            setStrategicAnalysis({
+                message: 'Strategic analysis not available for position library states',
+                factory_control: [],
+                endgame_scenarios: [],
+                risk_reward_scenarios: [],
+                move_suggestions: []
+            });
+            return;
+        }
+        
         setLoading(true);
         setError(null);
         

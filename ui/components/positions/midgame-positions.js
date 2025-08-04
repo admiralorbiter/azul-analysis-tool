@@ -3,10 +3,10 @@
 
 window.midgamePositions = (() => {
     // Helper function to create player with pattern lines
-    const createPlayerWithPatternLines = (patternLines, wallState, floorLine, score) => ({
+    const createPlayer = (patternLines, wallState, floorLine, score) => ({
         pattern_lines: patternLines,
         wall: wallState,
-        floor_line: floorLine,
+        floor: floorLine,
         score: score
     });
 
@@ -36,7 +36,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B'], ['Y', 'Y', 'Y'], [], [], []],
                     createWallWithTiles([[0, 0, 'B'], [1, 1, 'B']]),
                     [],
@@ -61,7 +61,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'B', 'R', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B', 'B'], [], ['R', 'R'], [], ['W']],
                     createWallWithTiles(
                         playerIdx === 0 
@@ -90,7 +90,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B'], ['Y', 'Y'], ['R', 'R'], ['K', 'K'], ['W']],
                     createWallWithTiles([
                         [0, 0, 'B'], [0, 1, 'Y'], [0, 2, 'R'], [0, 3, 'K'], [0, 4, 'W'],
@@ -122,7 +122,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B'], ['Y'], ['R'], ['K'], ['W']],
                     createWallWithTiles([
                         [0, 0, 'B'], [1, 1, 'Y'], [2, 2, 'R'], [3, 3, 'K'], [4, 4, 'W']
@@ -149,7 +149,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B', 'B'], ['Y', 'Y'], ['R'], [], []],
                     createWallWithTiles([
                         [0, 0, 'B'], [0, 1, 'Y'], [0, 2, 'R'], [0, 3, 'K'], [0, 4, 'W'],
@@ -177,7 +177,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B'], ['Y'], ['R', 'R'], ['K'], ['W']],
                     createWallWithTiles([
                         [0, 0, 'B'], [0, 1, 'Y'], [0, 2, 'R'], [0, 3, 'K'], [0, 4, 'W'],
@@ -208,7 +208,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B'], ['Y'], ['R'], ['K'], ['W']],
                     createWallWithTiles([
                         [0, 0, 'B'], [1, 1, 'Y'], [2, 2, 'R'], [3, 3, 'K'], [4, 4, 'W']
@@ -235,7 +235,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B', 'B'], ['Y', 'Y'], ['R'], ['K'], ['W']],
                     createWallWithTiles([
                         [0, 0, 'B'], [0, 1, 'Y'], [0, 2, 'R'], [0, 3, 'K'], [0, 4, 'W'],
@@ -263,7 +263,7 @@ window.midgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createPlayerWithPatternLines(
+                createPlayer(
                     [['B', 'B', 'B'], ['Y', 'Y'], ['R'], ['K'], ['W']],
                     createWallWithTiles([
                         [0, 0, 'B'], [0, 1, 'Y'], [0, 2, 'R'], [0, 3, 'K'], [0, 4, 'W'],

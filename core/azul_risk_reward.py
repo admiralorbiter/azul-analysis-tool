@@ -22,12 +22,15 @@ from .azul_model import AzulState
 class RiskRewardScenario:
     """Represents a risk/reward scenario analysis."""
     scenario_type: str  # "floor_risk", "blocking_risk", "timing_risk", "scoring_risk"
-    expected_value: float
-    risk_level: str  # "low", "medium", "high"
-    urgency_score: float
+    risk_score: float
+    reward_score: float
+    risk_reward_ratio: float
+    game_phase: str  # "early", "mid", "late"
+    risk_factors: List[str]
+    reward_factors: List[str]
+    recommendation: str
     confidence: float
     description: str
-    move_suggestions: List[str]
 
 
 class RiskRewardAnalyzer:
@@ -112,12 +115,15 @@ class RiskRewardAnalyzer:
             
             scenarios.append(RiskRewardScenario(
                 scenario_type="floor_risk",
-                expected_value=expected_value,
-                risk_level=self._assess_floor_risk_level(floor_tiles),
-                urgency_score=self._calculate_floor_risk_urgency(floor_tiles, future_penalty_risk),
+                risk_score=self._assess_floor_risk_level(floor_tiles),
+                reward_score=0.0, # No direct reward for floor line risk
+                risk_reward_ratio=0.0,
+                game_phase=self._assess_game_phase(state),
+                risk_factors=[f"Floor line penalty: {current_penalty} points", f"Future risk: {future_penalty_risk:.1f}"],
+                reward_factors=[],
+                recommendation="Focus on completing pattern lines and wall placements to reduce floor penalty.",
                 confidence=self._calculate_floor_risk_confidence(floor_tiles, state, player_id),
-                description=f"Floor line penalty: {current_penalty} points, future risk: {future_penalty_risk:.1f}",
-                move_suggestions=mitigation_moves
+                description=f"Floor line penalty: {current_penalty} points, future risk: {future_penalty_risk:.1f}"
             ))
         
         return scenarios
@@ -133,12 +139,15 @@ class RiskRewardAnalyzer:
             if threat['severity'] > self.blocking_risk_threshold:
                 scenarios.append(RiskRewardScenario(
                     scenario_type="blocking_risk",
-                    expected_value=threat['mitigation_value'],
-                    risk_level=threat['level'],
-                    urgency_score=threat['urgency'],
+                    risk_score=threat['severity'],
+                    reward_score=threat['mitigation_value'],
+                    risk_reward_ratio=threat['mitigation_value'] / threat['severity'] if threat['severity'] > 0 else 0.0,
+                    game_phase=self._assess_game_phase(state),
+                    risk_factors=[threat['description']],
+                    reward_factors=[],
+                    recommendation=threat['mitigation_moves'][0] if threat['mitigation_moves'] else "No specific mitigation move",
                     confidence=threat['confidence'],
-                    description=f"Blocking risk: {threat['description']}",
-                    move_suggestions=threat['mitigation_moves']
+                    description=threat['description']
                 ))
         
         return scenarios
@@ -155,12 +164,15 @@ class RiskRewardAnalyzer:
             if risk['severity'] > self.timing_risk_threshold:
                 scenarios.append(RiskRewardScenario(
                     scenario_type="timing_risk",
-                    expected_value=risk['value'],
-                    risk_level=risk['level'],
-                    urgency_score=risk['urgency'],
+                    risk_score=risk['severity'],
+                    reward_score=risk['value'],
+                    risk_reward_ratio=risk['value'] / risk['severity'] if risk['severity'] > 0 else 0.0,
+                    game_phase=game_phase,
+                    risk_factors=[risk['description']],
+                    reward_factors=[],
+                    recommendation=risk['mitigation_moves'][0] if risk['mitigation_moves'] else "No specific mitigation move",
                     confidence=risk['confidence'],
-                    description=f"Timing risk: {risk['description']}",
-                    move_suggestions=risk['mitigation_moves']
+                    description=risk['description']
                 ))
         
         return scenarios
@@ -178,12 +190,15 @@ class RiskRewardAnalyzer:
             if risk['severity'] > self.scoring_risk_threshold:
                 scenarios.append(RiskRewardScenario(
                     scenario_type="scoring_risk",
-                    expected_value=risk['value'],
-                    risk_level=risk['level'],
-                    urgency_score=risk['urgency'],
+                    risk_score=risk['severity'],
+                    reward_score=risk['value'],
+                    risk_reward_ratio=risk['value'] / risk['severity'] if risk['severity'] > 0 else 0.0,
+                    game_phase=self._assess_game_phase(state),
+                    risk_factors=[risk['description']],
+                    reward_factors=[],
+                    recommendation=risk['mitigation_moves'][0] if risk['mitigation_moves'] else "No specific mitigation move",
                     confidence=risk['confidence'],
-                    description=f"Scoring risk: {risk['description']}",
-                    move_suggestions=risk['mitigation_moves']
+                    description=risk['description']
                 ))
         
         return scenarios
@@ -240,14 +255,14 @@ class RiskRewardAnalyzer:
         
         return total_available
     
-    def _assess_floor_risk_level(self, floor_tiles: int) -> str:
+    def _assess_floor_risk_level(self, floor_tiles: int) -> float:
         """Assess floor line risk level."""
         if floor_tiles >= 5:
-            return "high"
+            return 1.0 # High risk
         elif floor_tiles >= 3:
-            return "medium"
+            return 0.7 # Medium risk
         else:
-            return "low"
+            return 0.3 # Low risk
     
     def _calculate_floor_risk_urgency(self, floor_tiles: int, future_risk: float) -> float:
         """Calculate urgency for floor line risk."""

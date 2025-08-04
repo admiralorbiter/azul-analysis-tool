@@ -6,7 +6,7 @@ window.educationalPositions = (() => {
     const createSimplePlayer = (patternLines, wallState, floorLine, score) => ({
         pattern_lines: patternLines,
         wall: wallState,
-        floor_line: floorLine,
+        floor: floorLine,
         score: score
     });
 

@@ -14,6 +14,16 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
             return;
         }
         
+        // Skip API calls for local position library states
+        if (gameState.fen_string.startsWith('local_')) {
+            setPatterns({
+                message: 'Pattern analysis not available for position library states',
+                patterns: [],
+                opportunities: []
+            });
+            return;
+        }
+        
         setLoading(true);
         setError(null);
         

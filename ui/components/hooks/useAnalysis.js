@@ -34,17 +34,125 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
         return mapping[tileColor] !== undefined ? mapping[tileColor] : 0;
     }, []);
     
+    // Helper function to apply a move locally to the game state
+    const applyMoveLocally = useCallback((currentState, move, playerIndex) => {
+        console.log('Applying move locally:', move);
+        
+        // Create a deep copy of the current state
+        const newState = JSON.parse(JSON.stringify(currentState));
+        
+        // Apply the move based on its type
+        if (move.source_id !== undefined && move.tile_type !== undefined) {
+            const tileType = move.tile_type;
+            const patternLineDest = move.pattern_line_dest;
+            const numToPatternLine = move.num_to_pattern_line || 0;
+            const numToFloor = move.num_to_floor_line || 0;
+            const tileColorMap = { 0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W' };
+            const tileColor = tileColorMap[tileType];
+            
+            if (move.source_id >= 0) {
+                // Factory to pattern line move
+                const factoryIndex = move.source_id;
+                const factory = newState.factories[factoryIndex];
+                const tilesToRemove = numToPatternLine + numToFloor;
+                
+                // Remove the specified number of tiles of this color from the factory
+                let removed = 0;
+                for (let i = factory.length - 1; i >= 0 && removed < tilesToRemove; i--) {
+                    if (factory[i] === tileColor) {
+                        factory.splice(i, 1);
+                        removed++;
+                    }
+                }
+                
+                // Move remaining tiles from factory to center
+                const remainingTiles = factory.filter(tile => tile !== tileColor);
+                newState.center.push(...remainingTiles);
+                newState.factories[factoryIndex] = [];
+            } else {
+                // Center pool to pattern line move
+                const centerPool = newState.center;
+                const tilesToRemove = numToPatternLine + numToFloor;
+                
+                // Remove the specified number of tiles of this color from the center pool
+                let removed = 0;
+                for (let i = centerPool.length - 1; i >= 0 && removed < tilesToRemove; i--) {
+                    if (centerPool[i] === tileColor) {
+                        centerPool.splice(i, 1);
+                        removed++;
+                    }
+                }
+            }
+            
+            // Add tiles to pattern line
+            if (numToPatternLine > 0 && patternLineDest >= 0 && patternLineDest < 5) {
+                const player = newState.players[playerIndex];
+                const patternLine = player.pattern_lines[patternLineDest];
+                const maxCapacity = patternLineDest + 1;
+                
+                // Add tiles to pattern line (up to capacity)
+                const tilesToAdd = Math.min(numToPatternLine, maxCapacity - patternLine.length);
+                for (let i = 0; i < tilesToAdd; i++) {
+                    patternLine.push(tileColor);
+                }
+            }
+            
+            // Add tiles to floor
+            if (numToFloor > 0) {
+                const player = newState.players[playerIndex];
+                for (let i = 0; i < numToFloor; i++) {
+                    player.floor.push(tileColor);
+                }
+            }
+        }
+        
+        // Generate a new local FEN string
+        const stateHash = btoa(JSON.stringify(newState)).slice(0, 8);
+        newState.fen_string = `local_${stateHash}`;
+        
+        console.log('New state after local move:', newState);
+        return newState;
+    }, []);
+    
     // Handle move execution
     const handleMoveExecution = useCallback(async (move) => {
-        if (!gameState) return;
+        if (!gameState) {
+            setStatusMessage('No game state available');
+            return;
+        }
         
         setLoading(true);
         setStatusMessage('Executing move...');
         
         try {
-            // Use the current FEN string from game state, or 'initial' as fallback
+            // Check if this is a local position library state
             const currentFen = gameState.fen_string || 'initial';
             console.log('Executing move with FEN:', currentFen);
+            
+            if (currentFen.startsWith('local_')) {
+                // This is a local position library state - handle move locally
+                console.log('App: Handling move for local position library state');
+                setStatusMessage('Move executed locally (position library mode)');
+                
+                // Create a new game state with the move applied
+                const newGameState = applyMoveLocally(gameState, move, currentPlayer);
+                
+                // Update the game state
+                await setGameState(newGameState);
+                
+                // Update move history
+                setMoveHistory(prev => [...prev, {
+                    move: move,
+                    result: { success: true, move_executed: 'local' },
+                    timestamp: Date.now(),
+                    player: currentPlayer
+                }]);
+                
+                setStatusMessage('Move executed locally');
+                setLoading(false);
+                return;
+            }
+            
             const result = await executeMove(currentFen, move, currentPlayer);
             
             if (result.success) {

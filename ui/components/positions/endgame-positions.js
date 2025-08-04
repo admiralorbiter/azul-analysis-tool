@@ -3,10 +3,10 @@
 
 window.endgamePositions = (() => {
     // Helper function to create player with advanced wall state
-    const createEndgamePlayer = (patternLines, wallState, floorLine, score) => ({
+    const createPlayer = (patternLines, wallState, floorLine, score) => ({
         pattern_lines: patternLines,
         wall: wallState,
-        floor_line: floorLine,
+        floor: floorLine,
         score: score
     });
 
@@ -44,7 +44,7 @@ window.endgamePositions = (() => {
             ],
             center: ['R', 'R', 'R', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [[], [], ['R', 'R', 'R'], [], ['W']],
                     createNearCompleteWall(0.6),
                     ['R', 'W'],
@@ -69,7 +69,7 @@ window.endgamePositions = (() => {
             ],
             center: ['K', 'K'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [[], [], [], ['K', 'K'], []],
                     createNearCompleteWall(0.8),
                     [],
@@ -94,7 +94,7 @@ window.endgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [['B'], ['Y'], ['R'], ['K'], ['W']],
                     createNearCompleteWall(0.7),
                     [],
@@ -121,7 +121,7 @@ window.endgamePositions = (() => {
             ],
             center: ['W', 'W', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [[], [], [], [], ['W', 'W', 'W']],
                     createNearCompleteWall(0.9),
                     [],
@@ -146,7 +146,7 @@ window.endgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [['B', 'B'], ['Y'], ['R'], ['K'], ['W']],
                     createNearCompleteWall(0.75),
                     [],
@@ -171,7 +171,7 @@ window.endgamePositions = (() => {
             ],
             center: ['R', 'K', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [['R'], ['K'], ['W'], ['B'], ['Y']],
                     createNearCompleteWall(0.6),
                     ['R', 'K'],
@@ -198,7 +198,7 @@ window.endgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K', 'W'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [['B', 'B', 'B', 'B'], ['Y', 'Y', 'Y', 'Y'], ['R', 'R', 'R', 'R'], ['K', 'K', 'K', 'K'], ['W', 'W', 'W', 'W']],
                     createNearCompleteWall(0.95),
                     [],
@@ -223,7 +223,7 @@ window.endgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [['B', 'B', 'B', 'B'], ['Y', 'Y', 'Y'], ['R', 'R'], ['K'], []],
                     createNearCompleteWall(0.6),
                     [],
@@ -248,7 +248,7 @@ window.endgamePositions = (() => {
             ],
             center: ['B', 'Y', 'R', 'K'],
             players: Array(2).fill().map((_, playerIdx) => 
-                createEndgamePlayer(
+                createPlayer(
                     [['B'], ['Y'], ['R'], ['K'], ['W']],
                     createNearCompleteWall(0.6),
                     [],

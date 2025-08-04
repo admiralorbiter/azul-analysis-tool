@@ -54,7 +54,7 @@ function PlayerBoard({
             React.createElement('div', {
                 className: 'space-y-2'
             },
-                player.pattern_lines.map((line, index) => 
+                (player.pattern_lines || []).map((line, index) => 
                     React.createElement(window.PatternLine, {
                         key: index,
                         tiles: line,
@@ -81,7 +81,7 @@ function PlayerBoard({
                 className: 'text-sm font-medium mb-2'
             }, 'Wall'),
             React.createElement(window.Wall, {
-                wall: player.wall,
+                wall: player.wall || Array(5).fill().map(() => Array(5).fill(null)),
                 onWallClick: onWallClick,
                 onDrop: onWallDrop,
                 selectedTile: selectedTile,
@@ -101,7 +101,7 @@ function PlayerBoard({
             React.createElement('div', {
                 className: 'flex gap-1'
             },
-                player.floor.map((tile, index) => {
+                (player.floor || []).map((tile, index) => {
                     const isValidDestination = selectedTile && onDestinationClick;
                     
                     return React.createElement('div', {
