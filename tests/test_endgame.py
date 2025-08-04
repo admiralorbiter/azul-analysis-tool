@@ -13,9 +13,9 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch
 
-from core.azul_endgame import EndgameDetector, EndgameDatabase, EndgamePosition
+from analysis_engine.strategic_analysis.azul_endgame import EndgameDetector, EndgameDatabase, EndgamePosition
 from core.azul_model import AzulState, AzulGameRule
-from core.azul_move_generator import FastMoveGenerator
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
 from core import azul_utils as utils
 
 

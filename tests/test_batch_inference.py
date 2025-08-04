@@ -16,6 +16,8 @@ from neural.gpu_optimizer import RTX30xxOptimizer, GPUOptimizationConfig, create
 from neural.model_evaluation import NeuralModelEvaluator, EvaluationConfig, create_model_evaluator
 from neural.azul_net import create_azul_net
 from core.azul_model import AzulState
+from analysis_engine.mathematical_optimization.azul_move_generator import AzulMoveGenerator
+from neural.policy_mapping import SelectionMethod
 
 
 class TestBatchInference(unittest.TestCase):
@@ -98,8 +100,6 @@ class TestBatchInference(unittest.TestCase):
     
     def test_move_selection_batch(self):
         """Test batch move selection."""
-        from core.azul_move_generator import AzulMoveGenerator
-        from neural.policy_mapping import SelectionMethod
         
         move_generator = AzulMoveGenerator()
         

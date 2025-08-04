@@ -13,7 +13,7 @@ import time
 import numpy as np
 from typing import List, Dict
 
-from core.azul_move_generator import AzulMoveGenerator, FastMoveGenerator, Move
+from analysis_engine.mathematical_optimization.azul_move_generator import AzulMoveGenerator, FastMoveGenerator, Move
 from core.azul_model import AzulState, AzulGameRule
 from core.azul_validator import AzulRuleValidator
 from core import azul_utils as utils

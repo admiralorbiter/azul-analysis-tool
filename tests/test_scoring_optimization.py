@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 from unittest.mock import Mock, patch
 
-from core.azul_scoring_optimization import (
+from analysis_engine.comprehensive_patterns.azul_scoring_optimization import (
     AzulScoringOptimizationDetector,
     ScoringOpportunity,
     ScoringOptimizationDetection

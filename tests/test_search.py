@@ -14,11 +14,11 @@ import time
 import signal
 from unittest.mock import Mock, patch
 
-from core.azul_search import TranspositionTable, AzulAlphaBetaSearch, SearchResult
+from analysis_engine.mathematical_optimization.azul_search import TranspositionTable, AzulAlphaBetaSearch, SearchResult
 from core.azul_model import AzulState, AzulGameRule
-from core.azul_move_generator import FastMoveGenerator, FastMove
-from core.azul_endgame import EndgameDatabase
-from core.azul_evaluator import AzulEvaluator
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator, FastMove
+from analysis_engine.strategic_analysis.azul_endgame import EndgameDatabase
+from analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
 from core import azul_utils as utils
 
 

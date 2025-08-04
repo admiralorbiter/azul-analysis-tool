@@ -23,9 +23,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from api.app import create_test_app
 from core.azul_model import AzulState
 from core.azul_rule_validator import BoardStateValidator
-from core.azul_patterns import AzulPatternDetector
-from core.azul_scoring_optimization import AzulScoringOptimizationDetector
-from core.azul_floor_line_patterns import AzulFloorLinePatternDetector
+from analysis_engine.comprehensive_patterns.azul_patterns import AzulPatternDetector
+from analysis_engine.comprehensive_patterns.azul_scoring_optimization import AzulScoringOptimizationDetector
+from analysis_engine.comprehensive_patterns.azul_floor_line_patterns import AzulFloorLinePatternDetector
 from core import azul_utils as utils
 
 

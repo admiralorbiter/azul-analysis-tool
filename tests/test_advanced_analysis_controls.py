@@ -19,8 +19,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.azul_model import AzulState
-from core.azul_search import AzulAlphaBetaSearch
-from core.azul_mcts import AzulMCTS
+from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
+from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
 
 
 class TestAdvancedAnalysisControls(unittest.TestCase):

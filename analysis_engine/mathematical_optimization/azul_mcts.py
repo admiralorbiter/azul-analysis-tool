@@ -16,10 +16,10 @@ from dataclasses import dataclass
 from typing import List, Optional, Dict, Any, Callable
 from enum import Enum
 
-from .azul_model import AzulState, AzulGameRule
+from core.azul_model import AzulState, AzulGameRule
 from .azul_move_generator import FastMoveGenerator, FastMove
 from .azul_evaluator import AzulEvaluator
-from .azul_database import AzulDatabase, CachedAnalysis
+from core.azul_database import AzulDatabase, CachedAnalysis
 
 # Optional neural imports - temporarily disabled for testing
 NEURAL_AVAILABLE = False

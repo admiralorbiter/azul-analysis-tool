@@ -15,11 +15,11 @@ import os
 # Add the core directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from core.azul_strategic_patterns import StrategicPatternDetector
-from core.azul_factory_control import FactoryControlDetector
-from core.azul_endgame_counting import EndgameCountingDetector
-from core.azul_risk_reward import RiskRewardAnalyzer
-from core.azul_strategic_utils import StrategicAnalysisValidator, StrategicAnalysisReporter
+from analysis_engine.strategic_analysis.azul_strategic_patterns import StrategicPatternDetector
+from analysis_engine.strategic_analysis.azul_factory_control import FactoryControlDetector
+from analysis_engine.strategic_analysis.azul_endgame_counting import EndgameCountingDetector
+from analysis_engine.strategic_analysis.azul_risk_reward import RiskRewardAnalyzer
+from analysis_engine.strategic_analysis.azul_strategic_utils import StrategicAnalysisValidator, StrategicAnalysisReporter
 from core.azul_model import AzulState
 
 

@@ -33,11 +33,19 @@ class PositionLoader:
         """Create fallback positions for basic functionality"""
         self.positions_cache = {
             "simple_blue_blocking": {
-                "description": "Simple blue blocking test position",
+                "description": "Simple blue blocking test position - Opponent has 1 blue tile in pattern line 0, needs 0 more. Blue tiles available in factory.",
                 "setup": {
-                    "player_1_lines": {"0": {"color": 0, "count": 1}},
-                    "factories": {"0": {"0": 2}, "1": {"0": 1}},
-                    "center_pool": {"0": 1}
+                    "player_1_lines": {"0": {"color": 0, "count": 1}},  # Player 1 has 1 blue tile in line 0
+                    "factories": {"0": {"0": 2, "1": 1, "2": 1}},  # Factory 0 has 2 blue tiles
+                    "center_pool": {"0": 1, "1": 1, "2": 1, "3": 1, "4": 1}
+                }
+            },
+            "high_urgency_red_blocking": {
+                "description": "High urgency red blocking test position - Opponent has 2 red tiles in pattern line 2, needs 1 more.",
+                "setup": {
+                    "player_1_lines": {"2": {"color": 2, "count": 2}},  # Player 1 has 2 red tiles in line 2
+                    "factories": {"0": {"2": 2, "3": 1, "4": 1}},  # Factory 0 has 2 red tiles
+                    "center_pool": {"2": 1, "3": 1, "4": 1}
                 }
             },
             "high_value_column_completion": {
@@ -67,19 +75,37 @@ class PositionLoader:
         setup = position_data.get('setup', {})
         
         # Set up player pattern lines
-        for player_key, lines in setup.get('player_lines', {}).items():
-            player_idx = int(player_key)
-            for line_idx, line_data in lines.items():
-                line_idx = int(line_idx)
-                state.agents[player_idx].lines_number[line_idx] = line_data['count']
-                state.agents[player_idx].lines_tile[line_idx] = line_data['color']
+        # Check for player_1_lines, player_0_lines, etc.
+        for key in setup.keys():
+            if key.startswith('player_') and key.endswith('_lines'):
+                # Extract player number from key (e.g., "player_1_lines" -> 1)
+                player_idx = int(key.split('_')[1])
+                lines_data = setup[key]
+                
+                # lines_data is a dictionary like {"0": {"color": 0, "count": 1}}
+                for line_idx, line_data in lines_data.items():
+                    line_idx = int(line_idx)
+                    if isinstance(line_data, dict):
+                        count = line_data['count']
+                        color = line_data['color']
+                    else:
+                        # Handle case where line_data is just the count
+                        count = line_data
+                        color = -1  # No specific color
+                    state.agents[player_idx].lines_number[line_idx] = count
+                    state.agents[player_idx].lines_tile[line_idx] = color
         
         # Set up wall tiles
-        for player_key, wall_tiles in setup.get('player_wall', {}).items():
-            player_idx = int(player_key)
-            for pos_str, color in wall_tiles.items():
-                row, col = map(int, pos_str.split(','))
-                state.agents[player_idx].grid_state[row][col] = 1
+        # Check for player_0_wall, player_1_wall, etc.
+        for key in setup.keys():
+            if key.startswith('player_') and key.endswith('_wall'):
+                # Extract player number from key (e.g., "player_0_wall" -> 0)
+                player_idx = int(key.split('_')[1])
+                wall_data = setup[key]
+                
+                for pos_str, color in wall_data.items():
+                    row, col = map(int, pos_str.split(','))
+                    state.agents[player_idx].grid_state[row][col] = 1
         
         # Set up factories
         for factory_idx, tiles in setup.get('factories', {}).items():

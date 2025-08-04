@@ -10,7 +10,7 @@ import traceback
 import time
 
 # Import core analysis engine
-from core.azul_move_analyzer import AzulMoveQualityAssessor
+from analysis_engine.comprehensive_patterns.azul_move_analyzer import AzulMoveQualityAssessor
 
 # Import existing utilities for FEN string parsing
 from api.routes.core import parse_fen_string

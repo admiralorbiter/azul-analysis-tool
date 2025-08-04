@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from .azul_model import AzulState
-from .azul_move_generator import FastMove
 
 
 @dataclass

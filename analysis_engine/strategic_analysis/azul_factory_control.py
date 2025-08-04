@@ -14,8 +14,8 @@ Integrates with existing pattern detection system for comprehensive analysis.
 import numpy as np
 from typing import Dict, List, Tuple, Optional, NamedTuple
 from dataclasses import dataclass
-from . import azul_utils as utils
-from .azul_model import AzulState
+from core import azul_utils as utils
+from core.azul_model import AzulState
 
 
 @dataclass

@@ -14,7 +14,7 @@ from neural.policy_mapping import (
     PolicyMapper, PolicyMappingConfig, create_policy_mapper,
     SelectionMethod
 )
-from core.azul_move_generator import FastMove
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMove
 from core.azul_utils import Action, Tile
 
 

@@ -507,7 +507,7 @@ def analyze_position():
         state = parse_fen_string(analysis_req.fen_string)
         
         # Import search components
-        from core.azul_search import AzulAlphaBetaSearch
+        from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
         
         # Create search engine
         search_engine = AzulAlphaBetaSearch(
@@ -599,7 +599,7 @@ def get_hint():
         state = parse_fen_string(hint_req.fen_string)
         
         # Import MCTS components
-        from core.azul_mcts import AzulMCTS
+        from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
         
         # Create MCTS engine
         mcts_engine = AzulMCTS(

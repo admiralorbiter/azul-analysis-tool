@@ -23,6 +23,8 @@ from neural.azul_net import (
     create_azul_net,
     count_parameters
 )
+from analysis_engine.mathematical_optimization.azul_mcts import RolloutPolicy
+from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
 
 
 class TestAzulNetConfig:
@@ -401,14 +403,14 @@ class TestNeuralMCTSIntegration:
     
     def test_neural_rollout_policy_available(self):
         """Test that neural rollout policy is available."""
-        from core.azul_mcts import RolloutPolicy
+        from analysis_engine.mathematical_optimization.azul_mcts import RolloutPolicy
         
         # Check that NEURAL policy is available
         assert RolloutPolicy.NEURAL in RolloutPolicy
     
     def test_neural_mcts_creation(self):
         """Test MCTS creation with neural policy."""
-        from core.azul_mcts import AzulMCTS, RolloutPolicy
+        from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
         
         # This should work if PyTorch is available
         try:
@@ -420,7 +422,7 @@ class TestNeuralMCTSIntegration:
     
     def test_neural_rollout_performance(self):
         """Test neural rollout performance."""
-        from core.azul_mcts import AzulMCTS, RolloutPolicy
+        from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
         
         try:
             mcts = AzulMCTS(rollout_policy=RolloutPolicy.NEURAL, max_rollouts=10)

@@ -11,7 +11,7 @@ import os
 # Add the project root to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from core.azul_patterns import AzulPatternDetector, BlockingOpportunity, PatternDetection
+from analysis_engine.comprehensive_patterns.azul_patterns import AzulPatternDetector, BlockingOpportunity, PatternDetection
 from core.azul_model import AzulState
 from core import azul_utils as utils
 

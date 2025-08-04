@@ -67,7 +67,7 @@ def analyze_neural():
         
         # Check if neural components are available
         try:
-            from core.azul_mcts import AzulMCTS, RolloutPolicy
+            from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
             from neural.azul_net import create_azul_net, AzulNeuralRolloutPolicy
             
             # Create neural MCTS

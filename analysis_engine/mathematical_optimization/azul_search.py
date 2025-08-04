@@ -13,11 +13,11 @@ import time
 import numpy as np
 from typing import List, Dict, Tuple, Optional, Any
 from dataclasses import dataclass
-from . import azul_utils as utils
-from .azul_model import AzulState, AzulGameRule
+from core import azul_utils as utils
+from core.azul_model import AzulState, AzulGameRule
 from .azul_evaluator import AzulEvaluator
 from .azul_move_generator import FastMoveGenerator, FastMove
-from .azul_endgame import EndgameDatabase
+from analysis_engine.strategic_analysis.azul_endgame import EndgameDatabase
 
 
 @dataclass

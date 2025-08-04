@@ -17,7 +17,7 @@ import threading
 from contextlib import contextmanager
 from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, asdict
-from .azul_model import AzulState
+from core.azul_model import AzulState
 
 
 @dataclass

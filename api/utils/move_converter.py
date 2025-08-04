@@ -94,7 +94,7 @@ def find_matching_move(engine_move: Dict[str, Any], legal_moves: List) -> Option
 def get_engine_response(state, agent_id: int) -> Optional[Dict[str, Any]]:
     """Get engine response move for the given state."""
     try:
-        from core.azul_mcts import AzulMCTS
+        from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
         from .formatters import format_move
         
         mcts = AzulMCTS()

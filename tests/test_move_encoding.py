@@ -11,7 +11,7 @@ import numpy as np
 from typing import List
 
 from neural.move_encoding import MoveEncoder, MoveEncodingConfig, create_move_encoder
-from core.azul_move_generator import FastMove
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMove
 from core.azul_utils import Action, Tile
 from core.azul_model import AzulState
 

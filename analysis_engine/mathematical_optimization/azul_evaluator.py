@@ -10,8 +10,8 @@ This module provides fast heuristic evaluation for Azul positions with:
 
 import numpy as np
 from typing import Dict, List, Tuple, Optional
-from . import azul_utils as utils
-from .azul_model import AzulState
+from core import azul_utils as utils
+from core.azul_model import AzulState
 
 
 class AzulEvaluator:

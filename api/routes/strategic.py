@@ -12,8 +12,8 @@ from pydantic import ValidationError
 
 from ..auth import require_session
 from ..utils import parse_fen_string, format_move
-from core.azul_strategic_patterns import StrategicPatternDetector
-from core.azul_strategic_utils import StrategicAnalysisCache, timeout, StrategicAnalysisReporter
+from analysis_engine.strategic_analysis.azul_strategic_patterns import StrategicPatternDetector
+from analysis_engine.strategic_analysis.azul_strategic_utils import StrategicAnalysisCache, timeout, StrategicAnalysisReporter
 
 # Create Flask blueprint for strategic analysis endpoints
 strategic_bp = Blueprint('strategic', __name__)

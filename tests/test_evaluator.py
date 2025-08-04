@@ -12,9 +12,9 @@ This module tests the heuristic evaluation functionality including:
 import pytest
 import time
 import numpy as np
-from core.azul_evaluator import AzulEvaluator
+from analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
 from core.azul_model import AzulState
-from core.azul_move_generator import AzulMoveGenerator, Move
+from analysis_engine.mathematical_optimization.azul_move_generator import AzulMoveGenerator, Move
 from core import azul_utils as utils
 
 
@@ -306,7 +306,7 @@ class TestEvaluatorPerformance:
     
     def test_move_evaluation_performance(self, evaluator, test_states):
         """Test move evaluation performance."""
-        from core.azul_move_generator import AzulMoveGenerator
+        from analysis_engine.mathematical_optimization.azul_move_generator import AzulMoveGenerator
         
         move_generator = AzulMoveGenerator()
         

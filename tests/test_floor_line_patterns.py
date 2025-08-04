@@ -13,7 +13,7 @@ Tests floor line management pattern recognition including:
 import unittest
 import numpy as np
 from unittest.mock import Mock, patch
-from core.azul_floor_line_patterns import (
+from analysis_engine.comprehensive_patterns.azul_floor_line_patterns import (
     AzulFloorLinePatternDetector, 
     FloorLineOpportunity, 
     FloorLinePatternDetection

@@ -11,9 +11,9 @@ This module provides efficient move generation for Azul with:
 import numpy as np
 from typing import List, Dict, Tuple, Optional, Set
 from dataclasses import dataclass
-from . import azul_utils as utils
-from .azul_model import AzulState, AzulGameRule
-from .azul_validator import AzulRuleValidator
+from core import azul_utils as utils
+from core.azul_model import AzulState, AzulGameRule
+from core.azul_rule_validator import AzulRuleValidator
 
 
 class FastMove:

@@ -12,9 +12,9 @@ import numpy as np
 import time
 from typing import Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass
-from . import azul_utils as utils
-from .azul_model import AzulState, AzulGameRule
-from .azul_move_generator import FastMoveGenerator, FastMove
+from core import azul_utils as utils
+from core.azul_model import AzulState, AzulGameRule
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator, FastMove
 
 
 @dataclass

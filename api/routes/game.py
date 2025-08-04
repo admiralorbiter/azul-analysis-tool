@@ -110,7 +110,7 @@ def execute_move():
                 print(f"  Factory {i}: {dict(factory.tiles)}")
             print(f"DEBUG: State center pool before move generation: {dict(state.centre_pool.tiles)}")
             
-            from core.azul_move_generator import FastMoveGenerator
+            from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
             generator = FastMoveGenerator()
             legal_moves = generator.generate_moves_fast(state, request_model.agent_id)
             print(f"DEBUG: Generated {len(legal_moves)} legal moves")
@@ -822,12 +822,12 @@ def analyze_position_internal(fen_string: str, agent_id: int, depth: int = 3) ->
         state = parse_fen_string(fen_string)
         
         # Get legal moves
-        from core.azul_move_generator import FastMoveGenerator
+        from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
         generator = FastMoveGenerator()
         legal_moves = generator.generate_moves_fast(state, agent_id)
         
         # Analyze with alpha-beta search
-        from core.azul_search import AzulAlphaBetaSearch
+        from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
         searcher = AzulAlphaBetaSearch()
         
         start_time = time.time()

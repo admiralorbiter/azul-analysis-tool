@@ -206,7 +206,7 @@ def detect_patterns():
             return jsonify({'error': 'FEN parsing error', 'message': str(e)}), 400
         
         # Import and use the pattern detector
-        from core.azul_patterns import AzulPatternDetector
+        from analysis_engine.comprehensive_patterns.azul_patterns import AzulPatternDetector
         detector = AzulPatternDetector()
         
         # Update urgency threshold if provided
@@ -283,7 +283,7 @@ def detect_scoring_optimization():
             return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
         
         # Import and use the scoring optimization detector
-        from core.azul_scoring_optimization import AzulScoringOptimizationDetector
+        from analysis_engine.comprehensive_patterns.azul_scoring_optimization import AzulScoringOptimizationDetector
         detector = AzulScoringOptimizationDetector()
         
         # Detect scoring optimization opportunities
@@ -381,7 +381,7 @@ def detect_floor_line_patterns():
             return jsonify({'error': f'Invalid FEN string: {str(e)}'}), 400
         
         # Import and use the floor line pattern detector
-        from core.azul_floor_line_patterns import AzulFloorLinePatternDetector
+        from analysis_engine.comprehensive_patterns.azul_floor_line_patterns import AzulFloorLinePatternDetector
         detector = AzulFloorLinePatternDetector()
         
         # Detect floor line patterns

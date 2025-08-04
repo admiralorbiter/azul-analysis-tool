@@ -23,11 +23,11 @@ from core.azul_profiler import (
     create_test_states
 )
 from core.azul_model import AzulState
-from core.azul_search import AzulAlphaBetaSearch
-from core.azul_mcts import AzulMCTS
-from core.azul_move_generator import FastMoveGenerator
-from core.azul_evaluator import AzulEvaluator
-from core.azul_endgame import EndgameDatabase
+from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
+from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
+from analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
+from analysis_engine.strategic_analysis.azul_endgame import EndgameDatabase
 from core import azul_utils as utils
 
 

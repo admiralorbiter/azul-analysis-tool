@@ -14,9 +14,9 @@ Builds on existing systems:
 import random
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
-from . import azul_utils as utils
-from .azul_model import AzulState
-from .azul_move_generator import AzulMoveGenerator
+from core import azul_utils as utils
+from core.azul_model import AzulState
+from analysis_engine.mathematical_optimization.azul_move_generator import AzulMoveGenerator
 
 # Import existing pattern detection systems
 from .azul_patterns import AzulPatternDetector
@@ -25,7 +25,7 @@ from .azul_floor_line_patterns import AzulFloorLinePatternDetector
 
 # Try to import strategic systems (they may not be available in all setups)
 try:
-    from .azul_strategic_patterns import StrategicPatternDetector
+    from analysis_engine.strategic_analysis.azul_strategic_patterns import StrategicPatternDetector
     STRATEGIC_AVAILABLE = True
 except ImportError:
     STRATEGIC_AVAILABLE = False

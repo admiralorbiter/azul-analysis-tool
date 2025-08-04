@@ -20,8 +20,8 @@ from datetime import datetime
 
 from core.azul_database import AzulDatabase, CachedAnalysis
 from core.azul_model import AzulState
-from core.azul_move_generator import FastMove
-from core.azul_mcts import AzulMCTS, RolloutPolicy
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMove
+from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
 
 
 class TestDatabaseInitialization:
