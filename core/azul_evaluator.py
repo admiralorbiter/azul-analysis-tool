@@ -144,7 +144,8 @@ class AzulEvaluator:
         completed = 0
         
         for row in range(agent_state.GRID_SIZE):
-            if np.sum(agent_state.grid_state[row]) == agent_state.GRID_SIZE:
+            # Use faster method: check if all elements are 1
+            if np.all(agent_state.grid_state[row]):
                 completed += 1
         
         return completed
@@ -154,7 +155,8 @@ class AzulEvaluator:
         completed = 0
         
         for col in range(agent_state.GRID_SIZE):
-            if np.sum(agent_state.grid_state[:, col]) == agent_state.GRID_SIZE:
+            # Use faster method: check if all elements are 1
+            if np.all(agent_state.grid_state[:, col]):
                 completed += 1
         
         return completed
@@ -181,26 +183,28 @@ class AzulEvaluator:
         Returns:
             Score after executing the move
         """
-        # Create a copy of the state to simulate the move
-        state_copy = state.clone()
+        # Get current score
+        current_score = self.evaluate_position(state, agent_id)
         
-        # Execute the move (simplified simulation)
-        # This is a basic implementation - in practice, you'd use the game rule
-        agent_state = state_copy.agents[agent_id]
+        # Calculate move impact (simplified - just add pattern line potential)
+        move_bonus = 0.0
         
-        # Simulate tile placement
         if move.pattern_line_dest >= 0:
-            # Place tiles in pattern line
-            agent_state.lines_number[move.pattern_line_dest] += move.num_to_pattern_line
-            agent_state.lines_tile[move.pattern_line_dest] = move.tile_type
+            # Add potential score for pattern line placement
+            pattern_line = move.pattern_line_dest
+            tiles_in_line = state.agents[agent_id].lines_number[pattern_line]
+            new_tiles = tiles_in_line + move.num_to_pattern_line
+            
+            if new_tiles <= pattern_line + 1:  # Valid placement
+                # Estimate potential score
+                completion_ratio = new_tiles / (pattern_line + 1)
+                move_bonus += completion_ratio * self._pattern_completion_bonuses[pattern_line + 1] * 0.3
         
-        # Simulate floor placement
         if move.num_to_floor_line > 0:
-            for _ in range(move.num_to_floor_line):
-                agent_state.floor_tiles.append(move.tile_type)
+            # Penalty for floor tiles
+            move_bonus -= move.num_to_floor_line * 1.0
         
-        # Evaluate the resulting position
-        return self.evaluate_position(state_copy, agent_id)
+        return current_score + move_bonus
     
     def get_move_scores(self, state: AzulState, agent_id: int, moves: List) -> List[float]:
         """

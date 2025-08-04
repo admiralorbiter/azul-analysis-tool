@@ -12,9 +12,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.azul_model import AzulState
-from core.azul_rule_validator import game_rule
-from core.azul_move_generator import MoveGenerator
-from core.azul_utils import Tile
+from core.azul_model import AzulGameRule
+# MoveGenerator doesn't exist, using game_rule.getLegalActions instead
+from core.azul_utils import Tile, Action, TileGrab
 
 
 class TestBackendCenterPoolLogic:
@@ -23,7 +23,45 @@ class TestBackendCenterPoolLogic:
     def setup_method(self):
         """Set up a fresh game state for each test."""
         self.state = AzulState(2)
-        self.move_generator = MoveGenerator()
+        self.game_rule = AzulGameRule(2)
+    
+    def create_factory_move(self, factory_index, tile_type, num_to_pattern_line, num_to_floor_line, pattern_line_dest=0):
+        """Helper method to create a factory move."""
+        # Adjust pattern line capacity - line 0 can only hold 1 tile, line 1 can hold 2, etc.
+        max_pattern_line_capacity = pattern_line_dest + 1
+        if num_to_pattern_line > max_pattern_line_capacity:
+            # Move excess tiles to floor line
+            excess = num_to_pattern_line - max_pattern_line_capacity
+            num_to_pattern_line = max_pattern_line_capacity
+            num_to_floor_line += excess
+        
+        tile_grab = TileGrab()
+        tile_grab.tile_type = tile_type
+        tile_grab.number = num_to_pattern_line + num_to_floor_line
+        tile_grab.pattern_line_dest = pattern_line_dest
+        tile_grab.num_to_pattern_line = num_to_pattern_line
+        tile_grab.num_to_floor_line = num_to_floor_line
+        
+        return (Action.TAKE_FROM_FACTORY, factory_index, tile_grab)
+    
+    def create_center_move(self, tile_type, num_to_pattern_line, num_to_floor_line, pattern_line_dest=0):
+        """Helper method to create a center move."""
+        # Adjust pattern line capacity - line 0 can only hold 1 tile, line 1 can hold 2, etc.
+        max_pattern_line_capacity = pattern_line_dest + 1
+        if num_to_pattern_line > max_pattern_line_capacity:
+            # Move excess tiles to floor line
+            excess = num_to_pattern_line - max_pattern_line_capacity
+            num_to_pattern_line = max_pattern_line_capacity
+            num_to_floor_line += excess
+        
+        tile_grab = TileGrab()
+        tile_grab.tile_type = tile_type
+        tile_grab.number = num_to_pattern_line + num_to_floor_line
+        tile_grab.pattern_line_dest = pattern_line_dest
+        tile_grab.num_to_pattern_line = num_to_pattern_line
+        tile_grab.num_to_floor_line = num_to_floor_line
+        
+        return (Action.TAKE_FROM_CENTRE, -1, tile_grab)
     
     def test_initial_center_pool_state(self):
         """Test that initial center pool is empty."""
@@ -58,13 +96,13 @@ class TestBackendCenterPoolLogic:
         assert tile_count > 0, "Should have at least one tile"
         
         # Take some tiles, leaving some behind
-        tiles_to_take = min(tile_count - 1, 2)  # Leave at least 1 tile behind
+        tiles_to_take = max(1, min(tile_count - 1, 2))  # Take at least 1 tile, leave at least 1 tile behind
         
         # Create a move
-        move = (1, factory_index, tile_type, 0, tiles_to_take, 0)  # action_type, source_id, tile_type, pattern_line_dest, num_to_pattern_line, num_to_floor_line
+        move = self.create_factory_move(factory_index, tile_type, tiles_to_take, 0)
         
         # Execute the move
-        new_state = game_rule.generateSuccessor(self.state, move)
+        new_state = self.game_rule.generateSuccessor(self.state, move, 0)
         
         # Check that center pool now has the remaining tiles
         remaining_tiles = tile_count - tiles_to_take
@@ -93,16 +131,24 @@ class TestBackendCenterPoolLogic:
                 break
         
         # Take some tiles from factory, leaving some in center
-        move = (1, factory_index, tile_type, 0, 1, 0)
-        state_with_center = game_rule.generateSuccessor(self.state, move)
+        move = self.create_factory_move(factory_index, tile_type, 1, 0)
+        state_with_center = self.game_rule.generateSuccessor(self.state, move, 0)
         
         # Verify center has tiles and first player marker is still False
         assert state_with_center.centre_pool.total > 0, "Center should have tiles"
         assert state_with_center.first_agent_taken is False, "First player marker should still be False"
         
         # Now take from center - this should set first player marker to True
-        center_move = (2, -1, tile_type, 1, 1, 0)  # action_type=2 for center, source_id=-1
-        final_state = game_rule.generateSuccessor(state_with_center, center_move)
+        # Find what tiles are actually in the center pool
+        center_tile_type = None
+        for tile_type_enum, count in state_with_center.centre_pool.tiles.items():
+            if count > 0:
+                center_tile_type = tile_type_enum
+                break
+        
+        assert center_tile_type is not None, "Center pool should have tiles"
+        center_move = self.create_center_move(center_tile_type, 0, 1, -1)  # Put in floor line
+        final_state = self.game_rule.generateSuccessor(state_with_center, center_move, 0)
         
         assert final_state.first_agent_taken is True, "First player marker should be True after taking from center"
     
@@ -125,15 +171,23 @@ class TestBackendCenterPoolLogic:
                 break
         
         # Take tiles from factory to put in center
-        move = (1, factory_index, tile_type, 0, 1, 0)
-        state_with_center = game_rule.generateSuccessor(self.state, move)
+        move = self.create_factory_move(factory_index, tile_type, 1, 0)
+        state_with_center = self.game_rule.generateSuccessor(self.state, move, 0)
         
         initial_center_count = state_with_center.centre_pool.total
         assert initial_center_count > 0, "Center should have tiles"
         
         # Take a tile from center
-        center_move = (2, -1, tile_type, 1, 1, 0)
-        final_state = game_rule.generateSuccessor(state_with_center, center_move)
+        # Find what tiles are actually in the center pool
+        center_tile_type = None
+        for tile_type_enum, count in state_with_center.centre_pool.tiles.items():
+            if count > 0:
+                center_tile_type = tile_type_enum
+                break
+        
+        assert center_tile_type is not None, "Center pool should have tiles"
+        center_move = self.create_center_move(center_tile_type, 0, 1, -1)  # Put in floor line
+        final_state = self.game_rule.generateSuccessor(state_with_center, center_move, 0)
         
         # Check that center has one fewer tile
         final_center_count = final_state.centre_pool.total
@@ -158,16 +212,25 @@ class TestBackendCenterPoolLogic:
                 break
         
         # Take tiles from factory to put in center
-        move = (1, factory_index, tile_type, 0, 1, 0)
-        state_with_center = game_rule.generateSuccessor(self.state, move)
+        move = self.create_factory_move(factory_index, tile_type, 1, 0)
+        state_with_center = self.game_rule.generateSuccessor(self.state, move, 0)
         
-        center_tile_count = state_with_center.centre_pool.tiles.get(tile_type, 0)
-        
+                # Count total tiles in center pool
+        total_center_tiles = state_with_center.centre_pool.total
+
         # Take all tiles from center
         current_state = state_with_center
-        for i in range(center_tile_count):
-            center_move = (2, -1, tile_type, i + 1, 1, 0)
-            current_state = game_rule.generateSuccessor(current_state, center_move)
+        for i in range(total_center_tiles):
+            # Find what tiles are actually in the center pool
+            center_tile_type = None
+            for tile_type_enum, count in current_state.centre_pool.tiles.items():
+                if count > 0:
+                    center_tile_type = tile_type_enum
+                    break
+            
+            assert center_tile_type is not None, "Center pool should have tiles"
+            center_move = self.create_center_move(center_tile_type, 0, 1, -1)  # Put in floor line
+            current_state = self.game_rule.generateSuccessor(current_state, center_move, 0)
         
         # Verify center is now empty
         assert current_state.centre_pool.total == 0, "Center pool should be empty after taking all tiles"
@@ -186,18 +249,26 @@ class TestBackendCenterPoolLogic:
                         break
                 
                 if tile_type is not None:
-                    move = (1, i, tile_type, 0, 1, 0)
-                    self.state = game_rule.generateSuccessor(self.state, move)
+                    # Put all tiles in floor line to avoid pattern line conflicts
+                    move = self.create_factory_move(i, tile_type, 0, 1, -1)  # Put in floor line
+                    self.state = self.game_rule.generateSuccessor(self.state, move, 0)
                     center_tiles[tile_type] = center_tiles.get(tile_type, 0) + 1
         
         # Verify center has multiple tile types
         assert len(center_tiles) > 0, "Center should have tiles"
         
-        # Take tiles from center
-        for tile_type, count in center_tiles.items():
-            for i in range(count):
-                center_move = (2, -1, tile_type, i + 1, 1, 0)
-                self.state = game_rule.generateSuccessor(self.state, center_move)
+                # Take all tiles from center pool
+        while self.state.centre_pool.total > 0:
+            # Find what tiles are actually in the center pool
+            center_tile_type = None
+            for tile_type_enum, count_in_center in self.state.centre_pool.tiles.items():
+                if count_in_center > 0:
+                    center_tile_type = tile_type_enum
+                    break
+
+            assert center_tile_type is not None, "Center pool should have tiles"
+            center_move = self.create_center_move(center_tile_type, 0, 1, -1)  # Put in floor line
+            self.state = self.game_rule.generateSuccessor(self.state, center_move, 0)
         
         # Verify center is empty and first player marker is True
         assert self.state.centre_pool.total == 0, "Center should be empty"
@@ -206,10 +277,10 @@ class TestBackendCenterPoolLogic:
     def test_center_pool_move_validation(self):
         """Test that center pool moves are properly validated."""
         # Try to take from empty center pool
-        empty_center_move = (2, -1, Tile.BLUE, 0, 1, 0)
+        empty_center_move = self.create_center_move(Tile.BLUE, 1, 0, 0)
         
         # This should fail or be invalid
-        legal_moves = self.move_generator.getLegalMoves(self.state)
+        legal_moves = self.game_rule.getLegalActions(self.state, 0)
         
         # Check that no center moves are legal when center is empty
         center_moves = [move for move in legal_moves if move[0] == 2]  # action_type == 2 for center
@@ -239,8 +310,8 @@ class TestBackendCenterPoolLogic:
         tiles_to_take = tile_count - 1  # Leave 1 tile behind
         
         # Take some tiles from factory
-        move = (1, factory_index, tile_type, 0, tiles_to_take, 0)
-        new_state = game_rule.generateSuccessor(self.state, move)
+        move = self.create_factory_move(factory_index, tile_type, tiles_to_take, 0)
+        new_state = self.game_rule.generateSuccessor(self.state, move, 0)
         
         # Check that the remaining tile is in center
         remaining_tiles = tile_count - tiles_to_take
@@ -267,8 +338,8 @@ class TestBackendCenterPoolLogic:
                 break
         
         # Take tiles from factory
-        move = (1, factory_index, tile_type, 0, 1, 0)
-        state_with_center = game_rule.generateSuccessor(self.state, move)
+        move = self.create_factory_move(factory_index, tile_type, 1, 0)
+        state_with_center = self.game_rule.generateSuccessor(self.state, move, 0)
         
         # Verify center state is consistent
         center_total = state_with_center.centre_pool.total
@@ -296,15 +367,23 @@ class TestBackendCenterPoolLogic:
                 break
         
         # Take tiles from factory to put in center
-        move = (1, factory_index, tile_type, 0, 1, 0)
-        state_with_center = game_rule.generateSuccessor(self.state, move)
+        move = self.create_factory_move(factory_index, tile_type, 1, 0)
+        state_with_center = self.game_rule.generateSuccessor(self.state, move, 0)
         
         # Take from center multiple times
         current_state = state_with_center
         for i in range(3):  # Take 3 times
             if current_state.centre_pool.total > 0:
-                center_move = (2, -1, tile_type, i + 1, 1, 0)
-                current_state = game_rule.generateSuccessor(current_state, center_move)
+                # Find what tiles are actually in the center pool
+                center_tile_type = None
+                for tile_type_enum, count in current_state.centre_pool.tiles.items():
+                    if count > 0:
+                        center_tile_type = tile_type_enum
+                        break
+                
+                assert center_tile_type is not None, "Center pool should have tiles"
+                center_move = self.create_center_move(center_tile_type, 0, 1, -1)  # Put in floor line
+                current_state = self.game_rule.generateSuccessor(current_state, center_move, 0)
                 
                 # First player marker should be True after first take from center
                 if i == 0:

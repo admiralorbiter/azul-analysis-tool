@@ -121,8 +121,15 @@ class PolicyMapper:
         if temperature > 0:
             # Apply temperature scaling
             scaled_policy = masked_policy / temperature
-            # Convert to probabilities
-            probs = torch.softmax(scaled_policy, dim=-1)
+            
+            # Handle invalid values (inf, nan, negative)
+            if torch.isnan(scaled_policy).any() or torch.isinf(scaled_policy).any() or (scaled_policy < 0).any():
+                # Fallback to uniform distribution
+                probs = torch.ones_like(scaled_policy) / len(legal_moves)
+            else:
+                # Convert to probabilities
+                probs = torch.softmax(scaled_policy, dim=-1)
+            
             # Sample from distribution
             move_index = torch.multinomial(probs, 1).item()
             return self.move_encoder.decode_move(move_index, legal_moves)
@@ -147,7 +154,13 @@ class PolicyMapper:
         """Select move using softmax sampling."""
         # Apply softmax with temperature
         scaled_policy = masked_policy / temperature
-        probs = torch.softmax(scaled_policy, dim=-1)
+        
+        # Handle invalid values (inf, nan, negative)
+        if torch.isnan(scaled_policy).any() or torch.isinf(scaled_policy).any() or (scaled_policy < 0).any():
+            # Fallback to uniform distribution
+            probs = torch.ones_like(scaled_policy) / len(legal_moves)
+        else:
+            probs = torch.softmax(scaled_policy, dim=-1)
         
         # Sample from distribution
         move_index = torch.multinomial(probs, 1).item()
