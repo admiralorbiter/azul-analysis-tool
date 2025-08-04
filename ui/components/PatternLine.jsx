@@ -112,9 +112,13 @@ function PatternLine({
                     <Tile 
                         key={index}
                         color={tile}
-                        onClick={() => {
+                        onClick={(e) => {
                             if (editMode && onElementSelect) {
-                                onElementSelect('pattern-line-tile', { playerIndex, rowIndex, tileIndex: index, tile });
+                                const isCtrlClick = e.ctrlKey || e.metaKey;
+                                onElementSelect({
+                                    type: 'pattern-line-tile',
+                                    data: { playerIndex, rowIndex, tileIndex: index, tile }
+                                }, isCtrlClick);
                             } else if (isValidDestination) {
                                 onDestinationClick('pattern', { rowIndex, tileIndex: index });
                             } else {
@@ -146,9 +150,13 @@ function PatternLine({
                         key={`empty-${index}`}
                         className={`tile ${isEditSelected ? 'selected' : ''}`}
                         style={{ backgroundColor: 'transparent', border: '2px dashed #d1d5db' }}
-                        onClick={() => {
+                        onClick={(e) => {
                             if (editMode && onElementSelect) {
-                                onElementSelect('pattern-line-empty', { playerIndex, rowIndex, emptyIndex: index });
+                                const isCtrlClick = e.ctrlKey || e.metaKey;
+                                onElementSelect({
+                                    type: 'pattern-line-empty',
+                                    data: { playerIndex, rowIndex, emptyIndex: index }
+                                }, isCtrlClick);
                             } else if (isValidDestination) {
                                 onDestinationClick('pattern', { rowIndex, tileIndex: tiles.length + index });
                             }
@@ -177,9 +185,13 @@ function PatternLine({
                         key={`empty-${index}`}
                         className={`tile ${isEditSelected ? 'selected' : ''}`}
                         style={{ backgroundColor: 'transparent', border: '2px dashed #d1d5db' }}
-                        onClick={() => {
+                        onClick={(e) => {
                             if (editMode && onElementSelect) {
-                                onElementSelect('pattern-line-empty', { playerIndex, rowIndex, emptyIndex: index });
+                                const isCtrlClick = e.ctrlKey || e.metaKey;
+                                onElementSelect({
+                                    type: 'pattern-line-empty',
+                                    data: { playerIndex, rowIndex, emptyIndex: index }
+                                }, isCtrlClick);
                             } else if (isValidDestination) {
                                 onDestinationClick('pattern', { rowIndex, tileIndex: tiles.length + index });
                             }
@@ -190,6 +202,7 @@ function PatternLine({
                                 if (window.showContextMenu) {
                                     window.showContextMenu(event, 'pattern-line-empty', { playerIndex, rowIndex, emptyIndex: index });
                                 }
+                            }
                             }
                         }}
                     />

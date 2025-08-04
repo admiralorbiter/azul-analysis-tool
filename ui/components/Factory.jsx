@@ -105,9 +105,13 @@ function Factory({
                         <Tile 
                             key={index}
                             color={tile}
-                            onClick={() => {
+                            onClick={(e) => {
                                 if (editMode && onElementSelect) {
-                                    onElementSelect('factory-tile', { factoryIndex, tileIndex: index, tile });
+                                    const isCtrlClick = e.ctrlKey || e.metaKey;
+                                    onElementSelect({
+                                        type: 'factory-tile',
+                                        data: { factoryIndex, tileIndex: index, tile }
+                                    }, isCtrlClick);
                                 } else if (onTileSelection) {
                                     onTileSelection(tileData);
                                 } else {

@@ -87,8 +87,14 @@ window.CenterPool = function CenterPool({
                                 e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                                 e.dataTransfer.effectAllowed = 'move';
                             },
-                            onClick: () => {
-                                if (editMode) {
+                            onClick: (e) => {
+                                if (editMode && handleElementSelect) {
+                                    const isCtrlClick = e.ctrlKey || e.metaKey;
+                                    handleElementSelect({
+                                        type: 'center-tile',
+                                        data: { sourceId: 'center', tileIndex: index, tile }
+                                    }, isCtrlClick);
+                                } else if (editMode) {
                                     setSelectedTile({ 
                                         sourceId: 'center', 
                                         tileIndex: index, 

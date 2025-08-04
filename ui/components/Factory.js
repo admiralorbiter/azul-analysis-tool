@@ -104,7 +104,17 @@ function Factory({ tiles, onTileClick, heatmap = null, factoryIndex, selectedTil
                 },
                     React.createElement(Tile, {
                         color: tile,
-                        onClick: () => onTileClick ? onTileClick(factoryIndex, index, tile) : null,
+                        onClick: (e) => {
+                            if (editMode && onElementSelect) {
+                                const isCtrlClick = e.ctrlKey || e.metaKey;
+                                onElementSelect({
+                                    type: 'factory-tile',
+                                    data: { factoryIndex, tileIndex: index, tile }
+                                }, isCtrlClick);
+                            } else if (onTileClick) {
+                                onTileClick(factoryIndex, index, tile);
+                            }
+                        },
                         draggable: true,
                         onDragStart: (e) => {
                             e.dataTransfer.setData('application/json', JSON.stringify({
