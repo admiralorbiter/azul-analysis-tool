@@ -139,7 +139,8 @@ def convert_azul_state_to_frontend(azul_state):
             'factories': [],
             'center': [],
             'players': [],
-            'first_player_taken': azul_state.first_agent_taken
+            'first_player_taken': azul_state.first_agent_taken,
+            'next_first_agent': azul_state.next_first_agent
         }
         
         # Convert factories
@@ -192,9 +193,26 @@ def convert_azul_state_to_frontend(azul_state):
             
             # Convert floor
             floor_tiles = []
-            for tile_type in agent.floor_tiles:
-                tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
-                floor_tiles.append(tile_colors.get(tile_type, 'W'))
+            
+            # Process floor occupancy and tiles together
+            floor_index = 0
+            tiles_index = 0
+            
+            for i, floor_occupied in enumerate(agent.floor):
+                if floor_occupied == 1:  # Position is occupied
+                    if i == 0 and agent.floor[0] == 1 and len(agent.floor_tiles) == 0:
+                        # This is likely the first player marker (first position, no tiles yet)
+                        floor_tiles.append('FP')
+                    elif tiles_index < len(agent.floor_tiles):
+                        # Regular tile
+                        tile_type = agent.floor_tiles[tiles_index]
+                        tile_colors = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+                        floor_tiles.append(tile_colors.get(tile_type, 'W'))
+                        tiles_index += 1
+                    else:
+                        # This is the first player marker (occupied but no tile in floor_tiles)
+                        floor_tiles.append('FP')
+            
             player['floor'] = floor_tiles
             
             frontend_state['players'].append(player)

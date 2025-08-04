@@ -81,11 +81,23 @@ function PlayerBoard({ player, playerIndex, onPatternLineClick, onWallClick, onP
                 className: 'flex flex-wrap gap-1'
             },
                 (player.floor || []).map((tile, index) => 
-                    React.createElement(window.Tile, {
-                        key: index,
-                        color: tile,
-                        className: 'w-5 h-5'
-                    })
+                    tile === 'FP' ? 
+                        // First player marker
+                        React.createElement('div', {
+                            key: index,
+                            className: 'w-5 h-5 bg-yellow-100 border-2 border-yellow-400 rounded flex items-center justify-center',
+                            title: 'First Player Marker (-1 penalty)'
+                        },
+                            React.createElement('span', {
+                                className: 'text-xs text-yellow-600 font-bold'
+                            }, '⭐')
+                        ) :
+                        // Regular tile
+                        React.createElement(window.Tile, {
+                            key: index,
+                            color: tile,
+                            className: 'w-5 h-5'
+                        })
                 ),
                 Array.from({ length: 7 - (player.floor || []).length }, (_, index) => 
                     React.createElement('div', {

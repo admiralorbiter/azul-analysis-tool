@@ -26,6 +26,9 @@ window.CenterPool = function CenterPool({
 
     const tiles = getTilesArray();
     const totalTiles = tiles.length;
+    
+    // Check if first player marker is available (not taken yet)
+    const firstPlayerMarkerAvailable = !gameState.first_player_taken;
 
     return React.createElement('div', {
         className: 'bg-white rounded p-3 shadow-sm'
@@ -44,6 +47,27 @@ window.CenterPool = function CenterPool({
         React.createElement('div', {
             className: 'min-h-[60px] bg-gray-50 rounded p-2 border-2 border-dashed border-gray-200'
         },
+            // First player marker display
+            firstPlayerMarkerAvailable && 
+            React.createElement('div', {
+                className: 'mb-2 p-2 bg-yellow-100 border-2 border-yellow-300 rounded flex items-center justify-center'
+            },
+                React.createElement('div', {
+                    className: 'flex items-center space-x-2'
+                },
+                    React.createElement('span', {
+                        className: 'text-2xl'
+                    }, '⭐'),
+                    React.createElement('span', {
+                        className: 'text-sm font-medium text-yellow-800'
+                    }, 'First Player Marker'),
+                    React.createElement('span', {
+                        className: 'text-xs text-yellow-600 bg-yellow-200 px-2 py-1 rounded'
+                    }, '-1 penalty')
+                )
+            ),
+            
+            // Regular tiles display
             totalTiles > 0 ? 
                 React.createElement('div', {
                     className: 'flex flex-wrap gap-1'
@@ -88,10 +112,21 @@ window.CenterPool = function CenterPool({
                 }, 'No tiles in center pool')
         ),
         
-        // First player marker indicator
+        // First player marker status
         gameState.first_player_taken && 
         React.createElement('div', {
-            className: 'mt-2 text-xs text-blue-600 font-medium'
-        }, '⭐ First player marker taken')
+            className: 'mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700'
+        }, 
+            React.createElement('div', {
+                className: 'flex items-center space-x-1'
+            },
+                React.createElement('span', {
+                    className: 'text-blue-600'
+                }, '✅'),
+                React.createElement('span', {
+                    className: 'font-medium'
+                }, 'First player marker taken')
+            )
+        )
     );
 }; 

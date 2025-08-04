@@ -33,7 +33,12 @@ This checklist helps systematically test all implemented features to identify co
 
 - [x] **Center Pool**
   - [x] Center tiles display correctly
-  - [ ] First player marker visible
+  - [x] First player marker visible ✅ **IMPLEMENTED**
+    - [x] Shows in center pool when available (⭐ First Player Marker)
+    - [x] Shows "-1 penalty" indicator
+    - [x] Displays "First player marker taken" when taken
+    - [x] Shows which player has the marker in status bar
+    - [x] Backend logic properly tracks first_agent_taken and next_first_agent
   - [x] Tile arrangement is clear
   - [x] Click/drag interactions work
 
@@ -230,7 +235,11 @@ This checklist helps systematically test all implemented features to identify co
 - [ ] **Analysis Performance**
   - [ ] Pattern detection < 200ms
   - [ ] Scoring optimization < 200ms
-  - [ ] Floor line patterns < 200ms
+  - [ ] Floor line patterns < 200ms ✅ **IMPLEMENTED**
+    - [x] First player marker displays in floor line
+    - [x] Regular tiles display correctly
+    - [x] Visual distinction between marker and tiles
+    - [x] Proper penalty calculation
   - [ ] Strategic analysis < 200ms
 
 - [ ] **UI Responsiveness**

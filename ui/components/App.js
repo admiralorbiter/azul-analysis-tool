@@ -263,7 +263,8 @@ function App() {
                     autoRefreshEnabled: autoRefreshEnabled,
                     moveHistory: moveHistory,
                     manualRefresh: manualRefresh,
-                    loading: loading
+                    loading: loading,
+                    gameState: gameState
                 }),
                 
                 // Enhanced Board Editor (R1.1) - appears when edit mode is enabled
