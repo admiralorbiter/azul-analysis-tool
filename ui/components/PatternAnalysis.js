@@ -9,13 +9,19 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
     
     // Pattern detection API call
     const detectPatterns = async () => {
+        console.log('PatternAnalysis: detectPatterns called');
+        console.log('PatternAnalysis: gameState:', gameState);
+        console.log('PatternAnalysis: fen_string:', gameState?.fen_string);
+        
         if (!gameState || !gameState.fen_string) {
+            console.log('PatternAnalysis: No game state or fen_string available');
             setError('No game state available');
             return;
         }
         
         // Skip API calls for local position library states
         if (gameState.fen_string.startsWith('local_')) {
+            console.log('PatternAnalysis: Skipping local position library state');
             setPatterns({
                 message: 'Pattern analysis not available for position library states',
                 patterns: [],
@@ -24,6 +30,7 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
             return;
         }
         
+        console.log('PatternAnalysis: Making API call with fen_string:', gameState.fen_string);
         setLoading(true);
         setError(null);
         
@@ -42,11 +49,14 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
                 })
             });
             
+            console.log('PatternAnalysis: API response status:', response.status);
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
+            console.log('PatternAnalysis: API response data:', data);
             setPatterns(data);
             
             // Notify parent component
@@ -64,15 +74,24 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
     
     // Auto-detect patterns when game state changes
     useEffect(() => {
+        console.log('PatternAnalysis: useEffect triggered');
+        console.log('PatternAnalysis: gameState changed:', gameState);
+        console.log('PatternAnalysis: fen_string:', gameState?.fen_string);
+        console.log('PatternAnalysis: factories:', gameState?.factories);
+        console.log('PatternAnalysis: players:', gameState?.players);
+        
         // Reset state when game state changes
         setPatterns(null);
         setError(null);
         setShowDetails(false);
         
         if (gameState && gameState.fen_string) {
+            console.log('PatternAnalysis: Calling detectPatterns');
             detectPatterns();
+        } else {
+            console.log('PatternAnalysis: No gameState or fen_string, skipping detectPatterns');
         }
-    }, [gameState?.fen_string, currentPlayer, gameState?.factories, gameState?.players]);
+    }, [gameState]); // Simplified dependency - just watch the entire gameState object
     
     // Color mapping for display
     const colorMap = {
@@ -122,6 +141,9 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
             <div className="pattern-analysis empty">
                 <div className="empty-icon">🎯</div>
                 <div>No patterns detected</div>
+                <button onClick={detectPatterns} className="retry-button">
+                    🔍 Manual Analysis
+                </button>
             </div>
         );
     }

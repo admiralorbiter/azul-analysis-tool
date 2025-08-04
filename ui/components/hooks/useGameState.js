@@ -42,7 +42,16 @@ window.useGameState = function useGameState() {
         // For position library data, handle it locally without backend processing
         if (newState && newState.factories && newState.center && newState.players) {
             console.log('App: Position library data detected, handling locally');
-            // Generate a local FEN string for position library data
+            
+            // If the position library data already has a proper fen_string (like 'simple_blue_blocking'),
+            // preserve it instead of converting to local_ prefix
+            if (newState.fen_string && !newState.fen_string.startsWith('local_') && !newState.fen_string.startsWith('state_')) {
+                console.log('App: Preserving original fen_string:', newState.fen_string);
+                setGameState(newState);
+                return;
+            }
+            
+            // Generate a local FEN string for position library data that doesn't have a proper fen_string
             const stateHash = btoa(JSON.stringify(newState)).slice(0, 8);
             const localFen = `local_${stateHash}`;
             

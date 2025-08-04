@@ -253,10 +253,12 @@ const PositionLibrary = React.memo(function PositionLibrary({
             console.log('DEBUG: Factories:', convertedState.factories);
             console.log('DEBUG: Center:', convertedState.center);
             console.log('DEBUG: Players:', convertedState.players);
+            console.log('DEBUG: FEN String:', convertedState.fen_string);
             
             // For local development, skip validation if no session token
             if (!sessionToken) {
                 // Set the state directly without backend processing
+                console.log('DEBUG: Setting game state directly:', convertedState);
                 setGameState(convertedState);
                 setStatusMessage(`✅ Loaded position: ${position.name} (local mode - auto-refresh disabled)`);
                 
@@ -329,13 +331,16 @@ const PositionLibrary = React.memo(function PositionLibrary({
                     const result = await response.json();
                     // Get the updated state with proper FEN string
                     const stateWithFen = await fetch('/api/v1/game_state?fen_string=initial').then(r => r.json());
+                    console.log('DEBUG: Setting game state with FEN from backend:', stateWithFen.game_state || stateWithFen);
                     setGameState(stateWithFen.game_state || stateWithFen);
                 } else {
                     // Fallback to direct state setting
+                    console.log('DEBUG: Fallback - setting game state directly:', newState);
                     setGameState(newState);
                 }
             } catch (fenError) {
                 console.warn('Failed to get FEN string, using direct state:', fenError);
+                console.log('DEBUG: Error fallback - setting game state directly:', newState);
                 setGameState(newState);
             }
             
