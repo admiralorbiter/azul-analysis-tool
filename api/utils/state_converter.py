@@ -138,7 +138,8 @@ def convert_azul_state_to_frontend(azul_state):
         frontend_state = {
             'factories': [],
             'center': [],
-            'players': []
+            'players': [],
+            'first_player_taken': azul_state.first_agent_taken
         }
         
         # Convert factories

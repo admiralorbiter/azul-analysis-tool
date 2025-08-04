@@ -49,7 +49,7 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
             
             if (result.success) {
                 // Use the game state returned directly from execute_move
-                const newGameState = result.game_state || await getGameState(result.new_fen);
+                const newGameState = result.new_game_state || result.game_state || await getGameState(result.new_fen);
                 await setGameState(newGameState);
                 
                 setMoveHistory(prev => [...prev, {
@@ -162,6 +162,70 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                 console.log('==================');
                 
                 setStatusMessage(`Taking ${tilesOfColor} ${dragData.tile} tiles: ${tilesToPattern} to pattern line, ${tilesToFloor} to floor`);
+                handleMoveExecution(move);
+            } else if (dragData.sourceType === 'center') {
+                const centerPool = gameState?.center || [];
+                if (!centerPool) {
+                    setStatusMessage('Center pool not found');
+                    return;
+                }
+                
+                const tileExists = centerPool.includes(dragData.tile);
+                if (!tileExists) {
+                    setStatusMessage(`Tile ${dragData.tile} not found in center pool`);
+                    console.log('Available tiles in center pool:', centerPool);
+                    return;
+                }
+                
+                const tileType = getTileType(dragData.tile);
+                
+                const tilesOfColor = centerPool.filter(tile => tile === dragData.tile).length;
+                
+                const activePlayer = gameState?.players?.[currentPlayer];
+                const currentPatternLine = activePlayer?.pattern_lines?.[rowIndex] || [];
+                const maxPatternLineCapacity = rowIndex + 1;
+                const currentTilesInLine = currentPatternLine.length;
+                const availableSpace = maxPatternLineCapacity - currentTilesInLine;
+                
+                const tilesToPattern = Math.min(tilesOfColor, availableSpace);
+                const tilesToFloor = tilesOfColor - tilesToPattern;
+                
+                if (availableSpace <= 0) {
+                    setStatusMessage(`Pattern line ${rowIndex} is already full!`);
+                    return;
+                }
+                
+                if (tilesOfColor === 0) {
+                    setStatusMessage(`No ${dragData.tile} tiles found in center pool`);
+                    return;
+                }
+                
+                if (currentTilesInLine > 0) {
+                    const existingTileColor = currentPatternLine[0];
+                    if (existingTileColor !== dragData.tile) {
+                        setStatusMessage(`Pattern line ${rowIndex} already contains ${existingTileColor} tiles!`);
+                        return;
+                    }
+                }
+                
+                const move = {
+                    source_id: -1, // Center pool is represented as -1
+                    tile_type: tileType,
+                    pattern_line_dest: rowIndex,
+                    num_to_pattern_line: tilesToPattern,
+                    num_to_floor_line: tilesToFloor
+                };
+                
+                console.log('=== MOVE DEBUG ===');
+                console.log(`Center pool contents:`, centerPool);
+                console.log(`Taking ${tilesOfColor} ${dragData.tile} tiles (type ${tileType})`);
+                console.log(`Pattern line ${rowIndex}: ${currentTilesInLine}/${maxPatternLineCapacity} tiles`);
+                console.log(`Available space: ${availableSpace}`);
+                console.log(`Distribution: ${tilesToPattern} to pattern line, ${tilesToFloor} to floor`);
+                console.log('Move object:', move);
+                console.log('==================');
+                
+                setStatusMessage(`Taking ${tilesOfColor} ${dragData.tile} tiles from center: ${tilesToPattern} to pattern line, ${tilesToFloor} to floor`);
                 handleMoveExecution(move);
             }
         } catch (error) {

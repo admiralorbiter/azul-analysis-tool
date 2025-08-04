@@ -1,9 +1,10 @@
-// GameBoard.js - Game board component with factories and player boards
+// GameBoard.js - Game board component with factories, center pool, and player boards
 const { useState } = React;
 
 // Import components from window
 const Factory = window.Factory;
 const PlayerBoard = window.PlayerBoard;
+const CenterPool = window.CenterPool;
 
 window.GameBoard = function GameBoard({
     gameState,
@@ -69,6 +70,18 @@ window.GameBoard = function GameBoard({
                 })
             )
         ),
+        
+        // Center Pool
+        React.createElement(CenterPool, {
+            gameState: gameState,
+            editMode: editMode,
+            selectedTile: selectedTile,
+            setSelectedTile: setSelectedTile,
+            handleElementSelect: handleElementSelect,
+            selectedElements: selectedElements,
+            heatmapEnabled: heatmapEnabled,
+            heatmapData: heatmapData
+        }),
         
         // Player boards - now with more space
         React.createElement('div', {

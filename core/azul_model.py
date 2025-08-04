@@ -410,6 +410,10 @@ class AzulState(GameState):
             assert self.tiles[tile_type] >= 0
             assert self.total >= 0
 
+        def RemoveTiles(self, number, tile_type):
+            """Remove tiles from the display (alias for ReactionTiles for clarity)."""
+            self.ReactionTiles(number, tile_type)
+
         def AddTiles(self, number, tile_type):
             assert number > 0
             assert tile_type in utils.Tile
@@ -1135,7 +1139,7 @@ class AzulGameRule(GameRule):
                     num_on_fd = fac.tiles[tile]
                     if num_on_fd > 0:
                         state.centre_pool.AddTiles(num_on_fd, tile)
-                        fac.ReactionTiles(num_on_fd, tile)
+                        fac.RemoveTiles(num_on_fd, tile)
         return state
     
     def getNextAgentIndex(self):

@@ -31,11 +31,11 @@ This checklist helps systematically test all implemented features to identify co
   - [x] Hover effects work properly
   - [x] Click interactions respond
 
-- [ ] **Center Pool**
-  - [ ] Center tiles display correctly
+- [x] **Center Pool**
+  - [x] Center tiles display correctly
   - [ ] First player marker visible
-  - [ ] Tile arrangement is clear
-  - [ ] Click/drag interactions work
+  - [x] Tile arrangement is clear
+  - [x] Click/drag interactions work
 
 - [ ] **Player Boards**
   - [ ] Pattern lines show correct capacities (1,2,3,4,5)
