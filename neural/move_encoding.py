@@ -213,7 +213,16 @@ class MoveEncoder:
         """
         mask = self.create_policy_mask(legal_moves, policy.size(-1))
         masked_policy = policy.clone()
-        masked_policy[~mask] = float('-inf')
+        
+        # Handle different tensor shapes
+        if policy.dim() == 2:
+            # Policy has shape [batch_size, policy_size]
+            mask = mask.unsqueeze(0)  # Add batch dimension
+            masked_policy[~mask] = float('-inf')
+        else:
+            # Policy has shape [policy_size]
+            masked_policy[~mask] = float('-inf')
+        
         return masked_policy
     
     def select_move_from_policy(self, policy: torch.Tensor, legal_moves: List[FastMove], 

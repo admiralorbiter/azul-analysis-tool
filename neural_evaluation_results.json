@@ -1,0 +1,199 @@
+{
+  "neural_model": {
+    "evaluations": [
+      0.021607639268040657,
+      -0.006869994103908539,
+      -0.11253035813570023,
+      0.036880698055028915,
+      -0.019139358773827553,
+      0.09946049004793167,
+      0.019719505682587624,
+      0.1008521020412445,
+      0.13657690584659576,
+      0.046377576887607574
+    ],
+    "move_selections": [
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 3,
+          "number": 1,
+          "pattern_line_dest": 0,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 0,
+          "number": 1,
+          "pattern_line_dest": 2,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 3,
+          "number": 1,
+          "pattern_line_dest": 0,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 1,
+        "tile_grab": {
+          "tile_type": 3,
+          "number": 1,
+          "pattern_line_dest": 0,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 3,
+          "number": 1,
+          "pattern_line_dest": 3,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 2,
+          "number": 1,
+          "pattern_line_dest": 1,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 0,
+          "number": 1,
+          "pattern_line_dest": 1,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 3,
+          "number": 2,
+          "pattern_line_dest": 3,
+          "num_to_pattern_line": 2,
+          "num_to_floor_line": 0
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 3,
+          "number": 3,
+          "pattern_line_dest": 0,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 2
+        }
+      },
+      {
+        "action_type": 1,
+        "source_id": 0,
+        "tile_grab": {
+          "tile_type": 0,
+          "number": 1,
+          "pattern_line_dest": 2,
+          "num_to_pattern_line": 1,
+          "num_to_floor_line": 0
+        }
+      }
+    ],
+    "policy_confidence": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "inference_times": [
+      0.0012606978416442871,
+      0.0012606978416442871,
+      0.0012606978416442871,
+      0.0012606978416442871,
+      0.002380669116973877,
+      0.002380669116973877,
+      0.002380669116973877,
+      0.002380669116973877,
+      0.0022503137588500977,
+      0.0022503137588500977
+    ],
+    "metrics": {
+      "mean_evaluation": 0.03229352068156004,
+      "std_evaluation": 0.06762505443897569,
+      "min_evaluation": -0.11253035813570023,
+      "max_evaluation": 0.13657690584659576,
+      "mean_confidence": 0.0,
+      "std_confidence": 0.0,
+      "mean_inference_time": 0.001906609535217285,
+      "total_inference_time": 0.01906609535217285
+    }
+  },
+  "comparisons": {
+    "heuristic": {
+      "correlation": 0.0,
+      "agreement_rate": 0.1,
+      "speedup_factor": 2.9992747189535947
+    },
+    "random": {
+      "correlation": -0.18455987147027428,
+      "agreement_rate": 0.0,
+      "speedup_factor": 0.5661193712563618
+    },
+    "mcts": {
+      "correlation": 0.0,
+      "agreement_rate": 0.1,
+      "speedup_factor": 2.4873138341107177
+    }
+  },
+  "test_positions_count": 10,
+  "evaluation_config": {
+    "num_test_positions": 10,
+    "max_depth_per_position": 10,
+    "num_simulations_per_position": 100,
+    "metrics": [
+      "EvaluationMetric.ACCURACY",
+      "EvaluationMetric.AGREEMENT_RATE",
+      "EvaluationMetric.CORRELATION",
+      "EvaluationMetric.MEAN_ABSOLUTE_ERROR"
+    ],
+    "batch_size": 4,
+    "enable_gpu": false,
+    "compare_with_heuristic": true,
+    "compare_with_random": true,
+    "compare_with_mcts": true,
+    "save_results": true,
+    "results_file": "neural_evaluation_results.json"
+  },
+  "timestamp": 1754277533.723474
+}
