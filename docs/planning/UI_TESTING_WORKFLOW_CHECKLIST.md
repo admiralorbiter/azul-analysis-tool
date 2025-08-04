@@ -84,7 +84,7 @@ This checklist helps systematically test all implemented features to identify co
   - [x] Color contrast is sufficient
   - [x] Hover effects work properly
 
-- [ ] **"Center Pool First Player Test"** (Position Library → Testing Positions → Board Display Testing → "Center Pool First Player Test")
+- [x] **"Center Pool First Player Test"** (Position Library → Testing Positions → Board Display Testing → "Center Pool First Player Test")
   - [x] Center pool shows multiple tiles of each color (2 of each)
   - [x] Tile arrangement is clear and organized
   - [x] Visual layout is clean

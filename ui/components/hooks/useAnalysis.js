@@ -90,10 +90,10 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                     
                     // Add first player marker to player's floor line
                     const player = newState.players[playerIndex];
-                    if (!player.floor) {
-                        player.floor = [];
+                    if (!player.floor_line) {
+                        player.floor_line = [];
                     }
-                    player.floor.push('FP'); // First Player marker
+                    player.floor_line.push('FP'); // First Player marker
                 }
             }
             
@@ -113,8 +113,11 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
             // Add tiles to floor
             if (numToFloor > 0) {
                 const player = newState.players[playerIndex];
+                if (!player.floor_line) {
+                    player.floor_line = [];
+                }
                 for (let i = 0; i < numToFloor; i++) {
-                    player.floor.push(tileColor);
+                    player.floor_line.push(tileColor);
                 }
             }
         }
