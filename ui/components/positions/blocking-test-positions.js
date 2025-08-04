@@ -202,6 +202,7 @@ window.blockingTestPositions = (() => {
         difficulty: "advanced",
         tags: ["blocking", "multiple", "complex", "testing", "pattern-detection"],
         generate: () => createGameState({
+            fen_string: "multiple_blocking_opportunities",
             gameState: {
                 players: [
                     {
@@ -266,6 +267,7 @@ window.blockingTestPositions = (() => {
         difficulty: "intermediate",
         tags: ["blocking", "no-blocking", "wall-complete", "testing", "pattern-detection"],
         generate: () => createGameState({
+            fen_string: "no_blocking_color_on_wall",
             gameState: {
                 players: [
                     {
@@ -326,7 +328,7 @@ window.blockingTestPositions = (() => {
 
     // Return the organized structure
     return {
-        "blocking": {
+        "blocking-detection": {
             name: "Blocking Detection Tests",
             description: "Positions designed to test tile blocking detection",
             icon: "🧪",

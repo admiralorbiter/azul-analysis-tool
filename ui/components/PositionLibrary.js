@@ -54,6 +54,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
     const floorLineTestPositions = window.floorLineTestPositions || {};
     const strategicPatternTestPositions = window.strategicPatternTestPositions || {};
     const uiTestingPositions = window.uiTestingPositions || {};
+    
+
 
     // Expanded position categories for R1.2 (modular structure)
     const positionCategories = {
@@ -170,6 +172,8 @@ const PositionLibrary = React.memo(function PositionLibrary({
             }
         }
     };
+    
+
 
     // Available tags for filtering (2-player only)
     const availableTags = [
