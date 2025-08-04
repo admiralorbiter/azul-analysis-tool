@@ -56,6 +56,68 @@ This checklist helps systematically test all implemented features to identify co
   - [ ] Score displays accurately
   - [ ] All interactive elements respond
 
+- [ ] **Board Display Testing** ✅ **READY TO START**
+  - [ ] **Pattern Line Capacity Test** (Position Library → Testing Positions → Board Display Testing)
+    - [ ] Row 1 shows 1 blue tile
+    - [ ] Row 2 shows 2 yellow tiles  
+    - [ ] Row 3 shows 3 red tiles
+    - [ ] Row 4 shows 4 black tiles
+    - [ ] Row 5 shows 5 white tiles
+    - [ ] All tiles display correct colors
+    - [ ] Visual spacing is appropriate
+    - [ ] Hover effects work properly
+
+  - [ ] **Wall Completion Display Test** (Position Library → Testing Positions → Board Display Testing)
+    - [ ] Complete row (5 tiles) displays correctly in first row
+    - [ ] Partial rows show appropriate tiles
+    - [ ] Empty spaces are clearly indicated
+    - [ ] Visual indicators for completion are clear
+    - [ ] Wall grid layout is compact and organized
+    - [ ] Column and row labels are clear and informative
+
+  - [ ] **Factory Display Test** (Position Library → Testing Positions → Board Display Testing)
+    - [ ] Factory 1 shows 4 blue tiles
+    - [ ] Factory 2 shows 4 yellow tiles
+    - [ ] Factory 3 shows 4 red tiles
+    - [ ] Factory 4 shows 4 black tiles
+    - [ ] Factory 5 shows 4 white tiles
+    - [ ] All factories have exactly 4 tiles each
+    - [ ] Factory tiles are well-organized
+    - [ ] Color contrast is sufficient
+    - [ ] Hover effects work properly
+
+  - [ ] **Center Pool First Player Test** (Position Library → Testing Positions → Board Display Testing)
+    - [ ] Center pool shows multiple tiles of each color (2 of each)
+    - [ ] Tile arrangement is clear and organized
+    - [ ] Visual layout is clean
+    - [ ] Tile counts are accurate
+    - [ ] Color coding is consistent
+    - [ ] Click/drag interactions work
+
+  - [ ] **Score Display Test** (Position Library → Testing Positions → Board Display Testing)
+    - [ ] Player 1 shows 45 points
+    - [ ] Player 2 shows 12 points
+    - [ ] Score display is prominent and clear
+    - [ ] Score differences are visually apparent
+    - [ ] Score calculation includes wall completions
+    - [ ] Floor line penalties are deducted correctly
+    - [ ] Visual hierarchy is appropriate
+
+  - [ ] **Integration Testing**
+    - [ ] Switch between different test positions without errors
+    - [ ] All components display correctly together
+    - [ ] No display conflicts between components
+    - [ ] Loading states show appropriate feedback
+    - [ ] Position switching works smoothly
+
+  - [ ] **Interactive Testing**
+    - [ ] Test hover effects on all components
+    - [ ] Test click interactions
+    - [ ] Test visual feedback
+    - [ ] Test loading states
+    - [ ] Test error handling
+
+
 ## 🔧 **Position Management Testing**
 
 ### **✅ Position Library (R1.2)**
