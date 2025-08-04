@@ -24,24 +24,27 @@ function PlayerBoard({
     return React.createElement('div', {
         className: `${borderClass} p-4 rounded-lg mb-4 transition-all duration-200`
     },
-        // Player Header
+        // Player Header with Enhanced Score Display
         React.createElement('div', {
-            className: `flex justify-between items-center mb-3 ${headerClass}`
+            className: 'mb-3'
         },
-            React.createElement('h3', {
-                className: 'text-lg font-semibold'
-            }, `Player ${playerIndex + 1}`),
             React.createElement('div', {
-                className: 'flex space-x-2 items-center'
+                className: `flex justify-between items-center mb-2 ${headerClass}`
             },
+                React.createElement('h3', {
+                    className: 'text-lg font-semibold'
+                }, `Player ${playerIndex + 1}`),
                 React.createElement('button', {
                     className: 'px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors',
                     onClick: () => onPlayerSwitch ? onPlayerSwitch(playerIndex) : null
-                }, 'Switch'),
-                React.createElement('span', {
-                    className: 'text-sm font-medium'
-                }, `Score: ${player.score || 0}`)
-            )
+                }, 'Switch')
+            ),
+            // Enhanced Score Display
+            React.createElement(window.ScoreDisplay, {
+                player: player,
+                playerIndex: playerIndex,
+                isActive: isActive
+            })
         ),
 
         // Pattern Lines

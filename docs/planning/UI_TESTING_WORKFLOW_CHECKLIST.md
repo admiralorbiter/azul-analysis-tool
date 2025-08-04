@@ -92,14 +92,14 @@ This checklist helps systematically test all implemented features to identify co
   - [x] Color coding is consistent
   - [x] Click/drag interactions work
 
-- [ ] **"Score Display Test"** (Position Library → Testing Positions → Board Display Testing → "Score Display Test")
-  - [ ] Player 1 shows 45 points
-  - [ ] Player 2 shows 12 points
-  - [ ] Score display is prominent and clear
-  - [ ] Score differences are visually apparent
-  - [ ] Score calculation includes wall completions
-  - [ ] Floor line penalties are deducted correctly
-  - [ ] Visual hierarchy is appropriate
+- [x] **"Score Display Test"** (Position Library → Testing Positions → Board Display Testing → "Score Display Test")
+  - [x] Player 1 shows 45 points
+  - [x] Player 2 shows 12 points
+  - [x] Score display is prominent and clear
+  - [x] Score differences are visually apparent
+  - [x] Score calculation includes wall completions
+  - [x] Floor line penalties are deducted correctly
+  - [x] Visual hierarchy is appropriate
 
 ## 🔧 **Position Management Testing**
 
