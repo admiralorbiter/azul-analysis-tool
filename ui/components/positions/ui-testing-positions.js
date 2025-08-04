@@ -26,7 +26,23 @@ window.uiTestingPositions = (() => {
                 const colorString = colorMap[colorIndex];
                 return Array(count).fill(colorString);
             }),
-            wall: player.wall,
+            wall: player.wall.map((row, rowIndex) => 
+                row.map((cell, colIndex) => {
+                    if (cell === 0) return null; // Empty cell
+                    if (cell === 1) {
+                        // Use the Azul wall color pattern
+                        const wallColorPattern = [
+                            ['B', 'Y', 'R', 'K', 'W'], // Row 1: Blue, Yellow, Red, Black, White
+                            ['W', 'B', 'Y', 'R', 'K'], // Row 2: White, Blue, Yellow, Red, Black
+                            ['K', 'W', 'B', 'Y', 'R'], // Row 3: Black, White, Blue, Yellow, Red
+                            ['R', 'K', 'W', 'B', 'Y'], // Row 4: Red, Black, White, Blue, Yellow
+                            ['Y', 'R', 'K', 'W', 'B']  // Row 5: Yellow, Red, Black, White, Blue
+                        ];
+                        return wallColorPattern[rowIndex][colIndex];
+                    }
+                    return cell; // Already a string color
+                })
+            ),
             floor_line: (player.floorTiles || []).map(tileIndex => {
                 // Convert numeric tile index to color string
                 const colorMap = ['B', 'Y', 'R', 'K', 'W'];
