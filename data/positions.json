@@ -1,0 +1,95 @@
+{
+  "simple_blue_blocking": {
+    "description": "Simple blue blocking test position",
+    "category": "blocking",
+    "difficulty": "beginner",
+    "tags": ["blocking", "blue", "simple", "testing"],
+    "setup": {
+      "player_1_lines": {
+        "0": {"color": 0, "count": 1}
+      },
+      "factories": {
+        "0": {"0": 2},
+        "1": {"0": 1},
+        "2": {"0": 1},
+        "3": {"0": 1},
+        "4": {"0": 1}
+      },
+      "center_pool": {"0": 1}
+    }
+  },
+  "high_value_column_completion": {
+    "description": "High value column completion test position",
+    "category": "scoring-optimization",
+    "difficulty": "intermediate",
+    "tags": ["scoring-optimization", "column-completion", "wall-bonus"],
+    "setup": {
+      "player_0_wall": {
+        "0,2": 1,
+        "1,2": 1,
+        "2,2": 1,
+        "3,2": 1
+      },
+      "factories": {
+        "0": {"2": 2},
+        "1": {"2": 1}
+      },
+      "center_pool": {"2": 1}
+    }
+  },
+  "simple_row_completion": {
+    "description": "Simple row completion test position",
+    "category": "scoring-optimization",
+    "difficulty": "beginner",
+    "tags": ["scoring-optimization", "row-completion", "wall-bonus"],
+    "setup": {
+      "player_0_wall": {
+        "0,0": 1,
+        "0,1": 1,
+        "0,2": 1,
+        "0,3": 1
+      },
+      "factories": {
+        "0": {"4": 2},
+        "1": {"4": 1}
+      },
+      "center_pool": {"4": 1}
+    }
+  },
+  "color_set_completion": {
+    "description": "Color set completion test position",
+    "category": "scoring-optimization",
+    "difficulty": "advanced",
+    "tags": ["scoring-optimization", "color-set-completion", "wall-bonus"],
+    "setup": {
+      "player_0_wall": {
+        "0,0": 1,
+        "1,1": 1,
+        "2,2": 1,
+        "3,3": 1
+      },
+      "factories": {
+        "0": {"4": 2},
+        "1": {"4": 1}
+      },
+      "center_pool": {"4": 1}
+    }
+  },
+  "high_urgency_red_blocking": {
+    "description": "High urgency red blocking test position",
+    "category": "blocking",
+    "difficulty": "intermediate",
+    "tags": ["blocking", "red", "high-urgency", "testing"],
+    "setup": {
+      "player_1_lines": {
+        "2": {"color": 2, "count": 2}
+      },
+      "factories": {
+        "0": {"2": 2},
+        "1": {"2": 1},
+        "2": {"2": 1}
+      },
+      "center_pool": {"2": 1}
+    }
+  }
+} 
