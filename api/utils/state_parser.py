@@ -155,14 +155,12 @@ def parse_fen_string(fen_string: str):
             test_state.agents[1].grid_state[2][2] = 0  # Red not on wall yet
             
             # Add red tiles to factories
-            test_state.factories[0].tiles[2] = 1  # 1 red tile in factory 0
-            test_state.factories[1].tiles[2] = 3  # 3 red tiles in factory 1
+            test_state.factories[0].tiles[2] = 2  # 2 red tiles in factory 0
+            test_state.factories[1].tiles[2] = 1  # 1 red tile in factory 1
             test_state.factories[2].tiles[2] = 1  # 1 red tile in factory 2
-            test_state.factories[3].tiles[2] = 1  # 1 red tile in factory 3
-            test_state.factories[4].tiles[2] = 1  # 1 red tile in factory 4
             
             # Add red tiles to center pool
-            test_state.centre_pool.tiles[2] = 2  # 2 red tiles in center
+            test_state.centre_pool.tiles[2] = 1  # 1 red tile in center
             
             random.seed()  # Reset seed
             return test_state
@@ -173,44 +171,42 @@ def parse_fen_string(fen_string: str):
             test_state = AzulState(2)
             
             # Set up simple row completion position
-            # Player 0 has 4 tiles in row 0, needs 1 more to complete
-            test_state.agents[0].grid_state[0][0] = 1  # Blue tile at (0,0)
-            test_state.agents[0].grid_state[0][1] = 1  # Yellow tile at (0,1)
-            test_state.agents[0].grid_state[0][2] = 1  # Red tile at (0,2)
-            test_state.agents[0].grid_state[0][3] = 1  # Black tile at (0,3)
-            # Missing white tile at (0,4) - this is the opportunity
+            # Player 0 has 4 tiles in row 0, needs 1 more for 2-point bonus
+            test_state.agents[0].grid_state[0][0] = 1  # Blue tile
+            test_state.agents[0].grid_state[0][1] = 1  # Yellow tile
+            test_state.agents[0].grid_state[0][2] = 1  # Red tile
+            test_state.agents[0].grid_state[0][3] = 1  # Black tile
+            # Missing white tile in position [0][4]
             
             # Add white tiles to factories for completion
             test_state.factories[0].tiles[4] = 2  # 2 white tiles in factory 0
             test_state.factories[1].tiles[4] = 1  # 1 white tile in factory 1
-            test_state.factories[2].tiles[4] = 1  # 1 white tile in factory 2
             
             # Add white tiles to center pool
             test_state.centre_pool.tiles[4] = 1  # 1 white tile in center
             
             random.seed()  # Reset seed
             return test_state
-        elif fen_string == "simple_column_completion":
-            # Create simple column completion test position
-            print("DEBUG: Creating simple column completion position")
+        elif fen_string == "high_value_column_completion":
+            # Create high value column completion test position
+            print("DEBUG: Creating high value column completion position")
             random.seed(42)  # Use fixed seed for reproducibility
             test_state = AzulState(2)
             
-            # Set up simple column completion position
-            # Player 0 has 4 tiles in column 0, needs 1 more to complete
-            test_state.agents[0].grid_state[0][0] = 1  # Blue tile at (0,0)
-            test_state.agents[0].grid_state[1][0] = 1  # Yellow tile at (1,0)
-            test_state.agents[0].grid_state[2][0] = 1  # Red tile at (2,0)
-            test_state.agents[0].grid_state[3][0] = 1  # Black tile at (3,0)
-            # Missing white tile at (4,0) - this is the opportunity
+            # Set up high value column completion position
+            # Player 0 has 4 tiles in column 2, needs 1 more for 7-point bonus
+            test_state.agents[0].grid_state[0][2] = 1  # Red tile in row 0, col 2
+            test_state.agents[0].grid_state[1][2] = 1  # Red tile in row 1, col 2
+            test_state.agents[0].grid_state[2][2] = 1  # Red tile in row 2, col 2
+            test_state.agents[0].grid_state[3][2] = 1  # Red tile in row 3, col 2
+            # Missing red tile in position [4][2]
             
-            # Add white tiles to factories for completion
-            test_state.factories[0].tiles[4] = 2  # 2 white tiles in factory 0
-            test_state.factories[1].tiles[4] = 1  # 1 white tile in factory 1
-            test_state.factories[2].tiles[4] = 1  # 1 white tile in factory 2
+            # Add red tiles to factories for completion
+            test_state.factories[0].tiles[2] = 2  # 2 red tiles in factory 0
+            test_state.factories[1].tiles[2] = 1  # 1 red tile in factory 1
             
-            # Add white tiles to center pool
-            test_state.centre_pool.tiles[4] = 1  # 1 white tile in center
+            # Add red tiles to center pool
+            test_state.centre_pool.tiles[2] = 1  # 1 red tile in center
             
             random.seed()  # Reset seed
             return test_state
@@ -220,21 +216,20 @@ def parse_fen_string(fen_string: str):
             random.seed(42)  # Use fixed seed for reproducibility
             test_state = AzulState(2)
             
-            # Set up color set completion position (blue tiles)
-            # Player 0 has 4 blue tiles, needs 1 more to complete set
-            test_state.agents[0].grid_state[0][0] = 1  # Blue at (0,0)
-            test_state.agents[0].grid_state[1][1] = 1  # Blue at (1,1)
-            test_state.agents[0].grid_state[2][2] = 1  # Blue at (2,2)
-            test_state.agents[0].grid_state[3][3] = 1  # Blue at (3,3)
-            # Missing blue tile at (4,4) - this is the opportunity
+            # Set up color set completion position
+            # Player 0 has 4 different colors on wall, needs 1 more for 10-point bonus
+            test_state.agents[0].grid_state[0][0] = 1  # Blue tile
+            test_state.agents[0].grid_state[1][1] = 1  # Yellow tile
+            test_state.agents[0].grid_state[2][2] = 1  # Red tile
+            test_state.agents[0].grid_state[3][3] = 1  # Black tile
+            # Missing white tile
             
-            # Add blue tiles to factories for completion
-            test_state.factories[0].tiles[0] = 2  # 2 blue tiles in factory 0
-            test_state.factories[1].tiles[0] = 1  # 1 blue tile in factory 1
-            test_state.factories[2].tiles[0] = 1  # 1 blue tile in factory 2
+            # Add white tiles to factories for completion
+            test_state.factories[0].tiles[4] = 2  # 2 white tiles in factory 0
+            test_state.factories[1].tiles[4] = 1  # 1 white tile in factory 1
             
-            # Add blue tiles to center pool
-            test_state.centre_pool.tiles[0] = 1  # 1 blue tile in center
+            # Add white tiles to center pool
+            test_state.centre_pool.tiles[4] = 1  # 1 white tile in center
             
             random.seed()  # Reset seed
             return test_state
