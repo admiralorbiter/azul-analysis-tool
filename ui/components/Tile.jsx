@@ -1,6 +1,9 @@
 // Tile Component with proper drag-and-drop
-import React, { useEffect, useRef } from 'react';
-import { TILE_COLORS } from '../constants/gameConstants';
+// Using global React and window.gameConstants for compatibility
+
+// Debug log to confirm component is loaded
+console.log('Enhanced Tile component loaded');
+console.log('Tile colors available:', window.gameConstants?.TILE_COLORS);
 
 function Tile({ 
     color, 
@@ -12,9 +15,9 @@ function Tile({
     dataAttributes = {}, 
     isSelected = false 
 }) {
-    const tileRef = useRef(null);
+    const tileRef = React.useRef(null);
     
-    useEffect(() => {
+    React.useEffect(() => {
         const tile = tileRef.current;
         if (!tile || !draggable) return;
         
@@ -39,17 +42,16 @@ function Tile({
         };
     }, [draggable, onDragStart, onDragEnd]);
     
-    return (
-        <div 
-            ref={tileRef}
-            className={`tile ${className} ${isSelected ? 'selected' : ''}`}
-            style={{ backgroundColor: TILE_COLORS[color] || '#6b7280' }}
-            onClick={onClick}
-            title={color}
-            draggable={draggable}
-            {...dataAttributes}
-        />
-    );
+    return React.createElement('div', {
+        ref: tileRef,
+        className: `tile ${className} ${isSelected ? 'selected' : ''}`,
+        style: { backgroundColor: window.gameConstants?.TILE_COLORS?.[color] || '#6b7280' },
+        onClick: onClick,
+        title: color,
+        draggable: draggable,
+        ...dataAttributes
+    });
 }
 
-export default Tile; 
+// Attach to window for backward compatibility
+window.Tile = Tile; 

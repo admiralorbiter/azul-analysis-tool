@@ -33,7 +33,7 @@ This checklist helps systematically test all implemented features to identify co
 
 - [x] **Center Pool**
   - [x] Center tiles display correctly
-  - [x] First player marker visible ✅ **IMPLEMENTED**
+  - [x] First player marker visible
     - [x] Shows in center pool when available (⭐ First Player Marker)
     - [x] Shows "-1 penalty" indicator
     - [x] Displays "First player marker taken" when taken
@@ -42,9 +42,16 @@ This checklist helps systematically test all implemented features to identify co
   - [x] Tile arrangement is clear
   - [x] Click/drag interactions work
 
-- [ ] **Player Boards**
-  - [ ] Pattern lines show correct capacities (1,2,3,4,5)
-  - [ ] Wall displays proper color patterns
+- [x] **Player Boards**
+  - [x] Pattern lines show correct capacities (1,2,3,4,5)
+  - [x] Wall displays proper color patterns ✅ **ENHANCED**
+    - [x] Color pattern indicators show expected tile colors
+    - [x] Placed tiles display clearly with proper contrast
+    - [x] Wall grid layout is compact and organized
+    - [x] Column and row labels are clear and informative
+    - [x] Visual feedback for hover and selection states
+    - [x] Completion tips provide helpful guidance
+    - [x] Tile colors properly loaded and displayed ✅ **FIXED**
   - [ ] Floor line shows penalty values
   - [ ] Score displays accurately
   - [ ] All interactive elements respond

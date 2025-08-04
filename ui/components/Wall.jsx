@@ -1,6 +1,9 @@
-// Wall Component with drop zones
-import React, { useEffect, useRef } from 'react';
-import Tile from './Tile';
+// Wall Component with enhanced visual design
+// Using global React and window.gameConstants for compatibility
+
+// Debug log to confirm component is loaded
+console.log('Enhanced Wall component loaded');
+console.log('Tile colors available:', window.gameConstants?.TILE_COLORS);
 
 function Wall({ 
     wall, 
@@ -13,9 +16,18 @@ function Wall({
     playerIndex = null, 
     selectedElement = null 
 }) {
-    const wallRef = useRef(null);
+    const wallRef = React.useRef(null);
     
-    useEffect(() => {
+    // Azul wall color pattern - each row has a different starting color
+    const wallColorPattern = [
+        ['B', 'Y', 'R', 'K', 'W'], // Row 1: Blue, Yellow, Red, Black, White
+        ['W', 'B', 'Y', 'R', 'K'], // Row 2: White, Blue, Yellow, Red, Black
+        ['K', 'W', 'B', 'Y', 'R'], // Row 3: Black, White, Blue, Yellow, Red
+        ['R', 'K', 'W', 'B', 'Y'], // Row 4: Red, Black, White, Blue, Yellow
+        ['Y', 'R', 'K', 'W', 'B']  // Row 5: Yellow, Red, Black, White, Blue
+    ];
+    
+    React.useEffect(() => {
         const wall = wallRef.current;
         if (!wall) return;
         
@@ -59,25 +71,64 @@ function Wall({
         };
     }, [onDrop]);
     
-    return (
-        <div ref={wallRef} className="wall">
-            {/* Column labels */}
-            <div className="wall-column-labels">
-                <div className="wall-cell-label"></div>
-                {['B', 'Y', 'R', 'K', 'W'].map((color, index) => (
-                    <div key={index} className="wall-cell-label text-xs text-gray-600 font-medium">
-                        {color}
-                    </div>
-                ))}
-            </div>
-            {wall.map((row, rowIndex) => (
-                <div key={rowIndex} className="wall-row">
-                    {/* Row label */}
-                    <div className="wall-cell-label text-xs text-gray-600 font-medium">
-                        Row {rowIndex + 1}
-                    </div>
-                    {row.map((cell, colIndex) => {
-                        const isValidDestination = selectedTile && onDestinationClick && !cell;
+    return React.createElement('div', {
+        ref: wallRef,
+        className: 'wall-container'
+    },
+        // Enhanced header with clear labeling
+        React.createElement('div', {
+            className: 'wall-header'
+        },
+            React.createElement('div', {
+                className: 'wall-title'
+            }, 'Wall'),
+            React.createElement('div', {
+                className: 'wall-subtitle'
+            }, 'Complete rows and columns for bonus points')
+        ),
+        
+        // Column labels with color indicators
+        React.createElement('div', {
+            className: 'wall-column-labels'
+        },
+            React.createElement('div', {
+                className: 'wall-corner-label'
+            }),
+            ['B', 'Y', 'R', 'K', 'W'].map((color, index) => 
+                React.createElement('div', {
+                    key: index,
+                    className: 'wall-column-label'
+                },
+                    React.createElement('div', {
+                        className: 'color-indicator',
+                        style: { backgroundColor: window.gameConstants?.TILE_COLORS?.[color] || '#6b7280' }
+                    }),
+                    React.createElement('span', {
+                        className: 'color-letter'
+                    }, color)
+                )
+            )
+        ),
+        
+        // Wall grid with enhanced styling
+        wall.map((row, rowIndex) => 
+            React.createElement('div', {
+                key: rowIndex,
+                className: 'wall-row'
+            },
+                // Row label with row number
+                React.createElement('div', {
+                    className: 'wall-row-label'
+                },
+                    React.createElement('span', {
+                        className: 'row-number'
+                    }, `R${rowIndex + 1}`)
+                ),
+                
+                // Wall cells with color pattern indicators
+                row.map((cell, colIndex) => {
+                    const isValidDestination = selectedTile && onDestinationClick && !cell;
+                    const expectedColor = wallColorPattern[rowIndex][colIndex];
                     
                     // Check if this wall cell is selected in edit mode
                     const isEditSelected = selectedElement && 
@@ -86,37 +137,61 @@ function Wall({
                         selectedElement.data.rowIndex === rowIndex && 
                         selectedElement.data.colIndex === colIndex;
                     
-                    return (
-                        <div 
-                            key={`${rowIndex}-${colIndex}`}
-                            className={`wall-cell ${cell ? 'occupied' : ''} ${isValidDestination ? 'valid-drop' : ''} ${isEditSelected ? 'selected' : ''}`}
-                            onClick={() => {
-                                if (editMode && onElementSelect) {
-                                    onElementSelect('wall-cell', { playerIndex, rowIndex, colIndex, tile: cell });
-                                } else if (isValidDestination) {
-                                    onDestinationClick('wall', { rowIndex, colIndex });
-                                } else {
-                                    onWallClick(rowIndex, colIndex);
+                    return React.createElement('div', {
+                        key: `${rowIndex}-${colIndex}`,
+                        className: `wall-cell ${cell ? 'occupied' : 'empty'} ${isValidDestination ? 'valid-drop' : ''} ${isEditSelected ? 'selected' : ''}`,
+                        onClick: () => {
+                            if (editMode && onElementSelect) {
+                                onElementSelect('wall-cell', { playerIndex, rowIndex, colIndex, tile: cell });
+                            } else if (isValidDestination) {
+                                onDestinationClick('wall', { rowIndex, colIndex });
+                            } else {
+                                onWallClick(rowIndex, colIndex);
+                            }
+                        },
+                        onContextMenu: (event) => {
+                            if (editMode) {
+                                event.preventDefault();
+                                if (window.showContextMenu) {
+                                    window.showContextMenu(event, 'wall-cell', { playerIndex, rowIndex, colIndex, tile: cell });
                                 }
-                            }}
-                            onContextMenu={(event) => {
-                                if (editMode) {
-                                    event.preventDefault();
-                                    if (window.showContextMenu) {
-                                        window.showContextMenu(event, 'wall-cell', { playerIndex, rowIndex, colIndex, tile: cell });
-                                    }
-                                }
-                            }}
-                            data-row={rowIndex}
-                            data-col={colIndex}
-                        >
-                            {cell && <Tile color={cell} />}
-                        </div>
+                            }
+                        },
+                        'data-row': rowIndex,
+                        'data-col': colIndex
+                    },
+                        // Show placed tile or color pattern indicator
+                        cell ? 
+                            React.createElement(window.Tile, { 
+                                color: cell,
+                                className: 'wall-tile'
+                            }) :
+                            React.createElement('div', {
+                                className: 'color-pattern-indicator',
+                                style: { backgroundColor: window.gameConstants?.TILE_COLORS?.[expectedColor] || '#e5e7eb' }
+                            })
                     );
                 })
-            ))}
-        </div>
+            )
+        ),
+        
+        // Wall completion indicators
+        React.createElement('div', {
+            className: 'wall-completion-info'
+        },
+            React.createElement('div', {
+                className: 'completion-tip'
+            },
+                React.createElement('span', {
+                    className: 'tip-icon'
+                }, '💡'),
+                React.createElement('span', {
+                    className: 'tip-text'
+                }, 'Complete rows (5 tiles) = 2 points each, Complete columns = 7 points each')
+            )
+        )
     );
 }
 
-export default Wall; 
+// Attach to window for backward compatibility
+window.Wall = Wall; 
