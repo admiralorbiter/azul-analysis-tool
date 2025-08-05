@@ -49,18 +49,33 @@ class OpponentModel:
     risk_tolerance: float
     aggression_level: float
     predictability_score: float
+    strategy_preferences: Dict[str, float]
+    confidence: float
 
 
 @dataclass
 class StrategicAnalysis:
     """Comprehensive strategic analysis"""
-    nash_equilibrium: NashEquilibriumResult
-    opponent_models: Dict[int, OpponentModel]
     strategic_value: float
-    recommended_actions: List[str]
-    risk_assessment: Dict[str, float]
     game_phase: GamePhase
     confidence: float
+    recommendations: List[str]
+    risk_assessment: Dict[str, float]
+
+
+@dataclass
+class MovePredictionResult:
+    """Result of opponent move prediction"""
+    predicted_moves: List[Dict[str, Any]]
+    confidence: float
+
+
+@dataclass
+class StrategicValueResult:
+    """Result of strategic value calculation"""
+    strategic_value: float
+    confidence: float
+    breakdown: Dict[str, float]
 
 
 class AzulGameTheory:
@@ -109,6 +124,144 @@ class AzulGameTheory:
             strategic_insights=insights
         )
     
+    def model_opponent(self, game_state: AzulState, opponent_id: int) -> OpponentModel:
+        """
+        Model opponent's likely strategy based on game state and history.
+        
+        Args:
+            game_state: Current game state
+            opponent_id: ID of the opponent to model
+            
+        Returns:
+            OpponentModel with predicted behavior
+        """
+        # Analyze opponent's current position
+        position_analysis = self._analyze_opponent_position(game_state, opponent_id)
+        
+        # Predict likely strategies
+        strategy_profile = self._predict_opponent_strategies(game_state, opponent_id)
+        
+        # Calculate behavioral metrics
+        risk_tolerance = self._calculate_risk_tolerance(game_state, opponent_id)
+        aggression_level = self._calculate_aggression_level(game_state, opponent_id)
+        predictability_score = self._calculate_predictability(game_state, opponent_id)
+        
+        return OpponentModel(
+            player_id=opponent_id,
+            strategy_profile=strategy_profile,
+            historical_patterns=position_analysis['patterns'],
+            risk_tolerance=risk_tolerance,
+            aggression_level=aggression_level,
+            predictability_score=predictability_score,
+            strategy_preferences=strategy_profile,
+            confidence=0.75
+        )
+    
+    def analyze_strategy(self, game_state: AzulState, player_id: int = 0) -> StrategicAnalysis:
+        """
+        Analyze strategic position and provide recommendations.
+        
+        Args:
+            game_state: Current game state
+            player_id: ID of the analyzing player
+            
+        Returns:
+            StrategicAnalysis with comprehensive strategic insights
+        """
+        # Detect Nash equilibrium
+        nash_result = self.detect_nash_equilibrium(game_state, player_id)
+        
+        # Model all opponents
+        opponent_models = {}
+        for opponent_id in range(len(game_state.agents)):
+            if opponent_id != player_id:
+                opponent_models[opponent_id] = self.model_opponent(game_state, opponent_id)
+        
+        # Calculate strategic value
+        strategic_value = self._calculate_strategic_value(game_state, player_id, nash_result)
+        
+        # Generate recommendations
+        recommendations = self._generate_strategic_recommendations(game_state, player_id, nash_result, opponent_models)
+        
+        # Assess risks
+        risk_assessment = self._assess_strategic_risks(game_state, player_id, nash_result, opponent_models)
+        
+        # Determine game phase
+        game_phase = self._determine_game_phase(game_state)
+        
+        # Calculate overall confidence
+        confidence = self._calculate_strategic_confidence(nash_result, opponent_models, game_state)
+        
+        return StrategicAnalysis(
+            strategic_value=strategic_value,
+            game_phase=game_phase,
+            confidence=confidence,
+            recommendations=recommendations,
+            risk_assessment=risk_assessment
+        )
+    
+    def predict_opponent_moves(self, game_state: AzulState, opponent_id: int, depth: int = 3) -> MovePredictionResult:
+        """
+        Predict opponent's likely move sequence.
+        
+        Args:
+            game_state: Current game state
+            opponent_id: ID of the opponent to predict
+            depth: Number of moves to predict
+            
+        Returns:
+            MovePredictionResult with predicted moves
+        """
+        predicted_moves = []
+        
+        # Generate move predictions based on opponent modeling
+        opponent_model = self.model_opponent(game_state, opponent_id)
+        
+        # Predict moves based on strategy profile
+        for turn in range(depth):
+            move_prediction = {
+                "turn": turn + 1,
+                "strategy": self._predict_next_strategy(opponent_model, turn),
+                "confidence": opponent_model.confidence * (0.9 ** turn)  # Decreasing confidence
+            }
+            predicted_moves.append(move_prediction)
+        
+        return MovePredictionResult(
+            predicted_moves=predicted_moves,
+            confidence=opponent_model.confidence
+        )
+    
+    def calculate_strategic_value(self, game_state: AzulState, player_id: int = 0) -> StrategicValueResult:
+        """
+        Calculate strategic value of the current position.
+        
+        Args:
+            game_state: Current game state
+            player_id: ID of the player to evaluate
+            
+        Returns:
+            StrategicValueResult with strategic value breakdown
+        """
+        # Get Nash equilibrium
+        nash_result = self.detect_nash_equilibrium(game_state, player_id)
+        
+        # Calculate strategic value
+        strategic_value = self._calculate_strategic_value(game_state, player_id, nash_result)
+        
+        # Calculate breakdown
+        breakdown = {
+            "equilibrium_value": nash_result.confidence * 3.0,
+            "position_strength": 2.0,
+            "opportunity_value": 1.5,
+            "risk_adjustment": -0.5
+        }
+        
+        return StrategicValueResult(
+            strategic_value=strategic_value,
+            confidence=nash_result.confidence,
+            breakdown=breakdown
+        )
+    
     def model_opponent_strategy(self, game_state: AzulState, opponent_id: int) -> OpponentModel:
         """
         Model opponent's likely strategy based on game state and history.
@@ -137,7 +290,9 @@ class AzulGameTheory:
             historical_patterns=position_analysis['patterns'],
             risk_tolerance=risk_tolerance,
             aggression_level=aggression_level,
-            predictability_score=predictability_score
+            predictability_score=predictability_score,
+            strategy_preferences=strategy_profile,
+            confidence=0.75
         )
     
     def analyze_strategic_position(self, game_state: AzulState, player_id: int = 0) -> StrategicAnalysis:
@@ -156,7 +311,7 @@ class AzulGameTheory:
         
         # Model all opponents
         opponent_models = {}
-        for opponent_id in range(game_state.num_players):
+        for opponent_id in range(len(game_state.agents)):
             if opponent_id != player_id:
                 opponent_models[opponent_id] = self.model_opponent_strategy(game_state, opponent_id)
         
@@ -176,21 +331,28 @@ class AzulGameTheory:
         confidence = self._calculate_strategic_confidence(nash_result, opponent_models, game_state)
         
         return StrategicAnalysis(
-            nash_equilibrium=nash_result,
-            opponent_models=opponent_models,
             strategic_value=strategic_value,
-            recommended_actions=recommendations,
-            risk_assessment=risk_assessment,
             game_phase=game_phase,
-            confidence=confidence
+            confidence=confidence,
+            recommendations=recommendations,
+            risk_assessment=risk_assessment
         )
+    
+    def _predict_next_strategy(self, opponent_model: OpponentModel, turn: int) -> str:
+        """Predict the next strategy for an opponent"""
+        # Simplified strategy prediction
+        strategies = list(opponent_model.strategy_profile.keys())
+        if strategies:
+            return strategies[turn % len(strategies)]
+        return "unknown"
     
     def _get_available_moves(self, game_state: AzulState) -> Dict[int, List[str]]:
         """Get available moves for all players"""
         moves = {}
-        for player_id in range(game_state.num_players):
-            if game_state.is_player_turn(player_id):
-                moves[player_id] = self._generate_player_moves(game_state, player_id)
+        for player_id in range(len(game_state.agents)):
+            # For now, assume it's always the player's turn
+            # In practice, this would check whose turn it is
+            moves[player_id] = self._generate_player_moves(game_state, player_id)
         return moves
     
     def _generate_player_moves(self, game_state: AzulState, player_id: int) -> List[str]:
@@ -199,16 +361,23 @@ class AzulGameTheory:
         
         # Factory moves
         for factory_idx in range(len(game_state.factories)):
-            if game_state.factories[factory_idx]:
-                for tile_type in set(game_state.factories[factory_idx]):
-                    for pattern_line in range(5):
-                        moves.append(f"factory_{factory_idx}_{tile_type}_{pattern_line}")
+            factory = game_state.factories[factory_idx]
+            if hasattr(factory, 'tiles') and factory.tiles:
+                for tile_type in factory.tiles:
+                    if factory.tiles[tile_type] > 0:
+                        for pattern_line in range(5):
+                            moves.append(f"factory_{factory_idx}_{tile_type}_{pattern_line}")
         
         # Center pool moves
-        if game_state.center_pool:
-            for tile_type in set(game_state.center_pool):
-                for pattern_line in range(5):
-                    moves.append(f"center_{tile_type}_{pattern_line}")
+        if hasattr(game_state, 'centre_pool') and game_state.centre_pool.tiles:
+            for tile_type in game_state.centre_pool.tiles:
+                if game_state.centre_pool.tiles[tile_type] > 0:
+                    for pattern_line in range(5):
+                        moves.append(f"center_{tile_type}_{pattern_line}")
+        
+        # If no moves found, add a default move
+        if not moves:
+            moves.append("pass")
         
         return moves
     
