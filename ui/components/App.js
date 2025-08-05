@@ -381,6 +381,30 @@ function App() {
             setNeuralExpanded: setNeuralExpanded
         }),
         
+        // Dynamic Optimization Page
+        currentPage === 'dynamic-optimization' && (() => {
+            console.log('Dynamic Optimization page selected');
+            console.log('window.DynamicOptimization:', window.DynamicOptimization);
+            console.log('gameState:', gameState);
+            console.log('currentPlayer:', currentPlayer);
+            
+            if (!window.DynamicOptimization) {
+                return React.createElement('div', { className: 'p-4' }, 
+                    React.createElement('h2', null, 'Dynamic Optimization'),
+                    React.createElement('p', null, 'DynamicOptimization component not loaded. Check console for errors.')
+                );
+            }
+            
+            return React.createElement(window.DynamicOptimization, {
+                gameState: gameState,
+                currentPlayer: currentPlayer,
+                onAnalysisComplete: (results) => {
+                    setStatusMessage('Dynamic optimization completed');
+                    console.log('Dynamic optimization results:', results);
+                }
+            });
+        })(),
+        
         // Context menu - moved to correct level
         React.createElement(ContextMenu, {
             visible: contextMenu.visible,

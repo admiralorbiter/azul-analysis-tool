@@ -1,0 +1,346 @@
+/* Mathematical Optimization Component Styles */
+
+.mathematical-optimization {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.mathematical-optimization h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 8px;
+}
+
+.mathematical-optimization p {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.optimization-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.control-group select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: #ffffff;
+    font-size: 0.9em;
+    color: #495057;
+    transition: border-color 0.2s ease;
+}
+
+.control-group select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.optimize-button {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 150px;
+    align-self: end;
+}
+
+.optimize-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2980b9, #1f5f8b);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.optimize-button:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #f5c6cb;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.optimization-results {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.optimization-results h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    border-bottom: 2px solid #27ae60;
+    padding-bottom: 8px;
+}
+
+.optimization-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.summary-item {
+    padding: 10px;
+    background: #e8f4fd;
+    border-radius: 4px;
+    border-left: 4px solid #3498db;
+}
+
+.summary-item strong {
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.optimal-moves {
+    margin-bottom: 20px;
+}
+
+.optimal-moves h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.moves-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.move-item {
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    font-size: 0.9em;
+    color: #495057;
+}
+
+.move-item strong {
+    color: #27ae60;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.5px;
+}
+
+.recommendations {
+    margin-bottom: 20px;
+}
+
+.recommendations h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.recommendations ul {
+    list-style: none;
+    padding: 0;
+}
+
+.recommendations li {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: #d4edda;
+    border-radius: 4px;
+    border-left: 4px solid #28a745;
+    color: #155724;
+    font-size: 0.9em;
+}
+
+.scoring-opportunities {
+    margin-bottom: 20px;
+}
+
+.scoring-opportunities h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.opportunities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.opportunity-section {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.opportunity-section h5 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1em;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 5px;
+}
+
+.opportunity-item {
+    padding: 5px 0;
+    color: #495057;
+    font-size: 0.9em;
+}
+
+.resource-analysis {
+    margin-bottom: 20px;
+}
+
+.resource-analysis h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.resource-summary {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.available-tiles h5 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+
+.tile-count {
+    padding: 5px 0;
+    color: #495057;
+    font-size: 0.9em;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.wall-analysis {
+    margin-bottom: 20px;
+}
+
+.wall-analysis h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.near-completions h5 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+
+.completion-item {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: #fff3cd;
+    border-radius: 4px;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+    font-size: 0.9em;
+}
+
+/* Loading state */
+.optimization-results.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .optimization-controls {
+        flex-direction: column;
+    }
+    
+    .control-group {
+        min-width: auto;
+    }
+    
+    .optimize-button {
+        align-self: stretch;
+    }
+    
+    .optimization-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .opportunities-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animation for results */
+.optimization-results {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Success state styling */
+.optimization-results.success {
+    border-left: 4px solid #27ae60;
+}
+
+/* Error state styling */
+.optimization-results.error {
+    border-left: 4px solid #e74c3c;
+} 

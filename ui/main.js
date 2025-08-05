@@ -40,6 +40,7 @@ const {
     ScoringOptimizationAnalysis,
     FloorLinePatternAnalysis,
     MoveQualityAnalysis,
+    DynamicOptimization,
     CenterPool
 } = {
     ValidationFeedback: window.ValidationFeedback || (() => React.createElement('div', null, 'ValidationFeedback not loaded')),
@@ -68,6 +69,7 @@ const {
     ScoringOptimizationAnalysis: window.ScoringOptimizationAnalysis || (() => React.createElement('div', null, 'ScoringOptimizationAnalysis not loaded')),
     FloorLinePatternAnalysis: window.FloorLinePatternAnalysis || (() => React.createElement('div', null, 'FloorLinePatternAnalysis not loaded')),
     MoveQualityAnalysis: window.MoveQualityAnalysis || (() => React.createElement('div', null, 'MoveQualityAnalysis not loaded')),
+    DynamicOptimization: window.DynamicOptimization || (() => React.createElement('div', null, 'DynamicOptimization not loaded')),
     CenterPool: window.CenterPool || (() => React.createElement('div', null, 'CenterPool not loaded'))
 };
 

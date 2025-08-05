@@ -1,13 +1,15 @@
 // API Configuration and Utility Functions
 
-// API Configuration - Use relative URLs to avoid CORS issues
-const API_BASE = '/api/v1';
+// API Configuration - Use existing API_BASE from constants.js
+console.log('Loading utils/api.js, API_CONSTANTS:', window.API_CONSTANTS);
+// Use the existing API_BASE from constants.js instead of declaring a new one
+console.log('API_BASE available:', window.API_CONSTANTS?.API_BASE);
 let sessionId = null;
 
 // Initialize session
 async function initializeSession() {
     try {
-        const response = await fetch(`${API_BASE}/auth/session`, {
+        const response = await fetch(`${window.API_CONSTANTS?.API_BASE}/auth/session`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -41,7 +43,7 @@ async function analyzePosition(fenString) {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/analyze`, {
+        const response = await fetch(`${window.API_CONSTANTS?.API_BASE}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -72,7 +74,7 @@ async function getGameState(fenString = 'initial') {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/analyze`, {
+        const response = await fetch(`${window.API_CONSTANTS?.API_BASE}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -104,7 +106,7 @@ async function getHint(fenString) {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/hint`, {
+        const response = await fetch(`${window.API_CONSTANTS?.API_BASE}/hint`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -135,7 +137,7 @@ async function analyzeNeural(fenString) {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/analyze`, {
+        const response = await fetch(`${window.API_CONSTANTS?.API_BASE}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -159,6 +161,36 @@ async function analyzeNeural(fenString) {
     }
 }
 
+// Generic API call function
+async function callAPI(endpoint, method = 'GET', data = null) {
+    if (!sessionId) {
+        console.error('No session ID available');
+        return { success: false, error: 'No session ID available' };
+    }
+    
+    try {
+        const response = await fetch(`${window.API_CONSTANTS?.API_BASE}${endpoint}`, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-ID': sessionId
+            },
+            body: data ? JSON.stringify(data) : undefined
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            return { success: true, ...result };
+        } else {
+            console.error(`API call failed: ${response.status}`);
+            return { success: false, error: `HTTP ${response.status}` };
+        }
+    } catch (error) {
+        console.error('API call error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // Export functions to window.api
 window.api = {
     initializeSession,
@@ -166,5 +198,6 @@ window.api = {
     getGameState,
     getHint,
     analyzeNeural,
+    callAPI,
     sessionId
 }; 

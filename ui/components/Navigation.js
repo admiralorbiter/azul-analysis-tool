@@ -13,7 +13,11 @@ function Navigation({ currentPage, onPageChange }) {
                 React.createElement('button', {
                     className: `px-4 py-2 rounded ${currentPage === 'neural' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
                     onClick: () => onPageChange('neural')
-                }, '🧠 Neural Training')
+                }, '🧠 Neural Training'),
+                React.createElement('button', {
+                    className: `px-4 py-2 rounded ${currentPage === 'dynamic-optimization' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                    onClick: () => onPageChange('dynamic-optimization')
+                }, '⚡ Dynamic Optimization')
             )
         )
     );

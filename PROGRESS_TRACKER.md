@@ -25,27 +25,39 @@
 - **B2.2: Analysis Cache API** ✅ - MCTS/Alpha-Beta result caching, search, stats
 - **B2.3: Performance API** ✅ - Statistics and monitoring endpoints
 
+#### **M6 - Mathematical Optimization (Week 2) - COMPLETE**
+- **Day 1: Linear Programming Optimizer** ✅ - PuLP-based optimization with 5 objectives
+- **Day 2: Dynamic Programming Optimizer** ✅ - Endgame evaluation and multi-turn planning
+- **API Integration** ✅ - 8 optimization endpoints with session management
+- **Frontend Integration** ✅ - React components with real-time optimization
+- **Testing** ✅ - Comprehensive test suites for both optimizers
+
 ### 📋 **Upcoming Milestones**
 
-#### **M6 - Web UI (B3) - PLANNED**
+#### **M7 - Web UI (B3) - PLANNED**
 - **B3.1: Game Board Display** 📋 - Interactive Azul board visualization
 - **B3.2: Analysis Interface** 📋 - Real-time search results and hints
 - **B3.3: Performance Dashboard** 📋 - Database stats and query monitoring
 
-#### **M7 - Neural Integration (C1) - PLANNED**
+#### **M8 - Neural Integration (C1) - PLANNED**
 - **C1.1: Model Loading** 📋 - PyTorch model integration
 - **C1.2: Inference API** 📋 - Neural evaluation endpoints
 - **C1.3: Training Pipeline** 📋 - Model training and validation
 
-#### **M8 - Advanced Search (C2) - PLANNED**
+#### **M9 - Advanced Search (C2) - PLANNED**
 - **C2.1: Neural MCTS** 📋 - MCTS with neural evaluation
 - **C2.2: Hybrid Search** 📋 - Combined exact and neural search
 - **C2.3: Opening Book** 📋 - Position database and book moves
 
-#### **M9 - Production Deployment (C3) - PLANNED**
+#### **M10 - Production Deployment (C3) - PLANNED**
 - **C3.1: Docker Containerization** 📋 - Containerized deployment
 - **C3.2: CI/CD Pipeline** 📋 - Automated testing and deployment
 - **C3.3: Monitoring & Logging** 📋 - Production monitoring setup
+
+#### **M11 - Game Theory Integration (Week 3) - PLANNED**
+- **Day 1: Nash Equilibrium Detection** 📋 - Game theory analysis
+- **Day 2: Opponent Modeling** 📋 - Player behavior prediction
+- **Day 3: Strategic Game Theory** 📋 - Advanced game theory features
 
 ## 🎯 **Epic B Progress Summary**
 

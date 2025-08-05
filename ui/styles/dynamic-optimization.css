@@ -1,0 +1,630 @@
+/* Dynamic Optimization Component Styles */
+
+.dynamic-optimization {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.dynamic-optimization h2 {
+    color: #fff;
+    margin-bottom: 8px;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dynamic-optimization p {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 24px;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Optimization Controls */
+.optimization-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.control-group select,
+.control-group input {
+    padding: 10px 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: #fff;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.control-group select:focus,
+.control-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.analyze-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    grid-column: 1 / -1;
+    margin-top: 8px;
+}
+
+.analyze-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.analyze-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Error Message */
+.error-message {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    font-weight: 500;
+}
+
+/* Analysis Results */
+.endgame-evaluation,
+.multi-turn-planning,
+.game-phase-analysis,
+.strategy-optimization {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.endgame-evaluation h3,
+.multi-turn-planning h3,
+.game-phase-analysis h3,
+.strategy-optimization h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 8px;
+}
+
+/* Summary Sections */
+.evaluation-summary,
+.plan-summary,
+.phase-summary,
+.strategy-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 6px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Metrics Grid */
+.evaluation-metrics,
+.optimization-details {
+    margin-bottom: 24px;
+}
+
+.evaluation-metrics h4,
+.optimization-details h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.metrics-grid,
+.optimization-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.metric-item,
+.optimization-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.metric-item label,
+.optimization-item label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.metric-item span,
+.optimization-item span {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Risk Assessment */
+.risk-assessment,
+.plan-risk-assessment {
+    margin-bottom: 24px;
+}
+
+.risk-assessment h4,
+.plan-risk-assessment h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.risk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.risk-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #dc3545;
+}
+
+.risk-item label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.risk-level {
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.risk-high {
+    background: #dc3545;
+    color: white;
+}
+
+.risk-medium {
+    background: #ffc107;
+    color: #212529;
+}
+
+.risk-low {
+    background: #28a745;
+    color: white;
+}
+
+/* Recommendations */
+.recommendations,
+.planning-recommendations,
+.strategy-recommendations,
+.phase-recommendations {
+    margin-bottom: 24px;
+}
+
+.recommendations h4,
+.planning-recommendations h4,
+.strategy-recommendations h4,
+.phase-recommendations h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.recommendations ul,
+.planning-recommendations ul,
+.strategy-recommendations ul,
+.phase-recommendations ul {
+    list-style: none;
+    padding: 0;
+}
+
+.recommendations li,
+.planning-recommendations li,
+.strategy-recommendations li,
+.phase-recommendations li {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 6px;
+    border-left: 4px solid #2196f3;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Move Sequence */
+.move-sequence {
+    margin-bottom: 24px;
+}
+
+.move-sequence h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.moves-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.move-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #28a745;
+}
+
+.move-number {
+    background: #28a745;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.move-type {
+    font-weight: 600;
+    color: #495057;
+    text-transform: capitalize;
+    min-width: 120px;
+}
+
+.move-details {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Alternative Plans */
+.alternative-plans {
+    margin-bottom: 24px;
+}
+
+.alternative-plans h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.alternative-plan {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #fff3cd;
+    border-radius: 6px;
+    border-left: 4px solid #ffc107;
+}
+
+.alt-plan-header {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Execution Guidance */
+.execution-guidance {
+    margin-bottom: 24px;
+}
+
+.execution-guidance h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.guidance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.guidance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #17a2b8;
+}
+
+.guidance-item label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.priority-high {
+    background: #dc3545;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.priority-medium {
+    background: #ffc107;
+    color: #212529;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.required {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.not-required {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.yes {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.no {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Phase Characteristics */
+.phase-characteristics {
+    margin-bottom: 24px;
+}
+
+.phase-characteristics h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.characteristics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.characteristic-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #6f42c1;
+}
+
+.characteristic-item label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.characteristic-item span {
+    font-weight: 600;
+    color: #333;
+    text-transform: capitalize;
+}
+
+/* Strategic Focus */
+.strategic-focus,
+.strategic-insights {
+    margin-bottom: 24px;
+}
+
+.strategic-focus h4,
+.strategic-insights h4 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.strategic-focus ul,
+.strategic-insights ul {
+    list-style: none;
+    padding: 0;
+}
+
+.strategic-focus li,
+.strategic-insights li {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-radius: 6px;
+    border-left: 4px solid #ffc107;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Optimization Actions */
+.optimization-actions {
+    margin-top: 16px;
+}
+
+.optimization-actions h5 {
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.optimization-actions ul {
+    list-style: none;
+    padding: 0;
+}
+
+.optimization-actions li {
+    padding: 10px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    border-radius: 6px;
+    border-left: 4px solid #28a745;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dynamic-optimization {
+        padding: 16px;
+        margin: 16px 0;
+    }
+    
+    .dynamic-optimization h2 {
+        font-size: 1.5rem;
+    }
+    
+    .optimization-controls {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .evaluation-summary,
+    .plan-summary,
+    .phase-summary,
+    .strategy-summary {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .metrics-grid,
+    .optimization-grid,
+    .risk-grid,
+    .guidance-grid,
+    .characteristics-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .move-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .move-type {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .dynamic-optimization {
+        padding: 12px;
+    }
+    
+    .dynamic-optimization h2 {
+        font-size: 1.3rem;
+    }
+    
+    .optimization-controls {
+        padding: 12px;
+    }
+    
+    .endgame-evaluation,
+    .multi-turn-planning,
+    .game-phase-analysis,
+    .strategy-optimization {
+        padding: 16px;
+    }
+    
+    .summary-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .metric-item,
+    .optimization-item,
+    .risk-item,
+    .guidance-item,
+    .characteristic-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+} 
