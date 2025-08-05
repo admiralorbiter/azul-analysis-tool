@@ -535,3 +535,209 @@ def detect_floor_line_patterns():
         
     except Exception as e:
         return jsonify({'error': f'Floor line pattern detection error: {str(e)}'}), 500 
+
+
+@validation_bp.route('/detect-comprehensive-patterns', methods=['POST'])
+def detect_comprehensive_patterns():
+    """Detect comprehensive patterns using the enhanced pattern detector with taxonomy."""
+    try:
+        # Handle malformed JSON
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+        
+        try:
+            data = request.get_json()
+        except Exception:
+            return jsonify({'error': 'Invalid JSON format'}), 400
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Parse the request
+        try:
+            request_model = PatternDetectionRequest(**data)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
+        
+        # Parse FEN string to get game state
+        try:
+            state = parse_fen_string(request_model.fen_string)
+            if state is None:
+                return jsonify({'error': 'Invalid FEN string', 'message': 'Could not parse game state from FEN string'}), 400
+        except ValueError as e:
+            return jsonify({'error': 'Invalid FEN string', 'message': str(e)}), 400
+        except Exception as e:
+            return jsonify({'error': 'FEN parsing error', 'message': str(e)}), 400
+        
+        # Import and use the enhanced pattern detector
+        from analysis_engine.comprehensive_patterns.enhanced_pattern_detector import EnhancedPatternDetector
+        detector = EnhancedPatternDetector()
+        
+        # Detect comprehensive patterns
+        comprehensive_analysis = detector.detect_patterns_comprehensive(state, request_model.current_player)
+        
+        # Prepare response with taxonomy information
+        response = {
+            'success': True,
+            'comprehensive_analysis': True,
+            'total_patterns': comprehensive_analysis.total_patterns,
+            'quality_metrics': {
+                'coverage_score': comprehensive_analysis.analysis_quality.get('coverage_score', 0.0),
+                'confidence_score': comprehensive_analysis.analysis_quality.get('confidence_score', 0.0),
+                'complexity_score': comprehensive_analysis.analysis_quality.get('complexity_score', 0.0)
+            },
+            'patterns_by_category': {}
+        }
+        
+        # Organize patterns by taxonomy category
+        response['patterns_by_category'] = {
+            'TACTICAL': [],
+            'STRATEGIC': [],
+            'ENDGAME': [],
+            'META': [],
+            'EDGE_CASE': []
+        }
+        
+        # Add tactical patterns
+        for pattern in comprehensive_analysis.tactical_patterns:
+            pattern_data = {
+                'pattern_name': pattern.pattern_definition.name,
+                'category': 'TACTICAL',
+                'urgency_level': pattern.urgency_score,
+                'complexity_level': pattern.complexity_score,
+                'confidence_score': pattern.confidence_score,
+                'description': pattern.pattern_definition.description,
+                'detection_criteria': pattern.pattern_definition.detection_criteria,
+                'success_metrics': pattern.pattern_definition.success_metrics,
+                'interaction_effects': pattern.pattern_definition.interaction_effects,
+                'examples': pattern.pattern_definition.example_scenarios,
+                'counter_patterns': pattern.pattern_definition.counter_patterns,
+                'prerequisites': pattern.pattern_definition.prerequisites,
+                'alternatives': pattern.pattern_definition.alternatives
+            }
+            response['patterns_by_category']['TACTICAL'].append(pattern_data)
+        
+        # Add strategic patterns
+        for pattern in comprehensive_analysis.strategic_patterns:
+            pattern_data = {
+                'pattern_name': pattern.pattern_definition.name,
+                'category': 'STRATEGIC',
+                'urgency_level': pattern.urgency_score,
+                'complexity_level': pattern.complexity_score,
+                'confidence_score': pattern.confidence_score,
+                'description': pattern.pattern_definition.description,
+                'detection_criteria': pattern.pattern_definition.detection_criteria,
+                'success_metrics': pattern.pattern_definition.success_metrics,
+                'interaction_effects': pattern.pattern_definition.interaction_effects,
+                'examples': pattern.pattern_definition.example_scenarios,
+                'counter_patterns': pattern.pattern_definition.counter_patterns,
+                'prerequisites': pattern.pattern_definition.prerequisites,
+                'alternatives': pattern.pattern_definition.alternatives
+            }
+            response['patterns_by_category']['STRATEGIC'].append(pattern_data)
+        
+        # Add endgame patterns
+        for pattern in comprehensive_analysis.endgame_patterns:
+            pattern_data = {
+                'pattern_name': pattern.pattern_definition.name,
+                'category': 'ENDGAME',
+                'urgency_level': pattern.urgency_score,
+                'complexity_level': pattern.complexity_score,
+                'confidence_score': pattern.confidence_score,
+                'description': pattern.pattern_definition.description,
+                'detection_criteria': pattern.pattern_definition.detection_criteria,
+                'success_metrics': pattern.pattern_definition.success_metrics,
+                'interaction_effects': pattern.pattern_definition.interaction_effects,
+                'examples': pattern.pattern_definition.example_scenarios,
+                'counter_patterns': pattern.pattern_definition.counter_patterns,
+                'prerequisites': pattern.pattern_definition.prerequisites,
+                'alternatives': pattern.pattern_definition.alternatives
+            }
+            response['patterns_by_category']['ENDGAME'].append(pattern_data)
+        
+        # Add meta patterns
+        for pattern in comprehensive_analysis.meta_patterns:
+            pattern_data = {
+                'pattern_name': pattern.pattern_definition.name,
+                'category': 'META',
+                'urgency_level': pattern.urgency_score,
+                'complexity_level': pattern.complexity_score,
+                'confidence_score': pattern.confidence_score,
+                'description': pattern.pattern_definition.description,
+                'detection_criteria': pattern.pattern_definition.detection_criteria,
+                'success_metrics': pattern.pattern_definition.success_metrics,
+                'interaction_effects': pattern.pattern_definition.interaction_effects,
+                'examples': pattern.pattern_definition.example_scenarios,
+                'counter_patterns': pattern.pattern_definition.counter_patterns,
+                'prerequisites': pattern.pattern_definition.prerequisites,
+                'alternatives': pattern.pattern_definition.alternatives
+            }
+            response['patterns_by_category']['META'].append(pattern_data)
+        
+        # Add edge case patterns
+        for pattern in comprehensive_analysis.edge_case_patterns:
+            pattern_data = {
+                'pattern_name': pattern.pattern_definition.name,
+                'category': 'EDGE_CASE',
+                'urgency_level': pattern.urgency_score,
+                'complexity_level': pattern.complexity_score,
+                'confidence_score': pattern.confidence_score,
+                'description': pattern.pattern_definition.description,
+                'detection_criteria': pattern.pattern_definition.detection_criteria,
+                'success_metrics': pattern.pattern_definition.success_metrics,
+                'interaction_effects': pattern.pattern_definition.interaction_effects,
+                'examples': pattern.pattern_definition.example_scenarios,
+                'counter_patterns': pattern.pattern_definition.counter_patterns,
+                'prerequisites': pattern.pattern_definition.prerequisites,
+                'alternatives': pattern.pattern_definition.alternatives
+            }
+            response['patterns_by_category']['EDGE_CASE'].append(pattern_data)
+        
+        # Add pattern interactions if available
+        if comprehensive_analysis.pattern_interactions:
+            response['pattern_interactions'] = []
+            for key, interaction in comprehensive_analysis.pattern_interactions.items():
+                interaction_data = {
+                    'pattern_a': key.split('_')[0] if '_' in key else key,
+                    'pattern_b': key.split('_')[1] if '_' in key else 'unknown',
+                    'interaction_type': interaction.get('type', 'unknown'),
+                    'strength': interaction.get('strength', 0.0),
+                    'description': interaction.get('description', 'Pattern interaction detected')
+                }
+                response['pattern_interactions'].append(interaction_data)
+        
+        # Add backward compatibility with existing pattern detection
+        response['backward_compatible'] = {
+            'total_patterns': comprehensive_analysis.total_patterns,
+            'confidence_score': comprehensive_analysis.confidence_score,
+            'patterns_detected': comprehensive_analysis.total_patterns > 0
+        }
+        
+        # Add blocking opportunities if requested
+        if request_model.include_blocking_opportunities and comprehensive_analysis.blocking_opportunities:
+            blocking_opportunities = []
+            for opp in comprehensive_analysis.blocking_opportunities:
+                blocking_opportunities.append({
+                    'target_player': opp.target_player,
+                    'target_pattern_line': opp.target_pattern_line,
+                    'target_color': opp.target_color,
+                    'blocking_tiles_available': opp.blocking_tiles_available,
+                    'blocking_factories': opp.blocking_factories,
+                    'blocking_center': opp.blocking_center,
+                    'urgency_score': opp.urgency_score,
+                    'urgency_level': "HIGH" if opp.urgency_score > 0.8 else "MEDIUM" if opp.urgency_score > 0.6 else "LOW",
+                    'description': opp.description
+                })
+            response['backward_compatible']['blocking_opportunities'] = blocking_opportunities
+        
+        # Add move suggestions if requested
+        if request_model.include_move_suggestions and comprehensive_analysis.blocking_opportunities:
+            move_suggestions = detector.get_blocking_move_suggestions(
+                state, request_model.current_player, comprehensive_analysis.blocking_opportunities
+            )
+            response['backward_compatible']['move_suggestions'] = move_suggestions
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': f'Comprehensive pattern detection error: {str(e)}'}), 500 

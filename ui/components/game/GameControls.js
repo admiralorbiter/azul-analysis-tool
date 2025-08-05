@@ -7,6 +7,7 @@ const ConfigurationPanel = window.ConfigurationPanel;
 const DevelopmentToolsPanel = window.DevelopmentToolsPanel;
 const AnalysisResults = window.AnalysisResults;
 const PatternAnalysis = window.PatternAnalysis;
+const ComprehensivePatternAnalysis = window.ComprehensivePatternAnalysis;
 const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
 const StrategicPatternAnalysis = window.StrategicPatternAnalysis;
 
@@ -159,6 +160,27 @@ window.GameControls = function GameControls({
                     onPatternDetected: (patterns) => {
                         if (patterns.patterns_detected) {
                             setStatusMessage(`🎯 ${patterns.total_patterns} tactical pattern${patterns.total_patterns !== 1 ? 's' : ''} detected`);
+                        }
+                    }
+                })
+            ),
+            
+            // Comprehensive Pattern Analysis Section
+            React.createElement('div', {
+                className: 'mb-4'
+            },
+                React.createElement('h4', {
+                    className: 'font-medium text-sm mb-2 text-gray-700'
+                }, '🏆 Comprehensive Pattern Analysis'),
+                React.createElement(ComprehensivePatternAnalysis, {
+                    gameState: gameState,
+                    currentPlayer: currentPlayer,
+                    onComprehensiveAnalysis: (analysis) => {
+                        if (analysis.success && analysis.total_patterns > 0) {
+                            const categories = Object.keys(analysis.patterns_by_category || {}).filter(cat => 
+                                analysis.patterns_by_category[cat].length > 0
+                            );
+                            setStatusMessage(`🏆 ${analysis.total_patterns} patterns detected across ${categories.length} categories`);
                         }
                     }
                 })

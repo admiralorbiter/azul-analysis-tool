@@ -8,6 +8,7 @@ from .azul_patterns import AzulPatternDetector
 from .azul_scoring_optimization import AzulScoringOptimizationDetector
 from .azul_floor_line_patterns import AzulFloorLinePatternDetector
 from .azul_move_analyzer import AzulMoveQualityAssessor
+from .enhanced_pattern_detector import EnhancedPatternDetector, TaxonomyPatternInstance, ComprehensivePatternAnalysis
 from .comprehensive_pattern_taxonomy import (
     ComprehensivePatternTaxonomy,
     ComprehensivePatternTaxonomyBuilder,
@@ -27,6 +28,9 @@ __all__ = [
     'AzulScoringOptimizationDetector', 
     'AzulFloorLinePatternDetector',
     'AzulMoveQualityAssessor',
+    'EnhancedPatternDetector',
+    'TaxonomyPatternInstance',
+    'ComprehensivePatternAnalysis',
     'ComprehensivePatternTaxonomy',
     'ComprehensivePatternTaxonomyBuilder',
     'ComprehensivePatternTaxonomyManager',
