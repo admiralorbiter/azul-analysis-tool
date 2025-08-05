@@ -506,6 +506,12 @@ def analyze_position():
         # Parse game state
         state = parse_fen_string(analysis_req.fen_string)
         
+        # If parsing failed, fall back to initial state for resilience
+        if state is None:
+            state = parse_fen_string("initial")
+            if state is None:
+                return jsonify({'error': 'Failed to create initial game state'}), 500
+        
         # Import search components
         from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
         

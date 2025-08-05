@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Tuple, Set
 from dataclasses import dataclass
 import numpy as np
 
-from core.azul_move_generator import FastMove
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMove
 from core.azul_utils import Action, Tile
 from core.azul_model import AzulState
 

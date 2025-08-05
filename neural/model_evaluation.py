@@ -15,8 +15,8 @@ import json
 import os
 
 from core.azul_model import AzulState
-from core.azul_evaluator import AzulEvaluator
-from core.azul_move_generator import AzulMoveGenerator
+from analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
+from analysis_engine.mathematical_optimization.azul_move_generator import AzulMoveGenerator
 from neural.azul_net import AzulNet, AzulTensorEncoder, create_azul_net
 from neural.batch_evaluator import BatchNeuralEvaluator, BatchConfig
 from neural.policy_mapping import PolicyMapper, SelectionMethod
@@ -210,7 +210,7 @@ class NeuralModelEvaluator:
                         policy, legal_moves, SelectionMethod.GREEDY
                     )
                     
-                    # Calculate policy confidence
+                    # Calculate policy confidence - policy is already a single tensor for this position
                     confidence = self.policy_mapper.get_move_confidence(
                         policy, selected_move, legal_moves
                     )

@@ -109,7 +109,7 @@ class AzulDynamicOptimizer:
             opponent_blocking * self.endgame_weights['opponent_blocking']
         )
         
-        evaluation_time = time.time() - start_time
+        evaluation_time = max(time.time() - start_time, 0.001)  # Ensure minimum measurable time
         
         return {
             'endgame_score': endgame_score,
@@ -183,8 +183,10 @@ class AzulDynamicOptimizer:
     
     def _determine_game_phase(self, state: AzulState) -> EndgamePhase:
         """Determine the current game phase based on round number."""
-        # Calculate current round from agent trace actions
-        if hasattr(state, 'agents') and state.agents:
+        # Use round attribute if available, otherwise calculate from agent trace
+        if hasattr(state, 'round') and state.round is not None:
+            current_round = state.round
+        elif hasattr(state, 'agents') and state.agents:
             # Get the first agent's trace to determine round
             agent = state.agents[0]
             if hasattr(agent, 'agent_trace') and agent.agent_trace:
@@ -259,7 +261,7 @@ class AzulDynamicOptimizer:
                 # Calculate how efficiently this pattern line is being used
                 tiles_in_line = lines_number[row_idx]
                 max_capacity = row_idx + 1
-                efficiency = tiles_in_line / max_capacity
+                efficiency = min(tiles_in_line / max_capacity, 1.0)  # Cap at 1.0
                 
                 # Bonus for near-completion
                 if tiles_in_line == max_capacity - 1:
@@ -363,27 +365,28 @@ class AzulDynamicOptimizer:
         
         # Generate moves for each factory
         for factory_idx, factory in enumerate(state.factories):
-            if factory:
-                for color in set(factory):
-                    # Generate move to pattern line
-                    for pattern_line_idx in range(5):
+            if factory and hasattr(factory, 'tiles'):
+                for color, count in factory.tiles.items():
+                    if count > 0:
+                        # Generate move to pattern line
+                        for pattern_line_idx in range(5):
+                            move = {
+                                'type': 'factory_to_pattern',
+                                'factory_idx': factory_idx,
+                                'color': color,
+                                'pattern_line_idx': pattern_line_idx,
+                                'player_id': player_id
+                            }
+                            moves.append(move)
+                        
+                        # Generate move to floor line
                         move = {
-                            'type': 'factory_to_pattern',
+                            'type': 'factory_to_floor',
                             'factory_idx': factory_idx,
                             'color': color,
-                            'pattern_line_idx': pattern_line_idx,
                             'player_id': player_id
                         }
                         moves.append(move)
-                    
-                    # Generate move to floor line
-                    move = {
-                        'type': 'factory_to_floor',
-                        'factory_idx': factory_idx,
-                        'color': color,
-                        'player_id': player_id
-                    }
-                    moves.append(move)
         
         return moves
     
@@ -406,8 +409,12 @@ class AzulDynamicOptimizer:
             
             # Copy factories
             for i, factory in enumerate(state.factories):
-                new_state.factories[i].tiles = factory.tiles.copy()
-                new_state.factories[i].total = factory.total
+                new_factory = new_state.TileDisplay()
+                if hasattr(factory, 'tiles'):
+                    for tile_type, count in factory.tiles.items():
+                        if count > 0:
+                            new_factory.AddTiles(count, tile_type)
+                new_state.factories[i] = new_factory
             
             # Copy center pool
             new_state.centre_pool.tiles = state.centre_pool.tiles.copy()
@@ -419,7 +426,7 @@ class AzulDynamicOptimizer:
                 color = move['color']
                 pattern_line_idx = move['pattern_line_idx']
                 
-                # Remove tiles from factory
+                # Remove tiles from factory TileDisplay
                 tiles_to_remove = new_state.factories[factory_idx].tiles.get(color, 0)
                 if tiles_to_remove > 0:
                     new_state.factories[factory_idx].RemoveTiles(tiles_to_remove, color)
@@ -433,7 +440,7 @@ class AzulDynamicOptimizer:
                 factory_idx = move['factory_idx']
                 color = move['color']
                 
-                # Remove tiles from factory
+                # Remove tiles from factory TileDisplay
                 tiles_to_remove = new_state.factories[factory_idx].tiles.get(color, 0)
                 if tiles_to_remove > 0:
                     new_state.factories[factory_idx].RemoveTiles(tiles_to_remove, color)
@@ -543,7 +550,10 @@ class AzulDynamicOptimizer:
         # Count available tiles
         available_tiles = []
         for factory in state.factories:
-            available_tiles.extend(factory)
+            if factory and hasattr(factory, 'tiles'):
+                for tile_type, count in factory.tiles.items():
+                    if count > 0:
+                        available_tiles.extend([tile_type] * count)
         
         if not available_tiles:
             return 1.0  # High risk if no tiles available

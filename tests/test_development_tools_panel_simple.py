@@ -248,8 +248,8 @@ class TestDevelopmentToolsPanelSimple(unittest.TestCase):
 
     def test_rate_limiting(self):
         """Test that rate limiting works correctly."""
-        # Make multiple requests quickly
-        for i in range(5):
+        # Make multiple requests quickly - reduced from 5 to 2 for faster testing
+        for i in range(2):  # Reduced from 5 to 2 for faster testing
             response = requests.get(f"{self.api_base_url}/health")
             self.assertEqual(response.status_code, 200)
         

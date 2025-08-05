@@ -21,28 +21,42 @@ class TestAzulDynamicOptimizer:
         self.test_state.current_player = 0
         
         # Add some tiles to factories
-        self.test_state.factories = [
-            [1, 1, 2, 3],  # Factory 0
-            [2, 3, 4, 5],  # Factory 1
-            [1, 2, 3, 4],  # Factory 2
-            [],             # Factory 3
-            []              # Factory 4
-        ]
+        # Create TileDisplay objects with tiles
+        factory0 = self.test_state.TileDisplay()
+        factory0.AddTiles(2, 0)  # 2 blue tiles
+        factory0.AddTiles(1, 4)  # 1 white tile
+        factory0.AddTiles(1, 2)  # 1 red tile
         
-        # Set up player states
-        self.test_state.players[0].score = 25
-        self.test_state.players[1].score = 20
+        factory1 = self.test_state.TileDisplay()
+        factory1.AddTiles(1, 4)  # 1 white tile
+        factory1.AddTiles(1, 2)  # 1 red tile
+        factory1.AddTiles(1, 3)  # 1 black tile
+        factory1.AddTiles(1, 1)  # 1 yellow tile
+        
+        factory2 = self.test_state.TileDisplay()
+        factory2.AddTiles(1, 0)  # 1 blue tile
+        factory2.AddTiles(1, 4)  # 1 white tile
+        factory2.AddTiles(1, 2)  # 1 red tile
+        factory2.AddTiles(1, 3)  # 1 black tile
+        
+        self.test_state.factories = [factory0, factory1, factory2, self.test_state.TileDisplay(), self.test_state.TileDisplay()]
+        
+        # Set up agent states (not players)
+        self.test_state.agents[0].score = 25
+        self.test_state.agents[1].score = 20
         
         # Add some tiles to pattern lines
-        self.test_state.players[0].pattern_lines[0] = [1, 2]  # 2 tiles in row 0
-        self.test_state.players[0].pattern_lines[1] = [3]     # 1 tile in row 1
+        self.test_state.agents[0].lines_number[0] = 1  # 1 tile in row 0 (capacity 1)
+        self.test_state.agents[0].lines_tile[0] = 0    # Blue tiles
+        self.test_state.agents[0].lines_number[1] = 1  # 1 tile in row 1 (capacity 2)
+        self.test_state.agents[0].lines_tile[1] = 2    # Red tiles
         
         # Add some tiles to floor line
-        self.test_state.players[0].floor_line = [1, 2]
+        self.test_state.agents[0].floor_tiles = [0, 4]  # Blue and white tiles
         
-        # Add some tiles to wall
-        self.test_state.players[0].wall[0][0] = 1  # Blue tile in top-left
-        self.test_state.players[0].wall[1][1] = 2  # Yellow tile in second row, second column
+        # Add some tiles to wall (1 indicates placed tile)
+        self.test_state.agents[0].grid_state[0][0] = 1  # Tile placed in top-left
+        self.test_state.agents[0].grid_state[1][1] = 1  # Tile placed in second row, second column
     
     def test_optimizer_initialization(self):
         """Test dynamic optimizer initialization."""
@@ -94,10 +108,10 @@ class TestAzulDynamicOptimizer:
         assert score == expected_score
         
         # Test with more completed tiles
-        self.test_state.players[0].wall[0][1] = 2
-        self.test_state.players[0].wall[0][2] = 3
-        self.test_state.players[0].wall[0][3] = 4
-        self.test_state.players[0].wall[0][4] = 5  # Complete first row
+        self.test_state.agents[0].grid_state[0][1] = 1
+        self.test_state.agents[0].grid_state[0][2] = 1
+        self.test_state.agents[0].grid_state[0][3] = 1
+        self.test_state.agents[0].grid_state[0][4] = 1  # Complete first row
         
         score = self.optimizer._calculate_wall_completion_score(self.test_state, 0)
         assert score > expected_score  # Should be higher with completed row
@@ -110,7 +124,7 @@ class TestAzulDynamicOptimizer:
         assert penalty == 3
         
         # Test with more floor line tiles
-        self.test_state.players[0].floor_line = [1, 2, 3, 4]
+        self.test_state.agents[0].floor_tiles = [1, 2, 3, 4]
         penalty = self.optimizer._calculate_floor_line_penalty(self.test_state, 0)
         assert penalty == 10  # 1 + 2 + 3 + 4
     
@@ -118,18 +132,20 @@ class TestAzulDynamicOptimizer:
         """Test pattern line efficiency calculation."""
         efficiency = self.optimizer._calculate_pattern_line_efficiency(self.test_state, 0)
         
-        # Row 0: 2 tiles, max capacity 1, efficiency = 2/1 = 2.0 (capped at 1.0)
-        # Row 1: 1 tile, max capacity 2, efficiency = 1/2 = 0.5
-        # Total efficiency = (1.0 + 0.5) / 5 = 0.3
-        expected_efficiency = (1.0 + 0.5) / 5.0
+        # Row 0: 1 tile, max capacity 1, efficiency = 1/1 = 1.0
+        # Row 1: 1 tile, max capacity 2, efficiency = 1/2 = 0.5 + 0.5 (near-completion bonus)
+        # Total efficiency = (1.0 + 1.0) / 5 = 0.4
+        expected_efficiency = (1.0 + 1.0) / 5.0
         assert abs(efficiency - expected_efficiency) < 0.01
     
     def test_calculate_factory_control(self):
         """Test factory control calculation."""
         control = self.optimizer._calculate_factory_control(self.test_state, 0)
         
-        # Available tiles: [1,1,2,3,2,3,4,5,1,2,3,4]
-        # Unique tiles: 5 colors, total tiles: 12
+        # Available tiles: Factory 0 has 2 blue, 1 white, 1 red
+        # Factory 1 has 1 white, 1 red, 1 black, 1 yellow
+        # Factory 2 has 1 blue, 1 white, 1 red, 1 black
+        # Total: 5 unique colors (all colors present), 12 total tiles
         # Diversity score: 5/5 = 1.0
         # Quantity score: 12/20 = 0.6
         # Expected: (1.0 + 0.6) / 2 = 0.8
@@ -144,8 +160,10 @@ class TestAzulDynamicOptimizer:
         assert blocking == 0.0
         
         # Add some pattern lines to opponent
-        self.test_state.players[1].pattern_lines[0] = [1, 2]
-        self.test_state.players[1].pattern_lines[2] = [3]
+        self.test_state.agents[1].lines_number[0] = 2
+        self.test_state.agents[1].lines_tile[0] = 0
+        self.test_state.agents[1].lines_number[2] = 1
+        self.test_state.agents[1].lines_tile[2] = 2
         
         blocking = self.optimizer._calculate_opponent_blocking_potential(self.test_state, 0)
         # 2 tiles in row 0 + 1 tile in row 2 = 3 tiles * 0.1 = 0.3
@@ -200,7 +218,7 @@ class TestAzulDynamicOptimizer:
         move = {
             'type': 'factory_to_pattern',
             'factory_idx': 0,
-            'color': 1,
+            'color': 0,  # Blue tiles
             'pattern_line_idx': 0,
             'player_id': 0
         }
@@ -209,11 +227,14 @@ class TestAzulDynamicOptimizer:
         assert new_state is not None
         
         # Check that tiles were moved correctly
-        # Factory 0 had [1,1,2,3], should now have [2,3]
-        assert new_state.factories[0] == [2, 3]
+        # Factory 0 had 2 blue, 1 white, 1 red tiles, should now have 1 white, 1 red
+        assert new_state.factories[0].tiles.get(0, 0) == 0  # No blue tiles left
+        assert new_state.factories[0].tiles.get(4, 0) == 1  # 1 white tile left
+        assert new_state.factories[0].tiles.get(2, 0) == 1  # 1 red tile left
         
-        # Pattern line 0 should have additional tiles
-        assert len(new_state.players[0].pattern_lines[0]) > 2
+        # Pattern line 0 should have additional tiles (if capacity allows)
+        # Since pattern line 0 has capacity 1 and already has 1 tile, no more can be added
+        assert new_state.agents[0].lines_number[0] == 1  # Still has 1 tile (at capacity)
     
     def test_evaluate_move_sequence(self):
         """Test move sequence evaluation."""
@@ -315,7 +336,11 @@ class TestAzulDynamicOptimizer:
         assert risk == 0.0
         
         # Add opponent pattern lines
-        self.test_state.players[1].pattern_lines[0] = [1, 2]
+        self.test_state.agents[1].lines_number[0] = 2
+        self.test_state.agents[1].lines_tile[0] = 1
+        self.test_state.agents[1].lines_number[2] = 1
+        self.test_state.agents[1].lines_tile[2] = 3
+        
         risk = self.optimizer._calculate_opponent_interference_risk(self.test_state, 0)
         
         # Should be > 0 with opponent pattern lines

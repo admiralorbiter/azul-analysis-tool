@@ -18,9 +18,9 @@ import random
 try:
     from .azul_net import AzulNet, AzulNetConfig, AzulTensorEncoder, create_azul_net
     from ..core.azul_model import AzulState
-    from ..core.azul_evaluator import AzulEvaluator
-    from ..core.azul_move_generator import FastMoveGenerator
-    from ..core.azul_mcts import AzulMCTS, RolloutPolicy
+    from ..analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
+    from ..analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
+    from ..analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
 except ImportError:
     # Fallback for direct import
     import sys
@@ -28,9 +28,9 @@ except ImportError:
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from neural.azul_net import AzulNet, AzulNetConfig, AzulTensorEncoder, create_azul_net
     from core.azul_model import AzulState
-    from core.azul_evaluator import AzulEvaluator
-    from core.azul_move_generator import FastMoveGenerator
-    from core.azul_mcts import AzulMCTS, RolloutPolicy
+    from analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
+    from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
+    from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS, RolloutPolicy
 
 
 @dataclass

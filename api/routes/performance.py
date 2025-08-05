@@ -164,15 +164,9 @@ def get_system_health():
         db_info = {}
         if hasattr(current_app, 'database') and current_app.database:
             try:
-                current_app.database.test_connection()
-                # Get database info for tests
-                db_info = {
-                    'status': 'healthy',
-                    'file_size_mb': 1.5,
-                    'total_pages': 100,
-                    'free_pages': 50,
-                    'page_size': 4096
-                }
+                # Test database connectivity by getting database info
+                db_info = current_app.database.get_database_info()
+                db_info['status'] = 'healthy'
             except Exception as e:
                 db_healthy = False
                 db_info = {
@@ -184,6 +178,7 @@ def get_system_health():
                     'page_size': 0
                 }
         else:
+            db_healthy = False
             db_info = {
                 'status': 'unhealthy',
                 'error': 'Database not available',
@@ -192,6 +187,11 @@ def get_system_health():
                 'free_pages': 0,
                 'page_size': 0
             }
+        
+        # Check database health
+        if not db_healthy:
+            health_status = 'degraded'
+            warnings.append('Database connectivity issues')
         
         # Create performance data
         performance_data = {

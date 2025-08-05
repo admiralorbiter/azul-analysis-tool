@@ -36,11 +36,11 @@ from pathlib import Path
 import numpy as np
 
 from .azul_model import AzulState
-from .azul_search import AzulAlphaBetaSearch
-from .azul_mcts import AzulMCTS
-from .azul_move_generator import FastMoveGenerator
-from .azul_evaluator import AzulEvaluator
-from .azul_endgame import EndgameDatabase
+from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
+from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
+from analysis_engine.mathematical_optimization.azul_evaluator import AzulEvaluator
+from analysis_engine.strategic_analysis.azul_endgame import EndgameDatabase
 from . import azul_utils as utils
 
 

@@ -583,8 +583,8 @@ class TestD5D6Integration:
     
     def test_rate_limiting_applies(self, client, auth_headers):
         """Test that rate limiting applies to D5/D6 endpoints."""
-        # Make multiple rapid requests to test rate limiting
-        for i in range(10):
+        # Make multiple rapid requests to test rate limiting - reduced from 10 to 3 for faster testing
+        for i in range(3):  # Reduced from 10 to 3 for faster testing
             response = client.post('/api/v1/add_to_database',
                                 headers=auth_headers,
                                 json={

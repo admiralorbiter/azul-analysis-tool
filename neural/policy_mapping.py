@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Tuple, Callable
 from dataclasses import dataclass
 from enum import Enum
 
-from core.azul_move_generator import FastMove
+from analysis_engine.mathematical_optimization.azul_move_generator import FastMove
 from core.azul_model import AzulState
 from neural.move_encoding import MoveEncoder
 
@@ -205,6 +205,7 @@ class PolicyMapper:
         # Get policy index for selected move
         try:
             move_index = self.move_encoder.encode_move(selected_move)
+            # Ensure move_index is within policy bounds
             if 0 <= move_index < policy.size(-1):
                 # Get probability of selected move
                 move_prob = torch.softmax(policy, dim=-1)[move_index].item()
@@ -217,9 +218,11 @@ class PolicyMapper:
                 confidence = move_prob / max_prob if max_prob > 0 else 0.0
                 return min(confidence, 1.0)
             else:
-                return 0.0
-        except (ValueError, IndexError):
-            return 0.0
+                # Move index is out of bounds, use fallback confidence
+                return 0.5  # Default confidence for out-of-bounds moves
+        except (ValueError, IndexError, RuntimeError):
+            # Handle any tensor conversion errors
+            return 0.5  # Default confidence for errors
     
     def should_use_fallback(self, confidence: float) -> bool:
         """Determine if heuristic fallback should be used."""

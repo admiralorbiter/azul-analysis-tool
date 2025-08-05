@@ -111,13 +111,9 @@ def parse_fen_string(fen_string: str):
             except Exception as e:
                 print(f"DEBUG: Error loading position '{fen_string}' from database: {e}")
             
-            # Fallback to initial state if position not found
-            print("DEBUG: Falling back to initial state")
-            if _initial_game_state is None:
-                random.seed(42)
-                _initial_game_state = AzulState(2)
-                random.seed()
-            return _initial_game_state
+            # For invalid FEN strings, return None instead of falling back to initial state
+            print("DEBUG: Invalid FEN string - returning None")
+            return None
             
     except Exception as e:
         print(f"DEBUG: Error parsing FEN string '{fen_string}': {e}")

@@ -91,5 +91,52 @@
       },
       "center_pool": {"2": 1}
     }
+  },
+  "critical_floor_risk": {
+    "description": "Critical floor risk test position with 6 tiles on floor line",
+    "category": "floor-line",
+    "difficulty": "expert",
+    "tags": ["floor-line", "risk-mitigation", "critical", "penalty-reduction", "testing"],
+    "setup": {
+      "player_0_floor": [0, 1, 2, 3, 4, 5],
+      "factories": {
+        "0": {"0": 2},
+        "1": {"1": 1},
+        "2": {"2": 1}
+      },
+      "center_pool": {"3": 1}
+    }
+  },
+  "test_blocking_position": {
+    "description": "Test blocking position for pattern detection",
+    "category": "blocking",
+    "difficulty": "beginner",
+    "tags": ["blocking", "pattern-detection", "testing"],
+    "setup": {
+      "player_1_lines": {
+        "0": {"color": 0, "count": 1}
+      },
+      "factories": {
+        "0": {"0": 2},
+        "1": {"0": 1}
+      },
+      "center_pool": {"0": 1}
+    }
+  },
+  "initial": {
+    "description": "Initial game state with no floor tiles",
+    "category": "initial",
+    "difficulty": "beginner",
+    "tags": ["initial", "empty", "testing"],
+    "setup": {
+      "factories": {
+        "0": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 2},
+        "1": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 2},
+        "2": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 2},
+        "3": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 2},
+        "4": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 2}
+      },
+      "center_pool": {}
+    }
   }
 } 

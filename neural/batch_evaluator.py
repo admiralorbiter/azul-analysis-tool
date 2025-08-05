@@ -201,8 +201,11 @@ class BatchNeuralEvaluator:
             else:
                 _, values = self.model(batch_tensor)
         
-        # Convert to list of scores
-        scores = values.cpu().numpy().flatten().tolist()
+        # Convert to list of scores - values is [batch_size, 1], so we need to squeeze
+        scores = values.cpu().numpy().squeeze().tolist()
+        # Ensure scores is a list even if batch_size is 1
+        if not isinstance(scores, list):
+            scores = [scores]
         return scores
     
     def get_policy_batch(self, states: List[AzulState], agent_ids: List[int]) -> List[torch.Tensor]:

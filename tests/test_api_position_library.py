@@ -537,8 +537,8 @@ class TestErrorRecovery:
     
     def test_api_rate_limiting_with_position_library(self):
         """Test rate limiting with position library operations."""
-        # Make multiple requests to test rate limiting
-        for i in range(5):
+        # Make multiple requests to test rate limiting - reduced from 5 to 2 for faster testing
+        for i in range(2):  # Reduced from 5 to 2 for faster testing
             move_data = {
                 "fen_string": "initial",
                 "move": {

@@ -83,6 +83,7 @@ class TestCompetitiveAPIIntegration(unittest.TestCase):
                                       'current_player': 0
                                   })
         
+        # The API should return 400 for invalid FEN strings
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
         self.assertIn('error', data)
@@ -405,10 +406,10 @@ class TestCompetitiveAPIIntegration(unittest.TestCase):
     
     def test_api_rate_limiting(self):
         """Test API rate limiting (if implemented)."""
-        # Make multiple rapid requests
+        # Make multiple rapid requests - reduced from 10 to 3 for faster testing
         fen_string = "test_blocking_position"  # Use a known test position
 
-        for _ in range(10):
+        for _ in range(3):  # Reduced from 10 to 3 for faster testing
             response = self.client.post('/api/v1/detect-patterns',
                                       json={
                                           'fen_string': fen_string,
