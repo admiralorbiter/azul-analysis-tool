@@ -42,7 +42,8 @@ const {
     MoveQualityAnalysis,
     DynamicOptimization,
     CenterPool,
-    GameTheoryAnalysis
+    GameTheoryAnalysis,
+    GameTheoryPage
 } = {
     ValidationFeedback: window.ValidationFeedback || (() => React.createElement('div', null, 'ValidationFeedback not loaded')),
     BoardEditor: window.BoardEditor || (() => React.createElement('div', null, 'BoardEditor not loaded')),
@@ -72,7 +73,8 @@ const {
     MoveQualityAnalysis: window.MoveQualityAnalysis || (() => React.createElement('div', null, 'MoveQualityAnalysis not loaded')),
     DynamicOptimization: window.DynamicOptimization || (() => React.createElement('div', null, 'DynamicOptimization not loaded')),
     CenterPool: window.CenterPool || (() => React.createElement('div', null, 'CenterPool not loaded')),
-    GameTheoryAnalysis: window.GameTheoryAnalysis || (() => React.createElement('div', null, 'GameTheoryAnalysis not loaded'))
+    GameTheoryAnalysis: window.GameTheoryAnalysis || (() => React.createElement('div', null, 'GameTheoryAnalysis not loaded')),
+    GameTheoryPage: window.GameTheoryPage || (() => React.createElement('div', null, 'GameTheoryPage not loaded'))
 };
 
 // Import custom hooks and components

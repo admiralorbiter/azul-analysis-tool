@@ -1,5 +1,5 @@
 // Navigation Component
-// Navigation bar for switching between main interface and neural training
+// Navigation bar for switching between main interface, neural training, and game theory
 
 function Navigation({ currentPage, onPageChange }) {
     return React.createElement('nav', { className: 'navigation bg-white shadow-md p-4 mb-4' },
@@ -10,6 +10,10 @@ function Navigation({ currentPage, onPageChange }) {
                     className: `px-4 py-2 rounded ${currentPage === 'main' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`,
                     onClick: () => onPageChange('main')
                 }, 'Main Interface'),
+                React.createElement('button', {
+                    className: `px-4 py-2 rounded ${currentPage === 'game-theory' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                    onClick: () => onPageChange('game-theory')
+                }, '🎯 Game Theory'),
                 React.createElement('button', {
                     className: `px-4 py-2 rounded ${currentPage === 'neural' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
                     onClick: () => onPageChange('neural')

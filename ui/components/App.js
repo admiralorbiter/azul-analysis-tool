@@ -405,6 +405,12 @@ function App() {
             });
         })(),
         
+        // Game Theory Page
+        currentPage === 'game-theory' && React.createElement(GameTheoryPage, {
+            gameState: gameState,
+            setStatusMessage: setStatusMessage
+        }),
+        
         // Context menu - moved to correct level
         React.createElement(ContextMenu, {
             visible: contextMenu.visible,
