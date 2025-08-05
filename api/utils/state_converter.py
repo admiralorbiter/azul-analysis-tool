@@ -247,4 +247,18 @@ def convert_azul_state_to_frontend(azul_state):
         print(f"DEBUG: Error converting azul state to frontend: {e}")
         import traceback
         print(f"DEBUG: Traceback: {traceback.format_exc()}")
-        return None 
+        return None
+
+
+class StateConverter:
+    """Utility class for converting between different state formats."""
+    
+    @staticmethod
+    def json_to_game_state(json_data):
+        """Convert JSON data to AzulState object."""
+        return convert_frontend_state_to_azul_state(json_data)
+    
+    @staticmethod
+    def game_state_to_json(azul_state):
+        """Convert AzulState object to JSON format."""
+        return convert_azul_state_to_frontend(azul_state) 

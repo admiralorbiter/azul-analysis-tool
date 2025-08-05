@@ -18,4 +18,15 @@ def handle_internal_error(error):
     """Handle 500 Internal Server errors."""
     if hasattr(error, 'description') and 'JSON' in error.description:
         return jsonify({'error': 'Invalid JSON format'}), 400
-    return jsonify({'error': 'Internal server error'}), 500 
+    return jsonify({'error': 'Internal server error'}), 500
+
+
+def handle_api_error(f):
+    """Decorator to handle API errors."""
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    wrapper.__name__ = f.__name__
+    return wrapper 

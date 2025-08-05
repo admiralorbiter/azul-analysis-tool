@@ -49,4 +49,9 @@ class FloorLinePatternRequest(BaseModel):
     include_blocking_opportunities: bool = True
     include_efficiency_opportunities: bool = True
     include_move_suggestions: bool = True
-    urgency_threshold: float = 0.7 
+    urgency_threshold: float = 0.7
+
+
+class ValidationError(Exception):
+    """Custom validation error for API requests."""
+    pass 

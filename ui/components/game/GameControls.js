@@ -10,6 +10,7 @@ const PatternAnalysis = window.PatternAnalysis;
 const ComprehensivePatternAnalysis = window.ComprehensivePatternAnalysis;
 const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
 const StrategicPatternAnalysis = window.StrategicPatternAnalysis;
+const GameTheoryAnalysis = window.GameTheoryAnalysis;
 
 window.GameControls = function GameControls({
     // Analysis state
@@ -242,6 +243,23 @@ window.GameControls = function GameControls({
                             const tier = analysis.primary_recommendation.quality_tier;
                             const score = analysis.primary_recommendation.quality_score;
                             setStatusMessage(`🎯 Best move: ${tier} (${score.toFixed(1)}/100)`);
+                        }
+                    }
+                })
+            ),
+            
+            // Game Theory Analysis Section (Week 3)
+            React.createElement('div', {
+                className: 'mb-4'
+            },
+                React.createElement('h4', {
+                    className: 'font-medium text-sm mb-2 text-gray-700'
+                }, '🎯 Game Theory Analysis'),
+                React.createElement(GameTheoryAnalysis, {
+                    gameState: gameState,
+                    onAnalysisComplete: (analysis) => {
+                        if (analysis && analysis.success) {
+                            setStatusMessage(`🎯 Game theory analysis completed`);
                         }
                     }
                 })
