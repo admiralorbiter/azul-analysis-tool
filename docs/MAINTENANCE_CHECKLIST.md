@@ -2,7 +2,7 @@
 
 > **Regular maintenance procedures to keep documentation clean and relevant**
 
-## 🔄 **Monthly Review Checklist**
+## 🔄 **Regular Review Checklist**
 
 ### **Core Documentation Updates**
 - [ ] **Update `STATUS.md`**
@@ -55,7 +55,7 @@
   - [ ] Consolidate progress summaries
   - [ ] Remove timeline-specific references
 
-## 📊 **Quarterly Review Checklist**
+## 📊 **Major Review Checklist**
 
 ### **Major Structure Review**
 - [ ] **Documentation Structure**
@@ -180,13 +180,13 @@
 
 ## 🎯 **Success Criteria**
 
-### **Monthly Goals**
+### **Regular Goals**
 - [ ] All core docs updated
 - [ ] No outdated information
 - [ ] Clean archive structure
 - [ ] Updated priorities
 
-### **Quarterly Goals**
+### **Major Review Goals**
 - [ ] Major structure improvements
 - [ ] Comprehensive content review
 - [ ] Archive cleanup completed
@@ -200,15 +200,15 @@
 
 ## 📝 **Maintenance Log**
 
-### **Last Review Date**: [Date]
-- [ ] Monthly checklist completed
-- [ ] Quarterly review completed
+### **Last Review Date**: [Priority-based]
+- [ ] Regular checklist completed
+- [ ] Major review completed
 - [ ] Major cleanup completed
 - [ ] Quality metrics updated
 
-### **Next Review Date**: [Date]
-- [ ] Schedule monthly review
-- [ ] Plan quarterly review
+### **Next Review Date**: [Priority-based]
+- [ ] Schedule regular review
+- [ ] Plan major review
 - [ ] Prepare for major release
 - [ ] Update maintenance procedures
 
