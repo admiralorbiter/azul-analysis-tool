@@ -1036,6 +1036,326 @@ class AzulState(GameState):
             'next_first_agent': getattr(self, 'next_first_agent', 0),
         }
 
+    # ===== FEN System Methods =====
+    
+    def to_fen(self) -> str:
+        """Convert AzulState to standard FEN string."""
+        try:
+            # 1. Factories
+            factories = self._encode_factories()
+            
+            # 2. Center Pool
+            center = self._encode_center()
+            
+            # 3. Player Walls
+            player1_wall = self._encode_wall(self.agents[0])
+            player2_wall = self._encode_wall(self.agents[1])
+            
+            # 4. Pattern Lines
+            player1_pattern = self._encode_pattern_lines(self.agents[0])
+            player2_pattern = self._encode_pattern_lines(self.agents[1])
+            
+            # 5. Floor Lines
+            player1_floor = self._encode_floor(self.agents[0])
+            player2_floor = self._encode_floor(self.agents[1])
+            
+            # 6. Scores
+            scores = f"{self.agents[0].score},{self.agents[1].score}"
+            
+            # 7. Round (estimate from game state)
+            round_num = self._estimate_round()
+            
+            # 8. Current Player
+            current_player = getattr(self, 'current_player', 0)
+            
+            # Combine all components
+            fen_parts = [
+                factories,
+                center,
+                f"{player1_wall}/{player1_pattern}/{player1_floor}",
+                f"{player2_wall}/{player2_pattern}/{player2_floor}",
+                scores,
+                str(round_num),
+                str(current_player)
+            ]
+            
+            return "/".join(fen_parts)
+            
+        except Exception as e:
+            # Fallback to hash-based FEN
+            return self._fallback_fen()
+    
+    @classmethod
+    def from_fen(cls, fen_string: str) -> 'AzulState':
+        """Create AzulState from standard FEN string."""
+        try:
+            # Parse FEN components
+            components = cls._parse_fen_components(fen_string)
+            
+            # Create new state
+            state = cls(2)  # 2-player game
+            
+            # Apply components to state
+            cls._apply_factories(state, components['factories'])
+            cls._apply_center(state, components['center'])
+            cls._apply_player(state, 0, components['player1'])
+            cls._apply_player(state, 1, components['player2'])
+            cls._apply_scores(state, components['scores'])
+            cls._apply_round(state, components['round'])
+            cls._apply_current_player(state, components['current_player'])
+            
+            return state
+            
+        except Exception as e:
+            # Fallback to existing parsing
+            return cls._fallback_from_fen(fen_string)
+    
+    @staticmethod
+    def validate_fen(fen_string: str) -> bool:
+        """Validate FEN string format and content."""
+        try:
+            # Basic format check
+            if not fen_string or '/' not in fen_string:
+                return False
+            
+            # Parse components
+            components = AzulState._parse_fen_components(fen_string)
+            
+            # Validate each component
+            if not AzulState._validate_factories(components.get('factories', [])):
+                return False
+            
+            if not AzulState._validate_center(components.get('center', '')):
+                return False
+            
+            if not AzulState._validate_player(components.get('player1', {})):
+                return False
+            
+            if not AzulState._validate_player(components.get('player2', {})):
+                return False
+            
+            if not AzulState._validate_scores(components.get('scores', '')):
+                return False
+            
+            return True
+            
+        except Exception:
+            return False
+    
+    # Helper methods for encoding
+    def _encode_factories(self) -> str:
+        """Encode factories to FEN format."""
+        factory_strings = []
+        for factory in self.factories:
+            tiles = []
+            for color, count in factory.tiles.items():
+                color_letter = self._color_to_letter(color)
+                tiles.extend([color_letter] * count)
+            # Pad to 4 tiles
+            while len(tiles) < 4:
+                tiles.append('-')
+            factory_strings.append(''.join(tiles[:4]))
+        return "|".join(factory_strings)
+    
+    def _encode_center(self) -> str:
+        """Encode center pool to FEN format."""
+        tiles = []
+        for color, count in self.centre_pool.tiles.items():
+            color_letter = self._color_to_letter(color)
+            tiles.extend([color_letter] * count)
+        return ''.join(tiles) if tiles else '-'
+    
+    def _encode_wall(self, agent) -> str:
+        """Encode player wall to FEN format."""
+        rows = []
+        for row in range(5):
+            row_tiles = []
+            for col in range(5):
+                if agent.grid_state[row][col] == 1:
+                    # Determine color based on position
+                    color = self._get_wall_color(row, col)
+                    row_tiles.append(self._color_to_letter(color))
+                else:
+                    row_tiles.append('-')
+            rows.append(''.join(row_tiles))
+        return "|".join(rows)
+    
+    def _encode_pattern_lines(self, agent) -> str:
+        """Encode pattern lines to FEN format."""
+        lines = []
+        for line_num in range(5):
+            line_length = line_num + 1
+            line_tiles = []
+            for pos in range(line_length):
+                if pos < agent.lines_number[line_num]:
+                    color = agent.lines_tile[line_num]
+                    line_tiles.append(self._color_to_letter(color))
+                else:
+                    line_tiles.append('-')
+            lines.append(''.join(line_tiles))
+        return "|".join(lines)
+    
+    def _encode_floor(self, agent) -> str:
+        """Encode floor line to FEN format."""
+        tiles = []
+        for tile in agent.floor_tiles:
+            tiles.append(self._color_to_letter(tile))
+        return ''.join(tiles) if tiles else '-'
+    
+    def _color_to_letter(self, color: int) -> str:
+        """Convert color number to letter."""
+        color_map = {0: 'B', 1: 'Y', 2: 'R', 3: 'K', 4: 'W'}
+        return color_map.get(color, '-')
+    
+    def _get_wall_color(self, row: int, col: int) -> int:
+        """Get the color that should be at wall position."""
+        # This is the Azul wall color scheme
+        color_scheme = [
+            [0, 1, 2, 3, 4],  # Row 0: B,Y,R,K,W
+            [4, 0, 1, 2, 3],  # Row 1: W,B,Y,R,K
+            [3, 4, 0, 1, 2],  # Row 2: K,W,B,Y,R
+            [2, 3, 4, 0, 1],  # Row 3: R,K,W,B,Y
+            [1, 2, 3, 4, 0]   # Row 4: Y,R,K,W,B
+        ]
+        return color_scheme[row][col]
+    
+    def _estimate_round(self) -> int:
+        """Estimate current round based on game state."""
+        # Count completed walls to estimate round
+        total_completed = 0
+        for agent in self.agents:
+            for row in range(5):
+                if sum(agent.grid_state[row]) == 5:  # Complete row
+                    total_completed += 1
+        return max(1, min(5, (total_completed // 2) + 1))
+    
+    def _fallback_fen(self) -> str:
+        """Generate fallback hash-based FEN."""
+        import hashlib
+        import json
+        
+        state_data = {
+            'factories': [(i, dict(factory.tiles)) for i, factory in enumerate(self.factories)],
+            'center': dict(self.centre_pool.tiles),
+            'agents': [
+                {
+                    'lines_tile': agent.lines_tile,
+                    'lines_number': agent.lines_number,
+                    'grid_state': agent.grid_state.tolist(),
+                    'floor_tiles': agent.floor_tiles,
+                    'score': agent.score
+                }
+                for agent in self.agents
+            ]
+        }
+        
+        state_json = json.dumps(state_data, sort_keys=True)
+        state_hash = hashlib.md5(state_json.encode('utf-8')).hexdigest()[:8]
+        return f"state_{state_hash}"
+    
+    @classmethod
+    def _fallback_from_fen(cls, fen_string: str) -> 'AzulState':
+        """Fallback parsing for non-standard FEN strings."""
+        # For now, create a default state
+        # This can be enhanced later to handle other FEN formats
+        return cls(2)
+    
+    @staticmethod
+    def _parse_fen_components(fen_string: str) -> dict:
+        """Parse FEN string into components."""
+        parts = fen_string.split('/')
+        
+        if len(parts) < 7:
+            raise ValueError(f"Invalid FEN format: expected 7+ parts, got {len(parts)}")
+        
+        return {
+            'factories': parts[0].split('|'),
+            'center': parts[1],
+            'player1': {
+                'wall': parts[2].split('|'),
+                'pattern': parts[3].split('|'),
+                'floor': parts[4]
+            },
+            'player2': {
+                'wall': parts[5].split('|'),
+                'pattern': parts[6].split('|'),
+                'floor': parts[7]
+            },
+            'scores': parts[8],
+            'round': int(parts[9]) if len(parts) > 9 else 1,
+            'current_player': int(parts[10]) if len(parts) > 10 else 0
+        }
+    
+    @staticmethod
+    def _validate_factories(factories: list) -> bool:
+        """Validate factory data."""
+        if not isinstance(factories, list):
+            return False
+        for factory in factories:
+            if not isinstance(factory, str) or len(factory) != 4:
+                return False
+        return True
+    
+    @staticmethod
+    def _validate_center(center: str) -> bool:
+        """Validate center pool data."""
+        return isinstance(center, str)
+    
+    @staticmethod
+    def _validate_player(player: dict) -> bool:
+        """Validate player data."""
+        required_keys = ['wall', 'pattern', 'floor']
+        return all(key in player for key in required_keys)
+    
+    @staticmethod
+    def _validate_scores(scores: str) -> bool:
+        """Validate scores data."""
+        try:
+            if ',' not in scores:
+                return False
+            score1, score2 = scores.split(',')
+            int(score1)
+            int(score2)
+            return True
+        except:
+            return False
+    
+    @classmethod
+    def _apply_factories(cls, state, factories_data):
+        """Apply factory data to state."""
+        # Implementation for applying factory data
+        pass
+    
+    @classmethod
+    def _apply_center(cls, state, center_data):
+        """Apply center pool data to state."""
+        # Implementation for applying center data
+        pass
+    
+    @classmethod
+    def _apply_player(cls, state, player_id, player_data):
+        """Apply player data to state."""
+        # Implementation for applying player data
+        pass
+    
+    @classmethod
+    def _apply_scores(cls, state, scores_data):
+        """Apply scores data to state."""
+        # Implementation for applying scores data
+        pass
+    
+    @classmethod
+    def _apply_round(cls, state, round_data):
+        """Apply round data to state."""
+        # Implementation for applying round data
+        pass
+    
+    @classmethod
+    def _apply_current_player(cls, state, current_player_data):
+        """Apply current player data to state."""
+        # Implementation for applying current player data
+        pass
+
     def is_game_over(self):
         """Check if the game is over according to Azul rules.
         

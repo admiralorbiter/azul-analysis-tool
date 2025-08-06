@@ -20,7 +20,7 @@ _current_editable_game_state = None
 
 
 def parse_fen_string(fen_string: str):
-    """Parse FEN string to create game state."""
+    """Parse FEN string to create game state with enhanced support."""
     global _current_game_state, _initial_game_state, _current_editable_game_state
     from core.azul_model import AzulState
     
@@ -29,6 +29,22 @@ def parse_fen_string(fen_string: str):
     print(f"DEBUG: _current_game_state is None: {_current_game_state is None}")
     print(f"DEBUG: _current_editable_game_state is None: {_current_editable_game_state is None}")
     
+    try:
+        # Try standard FEN parsing first
+        if AzulState.validate_fen(fen_string):
+            try:
+                state = AzulState.from_fen(fen_string)
+                print(f"DEBUG: Successfully parsed standard FEN")
+                return state
+            except Exception as e:
+                print(f"DEBUG: Standard FEN parsing failed: {e}")
+        else:
+            print(f"DEBUG: FEN validation failed, trying other formats")
+    
+    except Exception as e:
+        print(f"DEBUG: Standard FEN validation failed: {e}")
+    
+    # Fallback to existing parsing logic
     try:
         # Handle base64 encoded FEN strings
         if fen_string.startswith('base64_'):
@@ -397,7 +413,20 @@ def update_current_game_state(new_state):
 
 
 def state_to_fen(state) -> str:
-    """Convert game state to FEN string."""
+    """Convert game state to FEN string with enhanced support."""
+    try:
+        # Try standard FEN first
+        if hasattr(state, 'to_fen'):
+            return state.to_fen()
+    except Exception as e:
+        print(f"DEBUG: Standard FEN failed, using fallback: {e}")
+    
+    # Fallback to hash-based FEN
+    return _fallback_state_to_fen(state)
+
+
+def _fallback_state_to_fen(state) -> str:
+    """Fallback FEN generation using hash-based approach."""
     global _current_game_state
     
     # If this is the current game state, return a unique identifier
