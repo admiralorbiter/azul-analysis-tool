@@ -200,56 +200,138 @@ const MoveQualityDisplay = ({
             }
         }
 
-        // Skip API calls for local position library states
+        // Generate educational mock data for position library states
         if (gameState.fen_string.startsWith('local_')) {
-            console.log('MoveQualityDisplay: Using mock data for local_ FEN string');
-            console.log('MoveQualityDisplay: FEN string starts with local_:', gameState.fen_string.startsWith('local_'));
-            setMoveAnalysis({
-                message: 'Move quality analysis not available for position library states',
-                best_move: null,
-                alternatives: [],
-                quality_tier: '=',
-                score: 0,
-                is_real_data: false
-            });
-            return;
-        }
-
-        // For testing purposes, provide mock data if FEN string is test data or position library data
-        // Also handle cases where the FEN string might be a simple identifier
-        if (!realData && (gameState.fen_string.includes('test_') || 
-            gameState.fen_string.startsWith('simple_') ||
-            gameState.fen_string.startsWith('complex_') ||
-            gameState.fen_string.startsWith('midgame_') ||
-            gameState.fen_string.startsWith('endgame_') ||
-            gameState.fen_string.startsWith('opening_') ||
-            gameState.fen_string.includes('position') ||
-            gameState.fen_string === 'initial' ||
-            gameState.fen_string === 'saved' ||
-            gameState.fen_string.length < 50)) {
-            console.log('MoveQualityDisplay: Using mock data for position library FEN string (length:', gameState.fen_string.length, ')');
-            const mockQuality = {
-                quality_tier: '!',
-                quality_score: 75.5,
-                blocking_score: 80.0,
-                strategic_score: 70.0,
-                floor_line_score: 65.0,
-                scoring_score: 85.0,
-                confidence_score: 0.8,
-                primary_reason: 'This is a strong move that balances tactical and strategic considerations.',
-                move_description: 'Takes blue tile from factory 1 to pattern line 2'
+            console.log('MoveQualityDisplay: Generating educational mock data for position library state');
+            
+            // Analyze position complexity for educational content
+            const analyzePositionComplexity = (gameState) => {
+                const factoryCount = gameState.factories?.length || 0;
+                const centerTiles = gameState.center?.length || 0;
+                const playerBoards = gameState.players?.length || 0;
+                
+                let complexity = 0;
+                complexity += factoryCount * 10; // Each factory adds complexity
+                complexity += centerTiles * 5;   // Center tiles add complexity
+                complexity += playerBoards * 15; // Player boards add complexity
+                
+                // Cap complexity at 100
+                complexity = Math.min(complexity, 100);
+                
+                return {
+                    score: complexity,
+                    level: complexity < 30 ? 'beginner' : complexity < 70 ? 'intermediate' : 'advanced',
+                    factors: {
+                        factories: factoryCount,
+                        centerTiles: centerTiles,
+                        playerBoards: playerBoards
+                    }
+                };
             };
             
-            setMoveAnalysis({
+            // Generate realistic moves based on game state
+            const generateRealisticMoves = (gameState, currentPlayer) => {
+                const moves = [];
+                const factories = gameState.factories || [];
+                const colors = ['B', 'W', 'Y', 'R', 'K']; // Blue, White, Yellow, Red, Black
+                
+                // Generate moves from factories
+                factories.forEach((factory, factoryIndex) => {
+                    if (factory && factory.length > 0) {
+                        const color = factory[0];
+                        const patternLines = [1, 2, 3, 4, 5];
+                        
+                        patternLines.forEach(line => {
+                            moves.push({
+                                factory: factoryIndex,
+                                color: color,
+                                pattern_line: line,
+                                description: `Take ${color} tile from factory ${factoryIndex + 1} to pattern line ${line}`
+                            });
+                        });
+                    }
+                });
+                
+                // Add floor line moves
+                colors.forEach(color => {
+                    moves.push({
+                        factory: 0,
+                        color: color,
+                        pattern_line: 0, // Floor line
+                        description: `Take ${color} tile to floor line`
+                    });
+                });
+                
+                return moves.slice(0, 5); // Limit to 5 moves for educational purposes
+            };
+            
+            // Determine quality tier based on complexity
+            const determineQualityTier = (complexity) => {
+                if (complexity.score >= 80) return '!!';
+                if (complexity.score >= 60) return '!';
+                if (complexity.score >= 40) return '=';
+                if (complexity.score >= 20) return '?!';
+                return '?';
+            };
+            
+            // Generate educational reasoning
+            const generateEducationalReason = (qualityTier, complexity) => {
+                const reasons = {
+                    '!!': 'This position offers exceptional strategic opportunities. Look for moves that create multiple advantages and demonstrate advanced strategic thinking.',
+                    '!': 'This is a strong position with clear strategic advantages. Focus on moves that maximize your position while minimizing risks.',
+                    '=': 'This position is balanced and offers solid strategic options. Prioritize moves that maintain your position without unnecessary risks.',
+                    '?!': 'This position has some challenges. Look for moves that address key strategic concerns and avoid unnecessary risks.',
+                    '?': 'This position requires careful analysis. Focus on moves that improve your position and avoid moves that weaken your strategic position.'
+                };
+                
+                return reasons[qualityTier] || reasons['='];
+            };
+            
+            // Generate the educational mock analysis
+            const positionComplexity = analyzePositionComplexity(gameState);
+            const availableMoves = generateRealisticMoves(gameState, currentPlayer);
+            const qualityTier = determineQualityTier(positionComplexity);
+            const educationalReason = generateEducationalReason(qualityTier, positionComplexity);
+            
+            // Create educational mock data
+            const educationalMockData = {
                 success: true,
-                best_move: mockQuality,
-                alternatives: [
-                    { ...mockQuality, quality_tier: '=', quality_score: 65.0, move_description: 'Alternative: Take red tile to pattern line 1' },
-                    { ...mockQuality, quality_tier: '?!', quality_score: 45.0, move_description: 'Alternative: Take yellow tile to floor line' }
-                ],
+                best_move: {
+                    quality_tier: qualityTier,
+                    quality_score: positionComplexity.score,
+                    blocking_score: Math.max(60, positionComplexity.score - 10),
+                    strategic_score: Math.max(50, positionComplexity.score - 15),
+                    floor_line_score: Math.max(40, positionComplexity.score - 20),
+                    scoring_score: Math.max(55, positionComplexity.score - 12),
+                    confidence_score: 0.7 + (positionComplexity.score / 100) * 0.3,
+                    primary_reason: educationalReason,
+                    move_description: availableMoves[0]?.description || 'Educational move analysis',
+                    risk_level: positionComplexity.score < 30 ? 'low' : positionComplexity.score < 70 ? 'medium' : 'high'
+                },
+                alternatives: availableMoves.slice(1, 4).map((move, index) => ({
+                    quality_tier: ['!', '=', '?!'][index] || '=',
+                    quality_score: Math.max(40, positionComplexity.score - (index + 1) * 10),
+                    blocking_score: Math.max(50, positionComplexity.score - (index + 1) * 12),
+                    strategic_score: Math.max(45, positionComplexity.score - (index + 1) * 15),
+                    floor_line_score: Math.max(35, positionComplexity.score - (index + 1) * 18),
+                    scoring_score: Math.max(50, positionComplexity.score - (index + 1) * 13),
+                    confidence_score: 0.6 + (positionComplexity.score / 100) * 0.2,
+                    primary_reason: `Alternative move ${index + 1} for educational analysis`,
+                    move_description: move.description,
+                    risk_level: positionComplexity.score < 30 ? 'low' : positionComplexity.score < 70 ? 'medium' : 'high'
+                })),
                 analysis_complete: true,
-                is_real_data: false
-            });
+                is_real_data: false,
+                data_quality: 'educational_mock',
+                educational_enabled: true,
+                position_complexity: positionComplexity,
+                total_moves_analyzed: availableMoves.length,
+                analysis_summary: `Educational analysis of position with ${positionComplexity.level} complexity (${positionComplexity.score}/100)`
+            };
+            
+            setMoveAnalysis(educationalMockData);
+            setIsRealData(false);
+            setLoading(false);
             return;
         }
 

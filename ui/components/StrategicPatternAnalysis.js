@@ -14,15 +14,103 @@ function StrategicPatternAnalysis({ gameState, currentPlayer = 0, onStrategicAna
             return;
         }
         
-        // Skip API calls for local position library states
+        // Generate educational mock data for position library states
         if (gameState.fen_string.startsWith('local_')) {
-            setStrategicAnalysis({
-                message: 'Strategic analysis not available for position library states',
-                factory_control: [],
-                endgame_scenarios: [],
-                risk_reward_scenarios: [],
-                move_suggestions: []
-            });
+            console.log('StrategicPatternAnalysis: Generating educational mock data for position library state');
+            
+            // Analyze position complexity for educational content
+            const analyzePositionComplexity = (gameState) => {
+                const factoryCount = gameState.factories?.length || 0;
+                const centerTiles = gameState.center?.length || 0;
+                const playerBoards = gameState.players?.length || 0;
+                
+                let complexity = 0;
+                complexity += factoryCount * 10;
+                complexity += centerTiles * 5;
+                complexity += playerBoards * 15;
+                complexity = Math.min(complexity, 100);
+                
+                return {
+                    score: complexity,
+                    level: complexity < 30 ? 'beginner' : complexity < 70 ? 'intermediate' : 'advanced',
+                    factors: { factories: factoryCount, centerTiles: centerTiles, playerBoards: playerBoards }
+                };
+            };
+            
+            // Generate educational strategic analysis
+            const generateEducationalStrategicAnalysis = (gameState, currentPlayer) => {
+                const positionComplexity = analyzePositionComplexity(gameState);
+                const factories = gameState.factories || [];
+                
+                // Generate factory control scenarios
+                const factoryControl = factories.map((factory, index) => ({
+                    factory_id: index,
+                    control_score: Math.max(60, positionComplexity.score - index * 5),
+                    dominant_color: factory && factory.length > 0 ? factory[0] : 'B',
+                    strategic_value: Math.max(50, positionComplexity.score - index * 8),
+                    confidence: 0.7 + (positionComplexity.score / 100) * 0.2,
+                    educational_note: `Factory ${index + 1} offers ${positionComplexity.level} level strategic opportunities`
+                }));
+                
+                // Generate endgame scenarios
+                const endgameScenarios = [
+                    {
+                        scenario_type: 'scoring_opportunity',
+                        probability: 0.6 + (positionComplexity.score / 100) * 0.3,
+                        strategic_value: Math.max(70, positionComplexity.score),
+                        description: `Educational endgame scenario: ${positionComplexity.level} complexity position offers scoring opportunities`,
+                        confidence: 0.75
+                    },
+                    {
+                        scenario_type: 'defensive_play',
+                        probability: 0.4 + (positionComplexity.score / 100) * 0.2,
+                        strategic_value: Math.max(60, positionComplexity.score - 10),
+                        description: `Educational defensive scenario: Consider defensive moves in ${positionComplexity.level} position`,
+                        confidence: 0.65
+                    }
+                ];
+                
+                // Generate risk-reward scenarios
+                const riskRewardScenarios = [
+                    {
+                        risk_level: positionComplexity.score < 30 ? 'low' : positionComplexity.score < 70 ? 'medium' : 'high',
+                        reward_potential: Math.max(60, positionComplexity.score),
+                        risk_factors: [`${positionComplexity.level} complexity position`],
+                        strategic_recommendation: `Educational analysis: ${positionComplexity.level} position requires careful risk assessment`,
+                        confidence: 0.7
+                    }
+                ];
+                
+                // Generate move suggestions
+                const moveSuggestions = factories.slice(0, 3).map((factory, index) => ({
+                    move_type: 'factory_selection',
+                    factory_id: index,
+                    strategic_reasoning: `Educational move suggestion: Factory ${index + 1} offers ${positionComplexity.level} level opportunities`,
+                    expected_value: Math.max(65, positionComplexity.score - index * 8),
+                    confidence: 0.8 - (index * 0.1)
+                }));
+                
+                return {
+                    success: true,
+                    factory_control: factoryControl,
+                    endgame_scenarios: endgameScenarios,
+                    risk_reward_scenarios: riskRewardScenarios,
+                    move_suggestions: moveSuggestions,
+                    position_complexity: positionComplexity,
+                    educational_enabled: true,
+                    data_quality: 'educational_mock',
+                    analysis_summary: `Educational strategic analysis for ${positionComplexity.level} complexity position`
+                };
+            };
+            
+            const educationalStrategicData = generateEducationalStrategicAnalysis(gameState, currentPlayer);
+            setStrategicAnalysis(educationalStrategicData);
+            
+            // Notify parent component
+            if (onStrategicAnalysis) {
+                onStrategicAnalysis(educationalStrategicData);
+            }
+            
             return;
         }
         
