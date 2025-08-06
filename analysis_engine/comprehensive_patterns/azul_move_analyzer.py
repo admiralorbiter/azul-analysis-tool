@@ -170,10 +170,15 @@ class AzulMoveQualityAssessor:
         
         for move in valid_moves:
             # Convert move to dictionary format for consistency
+            # Convert tile_type from enum to integer for JSON serialization
+            tile_type = move.tile_type
+            if hasattr(tile_type, 'value'):
+                tile_type = tile_type.value
+            
             move_dict = {
                 'source_type': 'factory' if move.source_id < len(state.factories) else 'center',
                 'source_id': move.source_id,
-                'tile_type': move.tile_type,
+                'tile_type': tile_type,
                 'pattern_line_dest': move.pattern_line_dest,
                 'num_to_pattern_line': move.num_to_pattern_line,
                 'num_to_floor_line': move.num_to_floor_line,
@@ -424,7 +429,13 @@ class AzulMoveQualityAssessor:
     def _create_move_description(self, move) -> str:
         """Create human-readable description of a move."""
         source_type = "factory" if move.source_id < 5 else "center"  # Assuming 5 factories
-        color_name = self.color_names.get(move.tile_type, f"color_{move.tile_type}")
+        
+        # Handle tile_type conversion for both enum and integer
+        tile_type = move.tile_type
+        if hasattr(tile_type, 'value'):
+            tile_type = tile_type.value
+        
+        color_name = self.color_names.get(tile_type, f"color_{tile_type}")
         
         if move.pattern_line_dest >= 0:
             return f"Take {color_name} from {source_type} to pattern line {move.pattern_line_dest + 1}"

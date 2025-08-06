@@ -235,7 +235,7 @@ window.GameControls = function GameControls({
                 React.createElement('h4', {
                     className: 'font-medium text-sm mb-2 text-gray-700'
                 }, '🎯 Move Quality Assessment'),
-                React.createElement(MoveQualityAnalysis, {
+                React.createElement(window.MoveQualityDisplay, {
                     gameState: gameState,
                     currentPlayer: currentPlayer,
                     onMoveRecommendation: (analysis) => {
@@ -243,6 +243,26 @@ window.GameControls = function GameControls({
                             const tier = analysis.primary_recommendation.quality_tier;
                             const score = analysis.primary_recommendation.quality_score;
                             setStatusMessage(`🎯 Best move: ${tier} (${score.toFixed(1)}/100)`);
+                        }
+                    }
+                })
+            ),
+            
+            // Alternative Move Analysis Section (Slice 3 Phase 2)
+            React.createElement('div', {
+                className: 'mb-4'
+            },
+                React.createElement('h4', {
+                    className: 'font-medium text-sm mb-2 text-gray-700'
+                }, '🔄 Alternative Move Analysis'),
+                React.createElement(window.AlternativeMoveAnalysis, {
+                    gameState: gameState,
+                    currentPlayer: currentPlayer,
+                    onMoveSelection: (selectedMove) => {
+                        if (selectedMove) {
+                            const tier = selectedMove.quality_tier;
+                            const score = selectedMove.quality_score;
+                            setStatusMessage(`🔄 Selected move: ${tier} (${score.toFixed(1)}/100)`);
                         }
                     }
                 })

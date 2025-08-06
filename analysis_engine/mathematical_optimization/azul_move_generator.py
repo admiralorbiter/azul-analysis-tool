@@ -534,13 +534,15 @@ class AzulMoveGenerator:
         agent_state = state.agents[agent_id]
         
         for tile_type in utils.Tile:
-            num_available = factory.tiles[tile_type]
+            # Convert Tile enum to integer for dictionary access
+            tile_type_int = tile_type.value if hasattr(tile_type, 'value') else tile_type
+            num_available = factory.tiles.get(tile_type_int, 0)
             if num_available == 0:
                 continue
             
             # Generate pattern line moves
             pattern_moves = self._generate_pattern_line_moves(
-                agent_state, tile_type, num_available, factory_id, utils.Action.TAKE_FROM_FACTORY
+                agent_state, tile_type_int, num_available, factory_id, utils.Action.TAKE_FROM_FACTORY
             )
             moves.extend(pattern_moves)
             
@@ -548,7 +550,7 @@ class AzulMoveGenerator:
             floor_move = Move(
                 action_type=utils.Action.TAKE_FROM_FACTORY,
                 source_id=factory_id,
-                tile_type=tile_type,
+                tile_type=tile_type_int,
                 pattern_line_dest=-1,
                 num_to_pattern_line=0,
                 num_to_floor_line=num_available
@@ -563,13 +565,15 @@ class AzulMoveGenerator:
         agent_state = state.agents[agent_id]
         
         for tile_type in utils.Tile:
-            num_available = state.centre_pool.tiles[tile_type]
+            # Convert Tile enum to integer for dictionary access
+            tile_type_int = tile_type.value if hasattr(tile_type, 'value') else tile_type
+            num_available = state.centre_pool.tiles.get(tile_type_int, 0)
             if num_available == 0:
                 continue
             
             # Generate pattern line moves
             pattern_moves = self._generate_pattern_line_moves(
-                agent_state, tile_type, num_available, -1, utils.Action.TAKE_FROM_CENTRE
+                agent_state, tile_type_int, num_available, -1, utils.Action.TAKE_FROM_CENTRE
             )
             moves.extend(pattern_moves)
             
@@ -577,7 +581,7 @@ class AzulMoveGenerator:
             floor_move = Move(
                 action_type=utils.Action.TAKE_FROM_CENTRE,
                 source_id=-1,
-                tile_type=tile_type,
+                tile_type=tile_type_int,
                 pattern_line_dest=-1,
                 num_to_pattern_line=0,
                 num_to_floor_line=num_available

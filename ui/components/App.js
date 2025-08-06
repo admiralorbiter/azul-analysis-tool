@@ -369,33 +369,7 @@ function App() {
                             currentPlayer: currentPlayer,
                             loading: loading,
                             engineThinking: engineThinking
-                        }),
-                        
-                        // Move Quality Display - Floating panel
-                        gameState && window.MoveQualityDisplay && React.createElement('div', {
-                            style: {
-                                position: 'absolute',
-                                top: '10px',
-                                right: '10px',
-                                width: '350px',
-                                maxHeight: '400px',
-                                zIndex: 1000,
-                                backgroundColor: 'white',
-                                border: '1px solid #e0e0e0',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                overflow: 'hidden'
-                            }
-                        },
-                            React.createElement(window.MoveQualityDisplay, {
-                                gameState: gameState,
-                                currentPlayer: currentPlayer,
-                                onMoveRecommendation: (data) => {
-                                    console.log('Move recommendation:', data);
-                                    setStatusMessage('Move quality analysis completed');
-                                }
-                            })
-                        )
+                        })
                     )
                 )
             )

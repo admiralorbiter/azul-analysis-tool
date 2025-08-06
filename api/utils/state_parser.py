@@ -10,6 +10,7 @@ import copy
 import hashlib
 import json
 import time
+import base64
 from typing import Optional
 
 # Global state variables (moved from routes.py)
@@ -29,6 +30,69 @@ def parse_fen_string(fen_string: str):
     print(f"DEBUG: _current_editable_game_state is None: {_current_editable_game_state is None}")
     
     try:
+        # Handle base64 encoded FEN strings
+        if fen_string.startswith('base64_'):
+            try:
+                # Extract the base64 part after 'base64_'
+                base64_part = fen_string[7:]  # Remove 'base64_' prefix
+                decoded_fen = base64.b64decode(base64_part).decode('utf-8')
+                print(f"DEBUG: Decoded base64 FEN string: {decoded_fen}")
+                
+                # Check if the decoded string is JSON
+                if decoded_fen.strip().startswith('{'):
+                    try:
+                        # Parse as JSON and convert to AzulState
+                        import json
+                        game_data = json.loads(decoded_fen)
+                        print(f"DEBUG: Parsed JSON game data: {game_data}")
+                        
+                        # Convert JSON game data to AzulState
+                        from .state_converter import convert_json_to_azul_state
+                        state = convert_json_to_azul_state(game_data)
+                        if state is not None:
+                            print(f"DEBUG: Successfully converted JSON to AzulState")
+                            return state
+                        else:
+                            print(f"DEBUG: Failed to convert JSON to AzulState")
+                            return None
+                    except json.JSONDecodeError as e:
+                        print(f"DEBUG: Failed to parse JSON: {e}")
+                        # Try to fix malformed JSON structure
+                        print(f"DEBUG: Attempting to fix malformed JSON structure")
+                        try:
+                            fixed_json = fix_malformed_json(decoded_fen)
+                            if fixed_json:
+                                game_data = json.loads(fixed_json)
+                                print(f"DEBUG: Successfully parsed fixed JSON game data")
+                                
+                                # Convert JSON game data to AzulState
+                                from .state_converter import convert_json_to_azul_state
+                                state = convert_json_to_azul_state(game_data)
+                                if state is not None:
+                                    print(f"DEBUG: Successfully converted fixed JSON to AzulState")
+                                    return state
+                        except Exception as fix_error:
+                            print(f"DEBUG: Failed to fix JSON: {fix_error}")
+                        return None
+                else:
+                    # Recursively parse the decoded FEN string as traditional FEN
+                    return parse_fen_string(decoded_fen)
+            except Exception as e:
+                print(f"DEBUG: Failed to decode base64 FEN string: {e}")
+                return None
+        
+        # Handle real game FEN strings (long encoded strings)
+        if len(fen_string) > 100 and not fen_string.startswith(('local_', 'test_', 'simple_', 'complex_', 'midgame_', 'endgame_', 'opening_')):
+            try:
+                # Try to parse as a real game state FEN string
+                print(f"DEBUG: Attempting to parse real game FEN string (length: {len(fen_string)})")
+                state = AzulState.from_fen(fen_string)
+                print(f"DEBUG: Successfully parsed real game FEN string")
+                return state
+            except Exception as e:
+                print(f"DEBUG: Failed to parse real game FEN string: {e}")
+                # Fall back to other parsing methods
+        
         if fen_string.lower() in ["initial", "start"]:
             # Use a consistent initial state with fixed seed for reproducibility
             if _initial_game_state is None:
@@ -101,41 +165,169 @@ def parse_fen_string(fen_string: str):
                     from .state_converter import convert_frontend_state_to_azul_state
                     converted_state = convert_frontend_state_to_azul_state(_current_editable_game_state)
                     if converted_state is not None:
-                        print("DEBUG: Successfully converted frontend state to AzulState")
+                        print("DEBUG: Successfully converted frontend state to AzulState for local FEN")
                         return converted_state
                     else:
-                        print("DEBUG: Failed to convert frontend state")
+                        print("DEBUG: Failed to convert frontend state for local FEN")
                 except Exception as e:
-                    print(f"DEBUG: Error converting frontend state: {e}")
+                    print(f"DEBUG: Error converting frontend state for local FEN: {e}")
             
-            # Fall back to initial state for local FEN strings
-            if _initial_game_state is None:
-                print("DEBUG: Creating initial game state for local FEN")
-                random.seed(42)
-                _initial_game_state = AzulState(2)
-                random.seed()
-            return copy.deepcopy(_initial_game_state)
+            # Fall back to current game state
+            if _current_game_state is None:
+                if _initial_game_state is None:
+                    random.seed(42)
+                    _initial_game_state = AzulState(2)
+                    random.seed()
+                _current_game_state = copy.deepcopy(_initial_game_state)
+            return _current_game_state
         else:
-            # Try to load from dynamic position database
+            # Try to parse as a standard FEN string
             try:
-                from .position_loader import position_loader
-                state = position_loader.create_position(fen_string)
-                if state is not None:
-                    print(f"DEBUG: Successfully loaded position '{fen_string}' from database")
-                    return state
-                else:
-                    print(f"DEBUG: Position '{fen_string}' not found in database")
+                print(f"DEBUG: Attempting to parse as standard FEN string")
+                state = AzulState.from_fen(fen_string)
+                print(f"DEBUG: Successfully parsed standard FEN string")
+                return state
             except Exception as e:
-                print(f"DEBUG: Error loading position '{fen_string}' from database: {e}")
-            
-            # For invalid FEN strings, return None instead of falling back to initial state
-            print("DEBUG: Invalid FEN string - returning None")
-            return None
-            
+                print(f"DEBUG: Failed to parse as standard FEN string: {e}")
+                # If all parsing methods fail, return None
+                return None
+                
     except Exception as e:
-        print(f"DEBUG: Error parsing FEN string '{fen_string}': {e}")
-        import traceback
-        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        print(f"DEBUG: Error in parse_fen_string: {e}")
+        return None
+
+
+def is_real_game_fen(fen_string: str) -> bool:
+    """
+    Determine if a FEN string represents real game data.
+    
+    Args:
+        fen_string: The FEN string to check
+        
+    Returns:
+        bool: True if the FEN string represents real game data
+    """
+    if not fen_string:
+        return False
+    
+    # Check for base64 encoded strings
+    if fen_string.startswith('base64_'):
+        return True
+    
+    # Check for long encoded strings (likely real game data)
+    if len(fen_string) > 100:
+        # Exclude known test/position library patterns
+        if not any(pattern in fen_string for pattern in [
+            'local_', 'test_', 'simple_', 'complex_', 'midgame_', 
+            'endgame_', 'opening_', 'position'
+        ]):
+            return True
+    
+    # Check for standard FEN format (contains game state data)
+    if fen_string.count('|') > 0 or fen_string.count('/') > 0:
+        return True
+    
+    return False
+
+
+def fix_malformed_json(json_string: str) -> Optional[str]:
+    """
+    Fix common malformed JSON structure issues.
+    
+    Args:
+        json_string: The malformed JSON string
+        
+    Returns:
+        Optional[str]: The fixed JSON string, or None if fixing fails
+    """
+    try:
+        print(f"DEBUG: Attempting to fix malformed JSON")
+        
+        # Fix 1: Remove extra opening bracket in factories
+        # Original: "factories":[[["blue","red","yellow"],...]
+        # Fixed: "factories":[["blue","red","yellow"],...]
+        if '"factories":[[' in json_string:
+            json_string = json_string.replace('"factories":[[', '"factories":[')
+            print(f"DEBUG: Fixed extra opening bracket in factories")
+        
+        # Fix 2: Add missing closing bracket before "players"
+        # Find the last factory tile before "players"
+        players_start = json_string.find('"players"')
+        if players_start != -1:
+            # Look for the last closing quote before "players"
+            last_quote_before_players = json_string.rfind('"', 0, players_start)
+            if last_quote_before_players != -1:
+                # Find the closing quote of the last tile
+                closing_quote = json_string.find('"', last_quote_before_players + 1)
+                if closing_quote != -1:
+                    # Check if we need to add a closing bracket
+                    if json_string[closing_quote + 1:players_start].strip().startswith(','):
+                        # Insert the missing closing bracket after the last factory
+                        insert_pos = closing_quote + 1
+                        json_string = json_string[:insert_pos] + "]" + json_string[insert_pos:]
+                        print(f"DEBUG: Added missing closing bracket before players")
+        
+        # Fix 3: Handle any remaining structural issues
+        # Count brackets to ensure they match
+        open_brackets = json_string.count('[')
+        close_brackets = json_string.count(']')
+        open_braces = json_string.count('{')
+        close_braces = json_string.count('}')
+        
+        print(f"DEBUG: Bracket count - Open: {open_brackets}, Close: {close_brackets}")
+        print(f"DEBUG: Brace count - Open: {open_braces}, Close: {close_braces}")
+        
+        # If brackets don't match, try to fix
+        if open_brackets != close_brackets:
+            print(f"DEBUG: Bracket mismatch detected, attempting to fix")
+            # Add missing closing brackets at the end if needed
+            if open_brackets > close_brackets:
+                missing_brackets = open_brackets - close_brackets
+                json_string += "]" * missing_brackets
+                print(f"DEBUG: Added {missing_brackets} missing closing brackets")
+        
+        if open_braces != close_braces:
+            print(f"DEBUG: Brace mismatch detected, attempting to fix")
+            # Add missing closing braces at the end if needed
+            if open_braces > close_braces:
+                missing_braces = open_braces - close_braces
+                json_string += "}" * missing_braces
+                print(f"DEBUG: Added {missing_braces} missing closing braces")
+        
+        print(f"DEBUG: JSON fixing completed")
+        return json_string
+        
+    except Exception as e:
+        print(f"DEBUG: Failed to fix malformed JSON: {e}")
+        return None
+
+
+def decode_base64_fen(base64_fen: str) -> Optional[str]:
+    """
+    Decode a base64 encoded FEN string.
+    
+    Args:
+        base64_fen: The base64 encoded FEN string (with or without 'base64_' prefix)
+        
+    Returns:
+        Optional[str]: The decoded FEN string, or None if decoding fails
+    """
+    try:
+        # Remove 'base64_' prefix if present
+        if base64_fen.startswith('base64_'):
+            base64_part = base64_fen[7:]
+        else:
+            base64_part = base64_fen
+        
+        # Decode base64
+        decoded_bytes = base64.b64decode(base64_part)
+        decoded_fen = decoded_bytes.decode('utf-8')
+        
+        print(f"DEBUG: Successfully decoded base64 FEN string")
+        return decoded_fen
+        
+    except Exception as e:
+        print(f"DEBUG: Failed to decode base64 FEN string: {e}")
         return None
 
 

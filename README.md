@@ -24,7 +24,14 @@ Then open `http://localhost:8000/ui/` in your browser.
 - **Scoring Optimization** - Identify wall completion opportunities and bonuses
 - **Floor Line Patterns** - Analyze penalty management and floor line strategies
 - **Strategic Analysis** - Evaluate timing, trade-offs, and strategic decisions
-- **Move Quality Assessment** - Assess move efficiency and quality
+- **Move Quality Assessment** - Assess move efficiency and quality with real data integration
+
+### **🆕 NEW: Real Data Integration & Alternative Move Analysis**
+- **Base64 FEN Parser** - Robust parsing of encoded game states
+- **Real Data Detection** - Intelligent detection of real vs test data
+- **Alternative Move Analysis** - Side-by-side comparison of multiple moves
+- **Interactive Move Selection** - Clickable move selection with quality indicators
+- **Enhanced API Endpoints** - Real data detection and comprehensive move evaluation
 
 ### **🆕 NEW: Scalable Position Management**
 - **Dynamic Position Loading** - Positions stored in shared JSON database
@@ -77,17 +84,20 @@ python tools/position_manager.py add
 - React-based UI with real-time game state management
 - Interactive board editing and position library
 - Analysis result visualization
+- Real data indicators and alternative move analysis
 
 ### Backend
 - FastAPI-based REST API
 - Advanced pattern detection algorithms
 - Neural network integration for move evaluation
 - Dynamic position loading system
+- Enhanced FEN parser with base64 support
 
 ### Data Management
 - Shared position database (`data/positions.json`)
 - Version controlled position definitions
 - Scalable position management system
+- Real data detection and quality assessment
 
 ## 📖 **Documentation**
 
@@ -95,6 +105,7 @@ python tools/position_manager.py add
 - [Technical Implementation](docs/technical/)
 - [Position Management](docs/technical/position-management.md)
 - [Testing Guide](docs/testing/)
+- [Move Quality Assessment](docs/move_quality/)
 
 ## 🔧 **Development**
 

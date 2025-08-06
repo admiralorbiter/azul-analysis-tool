@@ -135,17 +135,123 @@ def convert_frontend_state_to_azul_state(frontend_state):
 
 
 def convert_tile_string_to_type(tile_string):
-    """Convert tile string (B, Y, R, K, W) to tile type integer."""
+    """Convert tile string (B, Y, R, K, W) or color name to tile type integer."""
+    # Handle both single letter codes and color names
     tile_map = {
         'B': 0,  # Blue
         'Y': 1,  # Yellow
         'R': 2,  # Red
         'K': 3,  # Black
-        'W': 4   # White
+        'W': 4,  # White
+        'blue': 0,
+        'yellow': 1,
+        'red': 2,
+        'black': 3,
+        'white': 4
     }
-    result = tile_map.get(tile_string.upper(), 0)
+    result = tile_map.get(tile_string.lower(), 0)
     print(f"DEBUG: convert_tile_string_to_type('{tile_string}') -> {result}")
     return result
+
+
+def convert_json_to_azul_state(json_data):
+    """Convert JSON game data to AzulState object."""
+    try:
+        from core.azul_model import AzulState
+        
+        print(f"DEBUG: Converting JSON to AzulState")
+        print(f"DEBUG: JSON data keys: {list(json_data.keys())}")
+        
+        # Create a new AzulState
+        state = AzulState(2)  # 2-player game
+        
+        # Convert factories
+        if 'factories' in json_data:
+            print(f"DEBUG: Converting factories from JSON: {json_data['factories']}")
+            for i, factory in enumerate(json_data['factories']):
+                if i < len(state.factories):
+                    # Clear existing tiles
+                    state.factories[i].tiles.clear()
+                    
+                    # Add tiles from JSON format
+                    if isinstance(factory, list):
+                        # Format: array of tile strings
+                        tile_counts = {}
+                        for tile in factory:
+                            tile_type = convert_tile_string_to_type(tile)
+                            tile_counts[tile_type] = tile_counts.get(tile_type, 0) + 1
+                        state.factories[i].tiles.update(tile_counts)
+                        print(f"DEBUG: Factory {i} converted: {factory} -> {tile_counts}")
+        
+        # Convert center pool
+        if 'center' in json_data:
+            print(f"DEBUG: Converting center pool: {json_data['center']}")
+            state.centre_pool.tiles.clear()
+            center_data = json_data['center']
+            if isinstance(center_data, list):
+                # List format: ["blue", "red"] (array of tile strings)
+                tile_counts = {}
+                for tile in center_data:
+                    tile_type = convert_tile_string_to_type(tile)
+                    tile_counts[tile_type] = tile_counts.get(tile_type, 0) + 1
+                state.centre_pool.tiles.update(tile_counts)
+                print(f"DEBUG: Center pool converted: {center_data} -> {tile_counts}")
+        
+        # Convert players
+        if 'players' in json_data:
+            print(f"DEBUG: Converting players: {len(json_data['players'])} players")
+            for i, player in enumerate(json_data['players']):
+                if i < len(state.agents):
+                    agent = state.agents[i]
+                    print(f"DEBUG: Converting player {i}: {list(player.keys())}")
+                    
+                    # Convert pattern lines
+                    if 'pattern_lines' in player:
+                        for j, pattern_line in enumerate(player['pattern_lines']):
+                            if j < len(agent.lines_tile):
+                                if isinstance(pattern_line, list) and len(pattern_line) > 0:
+                                    # Get tile type from first tile in pattern line
+                                    tile_type = convert_tile_string_to_type(pattern_line[0])
+                                    agent.lines_tile[j] = tile_type
+                                    agent.lines_number[j] = len(pattern_line)
+                                else:
+                                    agent.lines_tile[j] = -1
+                                    agent.lines_number[j] = 0
+                    
+                    # Convert wall
+                    if 'wall' in player:
+                        wall_data = player['wall']
+                        if isinstance(wall_data, list) and len(wall_data) == 5:
+                            for row in range(5):
+                                if row < len(agent.grid_state) and len(wall_data[row]) == 5:
+                                    for col in range(5):
+                                        if col < len(agent.grid_state[row]):
+                                            # wall_data[row][col] should be False (empty) or tile color string (has tile)
+                                            if wall_data[row][col] and wall_data[row][col] is not False:
+                                                # Convert tile color string to tile type
+                                                tile_type = convert_tile_string_to_type(wall_data[row][col])
+                                                agent.grid_state[row][col] = tile_type
+                                            else:
+                                                agent.grid_state[row][col] = -1
+                    
+                    # Convert score
+                    if 'score' in player:
+                        agent.score = player['score']
+        
+        # Convert turn
+        if 'turn' in json_data:
+            state.turn = json_data['turn']
+        
+        # Convert first_player_taken
+        if 'first_player_taken' in json_data:
+            state.first_player_taken = json_data['first_player_taken']
+        
+        print(f"DEBUG: Successfully converted JSON to AzulState")
+        return state
+        
+    except Exception as e:
+        print(f"DEBUG: Failed to convert JSON to AzulState: {e}")
+        return None
 
 
 def convert_azul_state_to_frontend(azul_state):
