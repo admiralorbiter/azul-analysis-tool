@@ -74,6 +74,13 @@ function Factory({
         selectedElement.type === 'factory' && 
         selectedElement.data === factoryIndex;
     
+    // Debug: Log factory contents
+    React.useEffect(() => {
+        if (tiles && tiles.length > 0) {
+            console.log(`Factory ${factoryIndex} contents:`, tiles);
+        }
+    }, [tiles, factoryIndex]);
+    
     return (
         <div 
             ref={factoryRef} 
@@ -127,10 +134,24 @@ function Factory({
                                 }
                             }}
                             className={`${heatmap ? `heatmap-${heatmap}` : ""} ${selectedTile && !isSelected ? 'valid-source' : ''} ${isEditSelected ? 'selected' : ''}`}
-                            draggable={tile !== 'W'} // Only non-empty tiles are draggable
+                            draggable={tile !== 'W' && tile !== 'E'} // Only non-empty tiles are draggable
                             isSelected={isSelected}
                             onDragStart={(e, tileElement) => {
                                 console.log('Factory tile drag start:', tile, factoryIndex, index);
+                                
+                                // Validate that the tile exists in this factory using the tiles prop
+                                if (!tiles || !tiles.includes(tile)) {
+                                    console.error(`Tile ${tile} not found in factory ${factoryIndex}. Available tiles:`, tiles);
+                                    e.preventDefault();
+                                    return false;
+                                }
+                                
+                                // Additional validation: ensure tile is draggable
+                                if (tile === 'W' || tile === 'E' || !tile) {
+                                    console.error(`Tile ${tile} is not draggable`);
+                                    e.preventDefault();
+                                    return false;
+                                }
                                 
                                 const tileData = {
                                     tile: tile,

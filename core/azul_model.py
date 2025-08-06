@@ -402,7 +402,16 @@ class AzulState(GameState):
         def ReactionTiles(self, number, tile_type):
             assert number > 0
             assert tile_type in utils.Tile
-            assert tile_type in self.tiles
+            
+            # Ensure all tile types are initialized in self.tiles
+            if not hasattr(self, 'tiles') or self.tiles is None:
+                self.tiles = {}
+                for tile in utils.Tile:
+                    self.tiles[tile] = 0
+            
+            # Ensure this specific tile type is initialized
+            if tile_type not in self.tiles:
+                self.tiles[tile_type] = 0
 
             self.tiles[tile_type] -= number
             self.total -= number
@@ -417,7 +426,16 @@ class AzulState(GameState):
         def AddTiles(self, number, tile_type):
             assert number > 0
             assert tile_type in utils.Tile
-            assert tile_type in self.tiles
+            
+            # Ensure all tile types are initialized in self.tiles
+            if not hasattr(self, 'tiles') or self.tiles is None:
+                self.tiles = {}
+                for tile in utils.Tile:
+                    self.tiles[tile] = 0
+            
+            # Ensure this specific tile type is initialized
+            if tile_type not in self.tiles:
+                self.tiles[tile_type] = 0
             
             self.tiles[tile_type] += number
             self.total += number

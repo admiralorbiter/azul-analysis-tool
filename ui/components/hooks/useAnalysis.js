@@ -176,6 +176,10 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                 const newGameState = result.new_game_state || result.game_state || await getGameState(result.new_fen);
                 await setGameState(newGameState);
                 
+                // Debug: Log the new game state
+                console.log('Move executed successfully, new game state:', newGameState);
+                console.log('New factories:', newGameState.factories);
+                
                 setMoveHistory(prev => [...prev, {
                     move: move,
                     result: result,
@@ -202,10 +206,14 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                 console.error('Move failed:', result);
                 setStatusMessage(`Move failed: ${result.error || 'Unknown error'}`);
                 
-                getGameState().then(async freshState => {
+                // Always refresh game state after failed move
+                try {
+                    const freshState = await getGameState();
                     await setGameState(freshState);
-                    console.log('Game state refreshed after failed move');
-                });
+                    console.log('Game state refreshed after failed move:', freshState);
+                } catch (refreshError) {
+                    console.error('Failed to refresh game state:', refreshError);
+                }
             }
         } catch (error) {
             setStatusMessage(`Error executing move: ${error.message}`);
@@ -228,6 +236,10 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                     setStatusMessage(`Factory ${dragData.sourceId} not found`);
                     return;
                 }
+                
+                // Debug: Log factory contents
+                console.log(`Factory ${dragData.sourceId} contents:`, factory);
+                console.log(`Trying to drag tile: ${dragData.tile}`);
                 
                 const tileExists = factory.includes(dragData.tile);
                 if (!tileExists) {

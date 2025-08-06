@@ -440,7 +440,97 @@ http://localhost:8000/ui/static/js/app.js
 
 ## 📝 FEN String Format
 
-The API uses a custom FEN-like string format for game positions:
+The API uses a **standard FEN (Forsyth-Edwards Notation) format** for game positions. This format provides a compact, human-readable representation of the complete Azul game state.
+
+### **Standard FEN Format**
+
+The standard FEN format follows this structure:
+```
+factories/center/player1_wall/player1_pattern/player1_floor/player2_wall/player2_pattern/player2_floor/scores/round/current_player
+```
+
+**Format Breakdown:**
+- **Factories**: 5 factories, each with 4 tiles (e.g., `BYRK|WBYR|KWBY|RKWB|YRKW`)
+- **Center**: Center pool tiles (e.g., `BYRKW` or `-` if empty)
+- **Player1 Wall**: 5x5 wall grid (e.g., `-----|-----|-----|-----|-----`)
+- **Player1 Pattern**: 5 pattern lines (e.g., `-----|-----|-----|-----|-----`)
+- **Player1 Floor**: Floor line tiles (e.g., `BYR` or `-` if empty)
+- **Player2 Wall**: 5x5 wall grid
+- **Player2 Pattern**: 5 pattern lines
+- **Player2 Floor**: Floor line tiles
+- **Scores**: Comma-separated scores (e.g., `0,0`)
+- **Round**: Current round number (e.g., `1`)
+- **Current Player**: Active player index (e.g., `0`)
+
+**Example Standard FEN:**
+```
+BYRK|WBYR|KWBY|RKWB|YRKW/BYRKW/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/0,0/1/0
+```
+
+### **FEN Types**
+
+The system supports multiple FEN formats:
+
+1. **Standard FEN** (Primary): Human-readable format as shown above
+2. **Hash-based FEN** (`state_{hash}`): For unique state identification
+3. **Base64 FEN** (`base64_{encoded}`): For encoded game data
+4. **Special Positions**: Pre-defined positions like `"start"`, `"midgame"`, `"endgame"`, `"initial"`
+
+### **FEN Validation**
+
+The API provides FEN validation through the `/api/v1/validate-fen` endpoint:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/validate-fen \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fen_string": "BYRK|WBYR|KWBY|RKWB|YRKW/BYRKW/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/0,0/1/0"
+  }'
+```
+
+**Response:**
+```json
+{
+  "valid": true,
+  "format": "standard",
+  "details": {
+    "factories": 5,
+    "center_tiles": 5,
+    "players": 2,
+    "round": 1,
+    "current_player": 0
+  }
+}
+```
+
+### **Game State Loading**
+
+Load a game state from FEN using the `/api/v1/game_state` endpoint:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/game_state \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fen_string": "BYRK|WBYR|KWBY|RKWB|YRKW/BYRKW/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/0,0/1/0"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "game_state": {
+    "factories": [...],
+    "center": [...],
+    "players": [...],
+    "fen_string": "BYRK|WBYR|KWBY|RKWB|YRKW/BYRKW/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/0,0/1/0"
+  }
+}
+```
+
+### **Legacy FEN Format**
+
+For backward compatibility, the API also supports the legacy FEN format:
 
 ```
 <player_count>:<factory_state>:<center_state>:<player_states>
@@ -451,13 +541,15 @@ The API uses a custom FEN-like string format for game positions:
 2:factory_0_blue_2_red_1_yellow_1:center_blue_1_red_1:player_0_pattern_0_blue_1_floor_0_score_0:player_1_pattern_0_red_1_floor_0_score_0
 ```
 
-**Special Positions:**
+### **Special Positions**
+
 - `"start"` - Initial game position
 - `"midgame"` - Mid-game position for testing
 - `"endgame"` - End-game position for testing
 - `"initial"` - **Persistent initial position** - Uses a global state that persists across requests for interactive play
 
-### State Persistence
+### **State Persistence**
+
 For interactive web UI functionality, the API maintains a global game state when using `"initial"` as the FEN string. This ensures that:
 - The game state persists across multiple move executions
 - The UI's perceived state matches the backend's actual state
@@ -489,7 +581,31 @@ elif fen_string == "your_new_position":
 - Test API endpoints with new FEN strings before frontend integration
 - Update error messages to include new FEN strings
 
-### **2. TileDisplay Count Method Issues**
+### **2. Standard FEN Validation**
+
+**Problem**: Invalid FEN format causing parsing errors
+```python
+# ERROR: Invalid FEN format: malformed_fen_string
+```
+
+**Solution**: Use the FEN validation endpoint before processing
+```python
+# Validate FEN before use
+response = requests.post('/api/v1/validate-fen', json={'fen_string': fen})
+if response.json()['valid']:
+    # Process valid FEN
+    game_state = parse_fen_string(fen)
+else:
+    # Handle invalid FEN
+    print(f"Invalid FEN: {response.json()['error']}")
+```
+
+**Best Practice**:
+- Always validate FEN strings before processing
+- Use the standard FEN format for new implementations
+- Provide clear error messages for invalid FEN strings
+
+### **3. TileDisplay Count Method Issues**
 
 **Problem**: `'TileDisplay' object has no attribute 'count'`
 ```python
@@ -512,7 +628,7 @@ if color in state.centre_pool.tiles:
 - Use `centre_pool` (not `center_pool`) for center pool access
 - Follow the pattern established in `azul_scoring_optimization.py`
 
-### **3. AgentState Attribute Issues**
+### **4. AgentState Attribute Issues**
 
 **Problem**: `'AgentState' object has no attribute 'pattern_lines'`
 ```python
@@ -533,7 +649,7 @@ if opponent_state.lines_number[pattern_line] > 0:
 - Use `lines_tile` for color in pattern lines
 - Reference existing working code in `azul_scoring_optimization.py`
 
-### **4. Frontend Module Loading Issues**
+### **5. Frontend Module Loading Issues**
 
 **Problem**: New test positions not appearing in position library
 

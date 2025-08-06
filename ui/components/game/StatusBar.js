@@ -92,7 +92,12 @@ window.StatusBar = function StatusBar({
                     className: 'btn-secondary btn-xs',
                     onClick: manualRefresh,
                     disabled: loading
-                }, '🔄 Refresh')
+                }, '🔄 Refresh'),
+                gameState && gameState.fen_string && React.createElement('span', {
+                    className: 'text-xs text-blue-600 font-mono',
+                    title: 'Current FEN string',
+                    style: { maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }
+                }, `FEN: ${gameState.fen_string.substring(0, 20)}...`)
             )
         )
     );

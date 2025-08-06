@@ -27,6 +27,54 @@ window.endgamePositions = (() => {
         return wall;
     };
 
+    // Helper function to generate standard FEN format
+    const generateStandardFEN = (gameState) => {
+        // Convert game state to standard FEN format
+        // Format: factories/center/player1_wall/player1_pattern/player1_floor/player2_wall/player2_pattern/player2_floor/scores/round/current_player
+        
+        // 1. Factories (5 factories, 4 tiles each)
+        const factories = gameState.factories.map(factory => {
+            // Ensure exactly 4 tiles per factory
+            const tiles = factory.slice(0, 4);
+            while (tiles.length < 4) {
+                tiles.push('-');
+            }
+            return tiles.join('');
+        }).join('|');
+        
+        // 2. Center pool
+        const center = gameState.center.length > 0 ? gameState.center.join('') : '-';
+        
+        // 3. Player data (wall/pattern/floor for each player)
+        const players = gameState.players.map(player => {
+            // Wall (5x5 grid)
+            const wall = player.wall.map(row => 
+                row.map(tile => tile || '-').join('')
+            ).join('|');
+            
+            // Pattern lines (5 lines)
+            const pattern = player.pattern_lines.map(line => 
+                line.join('')
+            ).join('|');
+            
+            // Floor line
+            const floor = player.floor.length > 0 ? player.floor.join('') : '-';
+            
+            return `${wall}/${pattern}/${floor}`;
+        });
+        
+        // 4. Scores
+        const scores = gameState.players.map(p => p.score || 0).join(',');
+        
+        // 5. Round (default to 8 for endgame positions)
+        const round = '8';
+        
+        // 6. Current player (default to 0)
+        const currentPlayer = '0';
+        
+        return `${factories}/${center}/${players[0]}/${players[1]}/${scores}/${round}/${currentPlayer}`;
+    };
+
     // Final Optimization Subcategory
 
     const lastRoundEfficiency = {
@@ -34,24 +82,31 @@ window.endgamePositions = (() => {
         description: "Final moves for maximum points - optimize every tile placement",
         difficulty: "expert",
         tags: ["endgame", "optimization", "final-round", "maximum-points", "2-player"],
-        generate: () => ({
-            factories: [
-                ['R'],
-                ['R'],
-                ['R'],
-                ['R'],
-                ['R']
-            ],
-            center: ['R', 'R', 'R', 'W'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [[], [], ['R', 'R', 'R'], [], ['W']],
-                    createNearCompleteWall(0.6),
-                    ['R', 'W'],
-                    45 + playerIdx * 8
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['R'],
+                    ['R'],
+                    ['R'],
+                    ['R'],
+                    ['R']
+                ],
+                center: ['R', 'R', 'R', 'W'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [[], [], ['R', 'R', 'R'], [], ['W']],
+                        createNearCompleteWall(0.6),
+                        ['R', 'W'],
+                        45 + playerIdx * 8
+                    )
                 )
-            )
-        })
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
     };
 
     const tieBreakerScenario = {
@@ -59,24 +114,31 @@ window.endgamePositions = (() => {
         description: "Close game with precise counting needed - every point matters",
         difficulty: "expert",
         tags: ["endgame", "optimization", "tie-breaker", "precise-counting", "2-player"],
-        generate: () => ({
-            factories: [
-                ['K'],
-                ['K'],
-                ['K'],
-                ['K'],
-                ['K']
-            ],
-            center: ['K', 'K'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [[], [], [], ['K', 'K'], []],
-                    createNearCompleteWall(0.8),
-                    [],
-                    52 + playerIdx * 2
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['K'],
+                    ['K'],
+                    ['K'],
+                    ['K'],
+                    ['K']
+                ],
+                center: ['K', 'K'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [[], [], [], ['K', 'K'], []],
+                        createNearCompleteWall(0.8),
+                        [],
+                        52 + playerIdx * 2
+                    )
                 )
-            )
-        })
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
     };
 
     const bonusScoring = {
@@ -84,199 +146,245 @@ window.endgamePositions = (() => {
         description: "Focus on completing rows, columns, and colors for maximum bonuses",
         difficulty: "expert",
         tags: ["endgame", "optimization", "bonus-scoring", "row-completion", "2-player"],
-        generate: () => ({
-            factories: [
-                ['B', 'Y'],
-                ['R', 'K'],
-                ['W', 'B'],
-                ['Y', 'R'],
-                ['K', 'W']
-            ],
-            center: ['B', 'Y', 'R'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [['B'], ['Y'], ['R'], ['K'], ['W']],
-                    createNearCompleteWall(0.7),
-                    [],
-                    40 + playerIdx * 3
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B', 'Y'],
+                    ['R', 'K'],
+                    ['W', 'B'],
+                    ['Y', 'R'],
+                    ['K', 'W']
+                ],
+                center: ['B', 'Y', 'R'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B'], ['Y'], ['R'], ['K'], ['W']],
+                        createNearCompleteWall(0.7),
+                        [],
+                        48 + playerIdx * 5
+                    )
                 )
-            )
-        })
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
     };
 
     // Precise Counting Subcategory
 
-    const finalTileCounting = {
-        name: "Final Tile Counting",
-        description: "Precise counting of remaining tiles for optimal endgame decisions",
+    const tileConservationPuzzle = {
+        name: "Tile Conservation Puzzle",
+        description: "Managing limited tiles for optimal endgame scoring",
         difficulty: "expert",
-        tags: ["endgame", "counting", "precise", "final-tiles", "2-player"],
-        generate: () => ({
-            factories: [
-                ['W'],
-                ['W'],
-                ['W'],
-                ['W'],
-                ['W']
-            ],
-            center: ['W', 'W', 'W'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [[], [], [], [], ['W', 'W', 'W']],
-                    createNearCompleteWall(0.9),
-                    [],
-                    65 + playerIdx * 5
+        tags: ["endgame", "counting", "tile-conservation", "limited-resources", "2-player"],
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B'],
+                    ['Y'],
+                    ['R'],
+                    ['K'],
+                    ['W']
+                ],
+                center: ['B', 'Y'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B'], ['Y'], ['R'], ['K'], ['W']],
+                        createNearCompleteWall(0.9),
+                        [],
+                        55 + playerIdx * 3
+                    )
                 )
-            )
-        })
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
     };
 
-    const scoreOptimization = {
-        name: "Score Optimization",
-        description: "Maximizing final score through strategic tile placement",
-        difficulty: "expert",
-        tags: ["endgame", "optimization", "score-maximization", "strategic", "2-player"],
-        generate: () => ({
-            factories: [
-                ['B', 'Y', 'R'],
-                ['K', 'W', 'B'],
-                ['Y', 'R', 'K'],
-                ['W', 'B', 'Y'],
-                ['R', 'K', 'W']
-            ],
-            center: ['B', 'Y', 'R', 'K'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [['B', 'B'], ['Y'], ['R'], ['K'], ['W']],
-                    createNearCompleteWall(0.75),
-                    [],
-                    48 + playerIdx * 4
-                )
-            )
-        })
-    };
-
-    const penaltyMinimization = {
-        name: "Penalty Minimization",
-        description: "Avoiding floor line penalties while maximizing scoring",
+    const negativePointsManagement = {
+        name: "Negative Points Management",
+        description: "Minimizing floor line penalties in final scoring",
         difficulty: "advanced",
-        tags: ["endgame", "penalty", "minimization", "floor-line", "2-player"],
-        generate: () => ({
-            factories: [
-                ['R', 'K'],
-                ['W', 'B'],
-                ['Y', 'R'],
-                ['K', 'W'],
-                ['B', 'Y']
-            ],
-            center: ['R', 'K', 'W'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [['R'], ['K'], ['W'], ['B'], ['Y']],
-                    createNearCompleteWall(0.6),
+        tags: ["endgame", "counting", "penalty-minimization", "floor-line", "2-player"],
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B', 'Y'],
                     ['R', 'K'],
-                    35 + playerIdx * 7
+                    ['W', 'B'],
+                    ['Y', 'R'],
+                    ['K', 'W']
+                ],
+                center: ['B', 'Y', 'R', 'K', 'W'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B'], ['Y'], ['R'], ['K'], ['W']],
+                        createNearCompleteWall(0.5),
+                        ['B', 'Y', 'R', 'K', 'W'],
+                        35 + playerIdx * 8
+                    )
                 )
-            )
-        })
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
+    };
+
+    const colorCompletionRace = {
+        name: "Color Completion Race",
+        description: "Final race to complete color sets for bonus points",
+        difficulty: "expert",
+        tags: ["endgame", "counting", "color-completion", "race", "2-player"],
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B', 'B'],
+                    ['Y', 'Y'],
+                    ['R', 'R'],
+                    ['K', 'K'],
+                    ['W', 'W']
+                ],
+                center: ['B', 'Y', 'R'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B', 'B'], ['Y', 'Y'], ['R', 'R'], ['K', 'K'], ['W', 'W']],
+                        createNearCompleteWall(0.6),
+                        [],
+                        42 + playerIdx * 6
+                    )
+                )
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
     };
 
     // Wall Completion Subcategory
 
+    const rowCompletionChallenge = {
+        name: "Row Completion Challenge",
+        description: "Strategic completion of rows for maximum row bonuses",
+        difficulty: "advanced",
+        tags: ["endgame", "wall-completion", "row-bonus", "strategic", "2-player"],
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B', 'Y'],
+                    ['R', 'K'],
+                    ['W', 'B'],
+                    ['Y', 'R'],
+                    ['K', 'W']
+                ],
+                center: ['B', 'Y', 'R'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B'], ['Y'], ['R'], ['K'], ['W']],
+                        createNearCompleteWall(0.8),
+                        [],
+                        50 + playerIdx * 4
+                    )
+                )
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
+    };
+
+    const columnCompletionChallenge = {
+        name: "Column Completion Challenge",
+        description: "Strategic completion of columns for maximum column bonuses",
+        difficulty: "advanced",
+        tags: ["endgame", "wall-completion", "column-bonus", "strategic", "2-player"],
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B', 'Y'],
+                    ['R', 'K'],
+                    ['W', 'B'],
+                    ['Y', 'R'],
+                    ['K', 'W']
+                ],
+                center: ['B', 'Y', 'R'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B'], ['Y'], ['R'], ['K'], ['W']],
+                        createNearCompleteWall(0.7),
+                        [],
+                        47 + playerIdx * 5
+                    )
+                )
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
+    };
+
     const fullWallCompletion = {
         name: "Full Wall Completion",
-        description: "Race to complete entire wall for maximum bonuses",
+        description: "Ultimate challenge - completing entire wall for maximum bonuses",
         difficulty: "expert",
-        tags: ["endgame", "wall-completion", "full-wall", "bonus", "2-player"],
-        generate: () => ({
-            factories: [
-                ['B', 'Y', 'R', 'K', 'W'],
-                ['Y', 'R', 'K', 'W', 'B'],
-                ['R', 'K', 'W', 'B', 'Y'],
-                ['K', 'W', 'B', 'Y', 'R'],
-                ['W', 'B', 'Y', 'R', 'K']
-            ],
-            center: ['B', 'Y', 'R', 'K', 'W'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [['B', 'B', 'B', 'B'], ['Y', 'Y', 'Y', 'Y'], ['R', 'R', 'R', 'R'], ['K', 'K', 'K', 'K'], ['W', 'W', 'W', 'W']],
-                    createNearCompleteWall(0.95),
-                    [],
-                    80 + playerIdx * 10
+        tags: ["endgame", "wall-completion", "full-wall", "ultimate-challenge", "2-player"],
+        generate: () => {
+            const gameState = {
+                factories: [
+                    ['B'],
+                    ['Y'],
+                    ['R'],
+                    ['K'],
+                    ['W']
+                ],
+                center: ['B', 'Y', 'R', 'K', 'W'],
+                players: Array(2).fill().map((_, playerIdx) => 
+                    createPlayer(
+                        [['B'], ['Y'], ['R'], ['K'], ['W']],
+                        createNearCompleteWall(0.95),
+                        [],
+                        60 + playerIdx * 10
+                    )
                 )
-            )
-        })
+            };
+            
+            return {
+                ...gameState,
+                fen_string: generateStandardFEN(gameState)
+            };
+        }
     };
 
-    const rowCompletionRace = {
-        name: "Row Completion Race",
-        description: "Competing to complete rows for scoring bonuses",
-        difficulty: "advanced",
-        tags: ["endgame", "row-completion", "race", "competitive", "2-player"],
-        generate: () => ({
-            factories: [
-                ['B', 'Y'],
-                ['R', 'K'],
-                ['W', 'B'],
-                ['Y', 'R'],
-                ['K', 'W']
-            ],
-            center: ['B', 'Y', 'R'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [['B', 'B', 'B', 'B'], ['Y', 'Y', 'Y'], ['R', 'R'], ['K'], []],
-                    createNearCompleteWall(0.6),
-                    [],
-                    55 + playerIdx * 8
-                )
-            )
-        })
-    };
-
-    const columnCompletionFocus = {
-        name: "Column Completion Focus",
-        description: "Strategic focus on completing columns for vertical bonuses",
-        difficulty: "advanced",
-        tags: ["endgame", "column-completion", "vertical", "strategic", "2-player"],
-        generate: () => ({
-            factories: [
-                ['B', 'Y', 'R'],
-                ['K', 'W', 'B'],
-                ['Y', 'R', 'K'],
-                ['W', 'B', 'Y'],
-                ['R', 'K', 'W']
-            ],
-            center: ['B', 'Y', 'R', 'K'],
-            players: Array(2).fill().map((_, playerIdx) => 
-                createPlayer(
-                    [['B'], ['Y'], ['R'], ['K'], ['W']],
-                    createNearCompleteWall(0.6),
-                    [],
-                    42 + playerIdx * 6
-                )
-            )
-        })
-    };
-
-    // Return the organized structure
+    // Return the module
     return {
         "optimization": {
             name: "Final Optimization",
-            description: "Maximizing endgame scoring",
-            icon: "🎯",
+            description: "Endgame scenarios focused on maximizing final scoring",
             positions: [lastRoundEfficiency, tieBreakerScenario, bonusScoring]
         },
         "counting": {
             name: "Precise Counting",
-            description: "Exact tile counting scenarios",
-            icon: "🧮",
-            positions: [finalTileCounting, scoreOptimization, penaltyMinimization]
+            description: "Scenarios requiring exact calculation and resource management",
+            positions: [tileConservationPuzzle, negativePointsManagement, colorCompletionRace]
         },
         "completion": {
             name: "Wall Completion",
-            description: "Completing walls and patterns",
-            icon: "🏆",
-            positions: [fullWallCompletion, rowCompletionRace, columnCompletionFocus]
+            description: "Strategic wall completion challenges for maximum bonuses",
+            positions: [rowCompletionChallenge, columnCompletionChallenge, fullWallCompletion]
         }
     };
 })(); 

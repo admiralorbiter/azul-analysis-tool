@@ -76,7 +76,11 @@ const {
     DynamicOptimization: window.DynamicOptimization || (() => React.createElement('div', null, 'DynamicOptimization not loaded')),
     CenterPool: window.CenterPool || (() => React.createElement('div', null, 'CenterPool not loaded')),
     GameTheoryAnalysis: window.GameTheoryAnalysis || (() => React.createElement('div', null, 'GameTheoryAnalysis not loaded')),
-    GameTheoryPage: window.GameTheoryPage || (() => React.createElement('div', null, 'GameTheoryPage not loaded'))
+    GameTheoryPage: window.GameTheoryPage || (() => React.createElement('div', null, 'GameTheoryPage not loaded')),
+    FENDisplay: window.FENDisplay || (() => React.createElement('div', null, 'FENDisplay not loaded')),
+    FENInput: window.FENInput || (() => React.createElement('div', null, 'FENInput not loaded')),
+    FENManager: window.FENManager || (() => React.createElement('div', null, 'FENManager not loaded')),
+    TestFENUI: window.TestFENUI || (() => React.createElement('div', null, 'TestFENUI not loaded'))
 };
 
 // Import custom hooks and components
