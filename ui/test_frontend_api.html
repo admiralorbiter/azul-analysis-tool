@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <div id="results"></div>
+    
+    <script src="ui/api/constants.js"></script>
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            try {
+                const apiBase = window.API_CONSTANTS?.API_BASE || '/api/v1';
+                console.log('API Base:', apiBase);
+                
+                const response = await fetch(`${apiBase}/analyze-move-quality`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fen_string: 'initial',
+                        current_player: 0,
+                        include_alternatives: true,
+                        max_alternatives: 4
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Response data:', data);
+                    results.innerHTML = `
+                        <h2>✅ API Test Successful!</h2>
+                        <p>Status: ${response.status}</p>
+                        <p>Success: ${data.success}</p>
+                        <p>Moves analyzed: ${data.total_moves_analyzed}</p>
+                        <p>Best move: ${data.primary_recommendation?.quality_tier} (${data.primary_recommendation?.quality_score})</p>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    results.innerHTML = `
+                        <h2>❌ API Test Failed</h2>
+                        <p>Status: ${response.status}</p>
+                        <p>Error: ${errorText}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('API test error:', error);
+                results.innerHTML = `
+                    <h2>❌ API Test Failed</h2>
+                    <p>Error: ${error.message}</p>
+                    <p>API Base: ${window.API_CONSTANTS?.API_BASE || 'Not set'}</p>
+                `;
+            }
+        }
+        
+        // Run test when page loads
+        testAPI();
+    </script>
+</body>
+</html> 

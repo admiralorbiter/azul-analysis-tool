@@ -48,7 +48,7 @@ def create_app(config=None):
         })
     
     # Enable CORS for web UI integration
-    CORS(app, origins=['http://localhost:3000', 'http://127.0.0.1:3000'])
+    CORS(app, origins=['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8000', 'http://127.0.0.1:8000'])
     
     # Initialize rate limiter
     if app.config.get('RATE_LIMIT_ENABLED', True):
@@ -94,35 +94,6 @@ def create_app(config=None):
             response.headers['Content-Type'] = 'text/css'
         
         return response
-    
-    # Serve UI files at root level for easier access
-    @app.route('/<path:filename>')
-    def static_files(filename):
-        ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
-        
-        # Only serve files that exist in the ui directory
-        if os.path.exists(os.path.join(ui_dir, filename)):
-            response = send_from_directory(ui_dir, filename)
-            
-            # Set correct MIME types
-            if filename.endswith('.js') or filename.endswith('.jsx'):
-                response.headers['Content-Type'] = 'application/javascript'
-            elif filename.endswith('.css'):
-                response.headers['Content-Type'] = 'text/css'
-            elif filename.endswith('.png'):
-                response.headers['Content-Type'] = 'image/png'
-            elif filename.endswith('.jpg') or filename.endswith('.jpeg'):
-                response.headers['Content-Type'] = 'image/jpeg'
-            
-            return response
-        else:
-            # Only fall back to index.html for known UI routes (not API routes)
-            if not filename.startswith('api/'):
-                return send_from_directory(ui_dir, 'index.html')
-            else:
-                # Let Flask handle 404 for API routes
-                from werkzeug.exceptions import NotFound
-                raise NotFound()
     
     # API info endpoint
     @app.route('/api')
@@ -173,6 +144,35 @@ def create_app(config=None):
     def index():
         ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
         return send_from_directory(ui_dir, 'index.html')
+    
+    # Serve UI files at root level for easier access (must be after API routes)
+    @app.route('/<path:filename>')
+    def static_files(filename):
+        ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ui')
+        
+        # Only serve files that exist in the ui directory
+        if os.path.exists(os.path.join(ui_dir, filename)):
+            response = send_from_directory(ui_dir, filename)
+            
+            # Set correct MIME types
+            if filename.endswith('.js') or filename.endswith('.jsx'):
+                response.headers['Content-Type'] = 'application/javascript'
+            elif filename.endswith('.css'):
+                response.headers['Content-Type'] = 'text/css'
+            elif filename.endswith('.png'):
+                response.headers['Content-Type'] = 'image/png'
+            elif filename.endswith('.jpg') or filename.endswith('.jpeg'):
+                response.headers['Content-Type'] = 'image/jpeg'
+            
+            return response
+        else:
+            # Only fall back to index.html for known UI routes (not API routes)
+            if not filename.startswith('api/'):
+                return send_from_directory(ui_dir, 'index.html')
+            else:
+                # Let Flask handle 404 for API routes
+                from werkzeug.exceptions import NotFound
+                raise NotFound()
     
     # Error handlers
     @app.errorhandler(404)

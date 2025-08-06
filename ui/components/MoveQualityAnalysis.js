@@ -44,13 +44,27 @@ function MoveQualityAnalysis({ gameState, currentPlayer = 0, onMoveRecommendatio
     }, [gameState?.fen_string, currentPlayer]);
 
     const analyzeMoveQuality = async () => {
+        console.log('MoveQualityAnalysis: analyzeMoveQuality called');
+        
         if (!gameState || !gameState.fen_string) {
+            console.log('MoveQualityAnalysis: No game state available');
             setError('No game state available');
             return;
         }
 
-        // Skip API calls for local position library states
-        if (gameState.fen_string.startsWith('local_')) {
+        console.log('MoveQualityAnalysis: Analyzing FEN string:', gameState.fen_string);
+
+        // Skip API calls for local position library states or test positions
+        if (gameState.fen_string.startsWith('local_') ||
+            gameState.fen_string.includes('test_') ||
+            gameState.fen_string.startsWith('simple_') ||
+            gameState.fen_string.startsWith('complex_') ||
+            gameState.fen_string.startsWith('midgame_') ||
+            gameState.fen_string.startsWith('endgame_') ||
+            gameState.fen_string.startsWith('opening_') ||
+            gameState.fen_string.includes('position') ||
+            gameState.fen_string.length > 100) { // Base64 encoded strings are typically long
+            console.log('MoveQualityAnalysis: Using mock data for position library FEN string (length:', gameState.fen_string.length, ')');
             setMoveAnalysis({
                 message: 'Move quality analysis not available for position library states',
                 best_move: null,
@@ -64,8 +78,11 @@ function MoveQualityAnalysis({ gameState, currentPlayer = 0, onMoveRecommendatio
         setLoading(true);
         setError(null);
 
+        console.log('MoveQualityAnalysis: Making API call for FEN string:', gameState.fen_string);
+
         try {
-            const response = await fetch('/api/v1/analyze-move-quality', {
+            const apiBase = window.API_CONSTANTS?.API_BASE || '/api/v1';
+            const response = await fetch(`${apiBase}/analyze-move-quality`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

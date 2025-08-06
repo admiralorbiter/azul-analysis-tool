@@ -92,6 +92,13 @@ def analyze_move_quality():
                 'error': f'Invalid FEN string: {str(e)}'
             }), 400
         
+        # Check if game_state is None (invalid FEN string)
+        if game_state is None:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid FEN string: "{fen_string}" is not recognized. Use "initial" for the starting position.'
+            }), 400
+        
         # Validate player ID
         if current_player >= len(game_state.agents):
             return jsonify({

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend FEN Logic Test</title>
+</head>
+<body>
+    <h1>Frontend FEN Logic Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test the FEN string logic from MoveQualityDisplay
+        function testFenLogic(fenString) {
+            const isTestData = fenString.includes('test_') || 
+                              fenString.includes('_') || 
+                              fenString.length < 10 ||
+                              fenString.startsWith('simple_') ||
+                              fenString.startsWith('complex_') ||
+                              fenString.startsWith('midgame_') ||
+                              fenString.startsWith('endgame_') ||
+                              fenString.startsWith('opening_');
+            
+            return isTestData;
+        }
+        
+        // Test various FEN strings
+        const testCases = [
+            'initial',
+            'simple_blue_blocking',
+            'complex_position',
+            'midgame_position',
+            'endgame_position',
+            'opening_position',
+            'test_position',
+            'local_abc123',
+            'state_123456'
+        ];
+        
+        const results = document.getElementById('results');
+        results.innerHTML = '<h2>Test Results:</h2>';
+        
+        testCases.forEach(fenString => {
+            const isTestData = testFenLogic(fenString);
+            const status = isTestData ? '✅ Mock Data' : '❌ API Call';
+            results.innerHTML += `<p><strong>${fenString}</strong>: ${status}</p>`;
+        });
+    </script>
+</body>
+</html> 
