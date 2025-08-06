@@ -26,6 +26,9 @@ const PositionLibrary = window.PositionLibrary;
 const ContextMenu = window.ContextMenu;
 const NeuralTrainingPage = window.NeuralTrainingPage;
 const TestMoveQualityPage = window.TestMoveQualityPage;
+const PerformanceAnalytics = window.PerformanceAnalytics;
+const AdvancedAnalysisLab = window.AdvancedAnalysisLab;
+const TacticalTrainingCenter = window.TacticalTrainingCenter;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -418,6 +421,24 @@ function App() {
         
         // Test Move Quality Page
         currentPage === 'test-move-quality' && React.createElement(TestMoveQualityPage, {
+            gameState: gameState,
+            setStatusMessage: setStatusMessage
+        }),
+        
+        // Performance Analytics Page
+        currentPage === 'performance-analytics' && React.createElement(PerformanceAnalytics, {
+            gameState: gameState,
+            setStatusMessage: setStatusMessage
+        }),
+        
+        // Advanced Analysis Lab Page
+        currentPage === 'advanced-analysis' && React.createElement(AdvancedAnalysisLab, {
+            gameState: gameState,
+            setStatusMessage: setStatusMessage
+        }),
+        
+        // Tactical Training Center Page
+        currentPage === 'tactical-training' && React.createElement(TacticalTrainingCenter, {
             gameState: gameState,
             setStatusMessage: setStatusMessage
         }),
