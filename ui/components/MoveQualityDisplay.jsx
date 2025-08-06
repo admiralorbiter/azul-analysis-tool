@@ -9,8 +9,9 @@
  * - Detailed analysis sections
  * - Responsive design with consistent styling
  * - Real data detection and enhanced analysis
+ * - EDUCATIONAL ENHANCEMENTS: Strategic explanations and learning tips
  * 
- * Version: 1.0.2 - Enhanced real data detection and base64 FEN support
+ * Version: 1.1.0 - Added educational explanations and strategic reasoning
  */
 
 const { useState, useEffect } = React;
@@ -25,44 +26,105 @@ const MoveQualityDisplay = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showDetails, setShowDetails] = useState(false);
+    const [showEducational, setShowEducational] = useState(false);
     const [isRealData, setIsRealData] = useState(false);
 
-    // Quality tier configuration
+    // Quality tier configuration with educational content
     const qualityTierConfig = {
         '!!': { 
             label: 'Brilliant', 
             color: '#FFD700', 
             icon: '⭐', 
             bgColor: '#FFF8DC',
-            borderColor: '#FFD700'
+            borderColor: '#FFD700',
+            educational: {
+                title: 'Brilliant Move - Strategic Masterpiece',
+                explanation: 'This move demonstrates exceptional strategic thinking. It likely creates multiple threats, blocks opponent opportunities, and sets up future advantages.',
+                strategicReasoning: 'Brilliant moves often combine tactical precision with long-term strategic vision. They may sacrifice immediate gains for superior position.',
+                learningTips: [
+                    'Look for moves that create multiple threats',
+                    'Consider long-term strategic implications',
+                    'Evaluate opponent\'s best responses',
+                    'Balance immediate gains with future opportunities'
+                ],
+                bestPractices: 'When you find a brilliant move, take time to understand why it works. These moves often reveal deep strategic patterns.'
+            }
         },
         '!': { 
             label: 'Excellent', 
             color: '#4CAF50', 
             icon: '💎', 
             bgColor: '#E8F5E8',
-            borderColor: '#4CAF50'
+            borderColor: '#4CAF50',
+            educational: {
+                title: 'Excellent Move - Strong Strategic Play',
+                explanation: 'This move is strategically sound and likely the best available option. It improves your position while limiting opponent opportunities.',
+                strategicReasoning: 'Excellent moves typically maximize your advantages while minimizing risks. They follow sound strategic principles.',
+                learningTips: [
+                    'Focus on moves that improve your position',
+                    'Consider the principle of least resistance',
+                    'Evaluate risk-reward ratios carefully',
+                    'Look for moves that limit opponent options'
+                ],
+                bestPractices: 'Excellent moves are the foundation of strong play. Practice identifying these moves consistently.'
+            }
         },
         '=': { 
             label: 'Good', 
             color: '#2196F3', 
             icon: '👍', 
             bgColor: '#E3F2FD',
-            borderColor: '#2196F3'
+            borderColor: '#2196F3',
+            educational: {
+                title: 'Good Move - Solid Strategic Choice',
+                explanation: 'This move is fundamentally sound and maintains a good position. While not exceptional, it avoids mistakes and keeps options open.',
+                strategicReasoning: 'Good moves maintain equilibrium and avoid weakening your position. They provide a solid foundation for future play.',
+                learningTips: [
+                    'Prioritize moves that don\'t weaken your position',
+                    'Maintain flexibility for future opportunities',
+                    'Avoid moves that create unnecessary weaknesses',
+                    'Consider the principle of least commitment'
+                ],
+                bestPractices: 'Good moves are the backbone of consistent play. Master these before attempting more complex strategies.'
+            }
         },
         '?!': { 
             label: 'Dubious', 
             color: '#FF9800', 
             icon: '⚠️', 
             bgColor: '#FFF3E0',
-            borderColor: '#FF9800'
+            borderColor: '#FF9800',
+            educational: {
+                title: 'Dubious Move - Questionable Strategic Choice',
+                explanation: 'This move has significant drawbacks or risks. While it might work in some situations, it\'s generally not recommended.',
+                strategicReasoning: 'Dubious moves often involve unnecessary risks or fail to address key strategic concerns. They may create weaknesses.',
+                learningTips: [
+                    'Look for safer alternatives',
+                    'Consider the risks before making the move',
+                    'Evaluate if the potential gains justify the risks',
+                    'Ask yourself if this move creates weaknesses'
+                ],
+                bestPractices: 'When you see a dubious move, look for better alternatives. Sometimes the best move is to avoid making a move.'
+            }
         },
         '?': { 
             label: 'Poor', 
             color: '#F44336', 
             icon: '❌', 
             bgColor: '#FFEBEE',
-            borderColor: '#F44336'
+            borderColor: '#F44336',
+            educational: {
+                title: 'Poor Move - Strategic Mistake',
+                explanation: 'This move is strategically unsound and likely worsens your position. It may create weaknesses or miss better opportunities.',
+                strategicReasoning: 'Poor moves often violate basic strategic principles. They may create weaknesses, miss opportunities, or play into opponent plans.',
+                learningTips: [
+                    'Look for moves that improve your position',
+                    'Consider the strategic implications carefully',
+                    'Avoid moves that create weaknesses',
+                    'Think about what your opponent wants you to do'
+                ],
+                bestPractices: 'Learn from poor moves by understanding why they don\'t work. This helps avoid similar mistakes in the future.'
+            }
         }
     };
 
@@ -458,6 +520,144 @@ const MoveQualityDisplay = ({
         );
     };
 
+    // Educational Content Component
+    const EducationalContent = ({ quality, config }) => {
+        if (!showEducational) {
+            return (
+                <button
+                    onClick={() => setShowEducational(true)}
+                    style={{
+                        background: 'none',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        color: '#666',
+                        cursor: 'pointer',
+                        width: '100%',
+                        marginTop: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}
+                >
+                    <span>🎓</span>
+                    <span>Learn About This Move</span>
+                </button>
+            );
+        }
+
+        const educational = config.educational;
+
+        return (
+            <div className="educational-content">
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '12px'
+                }}>
+                    <h4 style={{ 
+                        margin: 0, 
+                        fontSize: '14px', 
+                        color: '#333',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}>
+                        <span>🎓</span>
+                        <span>{educational.title}</span>
+                    </h4>
+                    <button
+                        onClick={() => setShowEducational(false)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '12px',
+                            color: '#666',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Hide
+                    </button>
+                </div>
+                
+                <div style={{ 
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '6px',
+                    padding: '12px',
+                    fontSize: '12px',
+                    lineHeight: '1.4',
+                    color: '#555'
+                }}>
+                    {/* Explanation */}
+                    <div style={{ marginBottom: '12px' }}>
+                        <div style={{ 
+                            fontWeight: 'bold', 
+                            marginBottom: '4px',
+                            color: '#333'
+                        }}>
+                            📖 Explanation
+                        </div>
+                        <div>{educational.explanation}</div>
+                    </div>
+
+                    {/* Strategic Reasoning */}
+                    <div style={{ marginBottom: '12px' }}>
+                        <div style={{ 
+                            fontWeight: 'bold', 
+                            marginBottom: '4px',
+                            color: '#333'
+                        }}>
+                            ♟️ Strategic Reasoning
+                        </div>
+                        <div>{educational.strategicReasoning}</div>
+                    </div>
+
+                    {/* Learning Tips */}
+                    <div style={{ marginBottom: '12px' }}>
+                        <div style={{ 
+                            fontWeight: 'bold', 
+                            marginBottom: '4px',
+                            color: '#333'
+                        }}>
+                            💡 Learning Tips
+                        </div>
+                        <ul style={{ 
+                            margin: '4px 0', 
+                            paddingLeft: '16px',
+                            fontSize: '11px'
+                        }}>
+                            {educational.learningTips.map((tip, index) => (
+                                <li key={index} style={{ marginBottom: '2px' }}>{tip}</li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Best Practices */}
+                    <div>
+                        <div style={{ 
+                            fontWeight: 'bold', 
+                            marginBottom: '4px',
+                            color: '#333'
+                        }}>
+                            ✅ Best Practices
+                        </div>
+                        <div style={{ 
+                            backgroundColor: '#e8f5e8',
+                            padding: '6px 8px',
+                            borderRadius: '4px',
+                            borderLeft: '3px solid #4CAF50'
+                        }}>
+                            {educational.bestPractices}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // Detailed Analysis Component
     const DetailedAnalysis = ({ quality }) => {
         if (!showDetails) {
@@ -473,7 +673,7 @@ const MoveQualityDisplay = ({
                         color: '#666',
                         cursor: 'pointer',
                         width: '100%',
-                        marginTop: '12px'
+                        marginTop: '8px'
                     }}
                 >
                     Show Detailed Analysis
@@ -802,6 +1002,9 @@ const MoveQualityDisplay = ({
                     <strong>Move:</strong> {quality.move_description}
                 </div>
             )}
+
+            {/* Educational content */}
+            <EducationalContent quality={quality} config={config} />
 
             {/* Detailed analysis */}
             <div style={{ marginBottom: '12px' }}>

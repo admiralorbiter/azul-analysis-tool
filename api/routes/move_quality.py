@@ -23,7 +23,7 @@ move_quality_bp = Blueprint('move_quality', __name__)
 move_quality_assessor = AzulMoveQualityAssessor()
 
 
-@move_quality_bp.route('/api/v1/assess-move-quality', methods=['POST'])
+@move_quality_bp.route('/assess-move-quality', methods=['POST'])
 def assess_move_quality():
     """
     Assess the quality of a specific move.
@@ -116,7 +116,7 @@ def assess_move_quality():
         }), 500
 
 
-@move_quality_bp.route('/api/v1/evaluate-all-moves', methods=['POST'])
+@move_quality_bp.route('/evaluate-all-moves', methods=['POST'])
 def evaluate_all_moves():
     """
     Evaluate all possible moves in a position.
@@ -211,7 +211,7 @@ def evaluate_all_moves():
         }), 500
 
 
-@move_quality_bp.route('/api/v1/move-quality-info', methods=['GET'])
+@move_quality_bp.route('/move-quality-info', methods=['GET'])
 def get_move_quality_info():
     """
     Get information about the move quality assessment system.
@@ -276,4 +276,215 @@ def get_move_quality_info():
         return jsonify({
             "success": False,
             "error": f"Failed to get system info: {str(e)}"
-        }), 500 
+        }), 500
+
+
+@move_quality_bp.route('/education/move-explanation', methods=['POST'])
+def get_move_educational_explanation():
+    """
+    Get educational explanation for a move quality assessment.
+    
+    Request body:
+    {
+        "quality_tier": "!",
+        "move_description": "Take blue tile from factory 2 to pattern line 3",
+        "position_context": "Mid-game position with multiple options"
+    }
+    
+    Response:
+    {
+        "success": true,
+        "educational_content": {
+            "title": "Excellent Move - Strong Strategic Play",
+            "explanation": "This move is strategically sound...",
+            "strategic_reasoning": "Excellent moves typically maximize...",
+            "learning_tips": ["Focus on moves that improve your position", ...],
+            "best_practices": "Excellent moves are the foundation of strong play...",
+            "related_concepts": ["positional play", "strategic planning"],
+            "difficulty_level": "intermediate"
+        }
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No JSON data provided"
+            }), 400
+        
+        quality_tier = data.get('quality_tier')
+        move_description = data.get('move_description', '')
+        position_context = data.get('position_context', '')
+        
+        if not quality_tier:
+            return jsonify({
+                "success": False,
+                "error": "quality_tier is required"
+            }), 400
+        
+        # Educational content for each quality tier
+        educational_content = {
+            '!!': {
+                "title": "Brilliant Move - Strategic Masterpiece",
+                "explanation": "This move demonstrates exceptional strategic thinking. It likely creates multiple threats, blocks opponent opportunities, and sets up future advantages.",
+                "strategic_reasoning": "Brilliant moves often combine tactical precision with long-term strategic vision. They may sacrifice immediate gains for superior position.",
+                "learning_tips": [
+                    "Look for moves that create multiple threats",
+                    "Consider long-term strategic implications",
+                    "Evaluate opponent's best responses",
+                    "Balance immediate gains with future opportunities"
+                ],
+                "best_practices": "When you find a brilliant move, take time to understand why it works. These moves often reveal deep strategic patterns.",
+                "related_concepts": ["tactical combinations", "strategic planning", "positional sacrifice"],
+                "difficulty_level": "advanced"
+            },
+            '!': {
+                "title": "Excellent Move - Strong Strategic Play",
+                "explanation": "This move is strategically sound and likely the best available option. It improves your position while limiting opponent opportunities.",
+                "strategic_reasoning": "Excellent moves typically maximize your advantages while minimizing risks. They follow sound strategic principles.",
+                "learning_tips": [
+                    "Focus on moves that improve your position",
+                    "Consider the principle of least resistance",
+                    "Evaluate risk-reward ratios carefully",
+                    "Look for moves that limit opponent options"
+                ],
+                "best_practices": "Excellent moves are the foundation of strong play. Practice identifying these moves consistently.",
+                "related_concepts": ["positional play", "risk management", "strategic planning"],
+                "difficulty_level": "intermediate"
+            },
+            '=': {
+                "title": "Good Move - Solid Strategic Choice",
+                "explanation": "This move is fundamentally sound and maintains a good position. While not exceptional, it avoids mistakes and keeps options open.",
+                "strategic_reasoning": "Good moves maintain equilibrium and avoid weakening your position. They provide a solid foundation for future play.",
+                "learning_tips": [
+                    "Prioritize moves that don't weaken your position",
+                    "Maintain flexibility for future opportunities",
+                    "Avoid moves that create unnecessary weaknesses",
+                    "Consider the principle of least commitment"
+                ],
+                "best_practices": "Good moves are the backbone of consistent play. Master these before attempting more complex strategies.",
+                "related_concepts": ["solid play", "positional maintenance", "flexibility"],
+                "difficulty_level": "beginner"
+            },
+            '?!': {
+                "title": "Dubious Move - Questionable Strategic Choice",
+                "explanation": "This move has significant drawbacks or risks. While it might work in some situations, it's generally not recommended.",
+                "strategic_reasoning": "Dubious moves often involve unnecessary risks or fail to address key strategic concerns. They may create weaknesses.",
+                "learning_tips": [
+                    "Look for safer alternatives",
+                    "Consider the risks before making the move",
+                    "Evaluate if the potential gains justify the risks",
+                    "Ask yourself if this move creates weaknesses"
+                ],
+                "best_practices": "When you see a dubious move, look for better alternatives. Sometimes the best move is to avoid making a move.",
+                "related_concepts": ["risk assessment", "safety first", "alternative analysis"],
+                "difficulty_level": "intermediate"
+            },
+            '?': {
+                "title": "Poor Move - Strategic Mistake",
+                "explanation": "This move is strategically unsound and likely worsens your position. It may create weaknesses or miss better opportunities.",
+                "strategic_reasoning": "Poor moves often violate basic strategic principles. They may create weaknesses, miss opportunities, or play into opponent plans.",
+                "learning_tips": [
+                    "Look for moves that improve your position",
+                    "Consider the strategic implications carefully",
+                    "Avoid moves that create weaknesses",
+                    "Think about what your opponent wants you to do"
+                ],
+                "best_practices": "Learn from poor moves by understanding why they don't work. This helps avoid similar mistakes in the future.",
+                "related_concepts": ["mistake analysis", "strategic principles", "positional awareness"],
+                "difficulty_level": "beginner"
+            }
+        }
+        
+        # Get educational content for the quality tier
+        content = educational_content.get(quality_tier, educational_content['='])
+        
+        # Add contextual information if provided
+        if move_description:
+            content["move_context"] = move_description
+        if position_context:
+            content["position_context"] = position_context
+        
+        return jsonify({
+            "success": True,
+            "educational_content": content
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Educational explanation failed: {str(e)}"
+        }), 500
+
+
+@move_quality_bp.route('/education/strategic-concepts', methods=['GET'])
+def get_strategic_concepts():
+    """
+    Get list of strategic concepts for educational purposes.
+    
+    Response:
+    {
+        "success": true,
+        "concepts": [
+            {
+                "name": "Positional Play",
+                "description": "Focusing on improving your position...",
+                "difficulty": "intermediate",
+                "examples": ["controlling key squares", "piece coordination"]
+            }
+        ]
+    }
+    """
+    strategic_concepts = [
+        {
+            "name": "Positional Play",
+            "description": "Focusing on improving your position rather than immediate tactical gains. This involves controlling key areas and coordinating your pieces effectively.",
+            "difficulty": "intermediate",
+            "examples": ["controlling key squares", "piece coordination", "pawn structure"],
+            "learning_tips": [
+                "Look for moves that improve your position",
+                "Consider long-term strategic goals",
+                "Evaluate piece coordination"
+            ]
+        },
+        {
+            "name": "Tactical Awareness",
+            "description": "Recognizing and creating tactical opportunities. This involves calculating specific sequences and identifying immediate threats.",
+            "difficulty": "beginner",
+            "examples": ["forks", "pins", "discovered attacks"],
+            "learning_tips": [
+                "Look for multiple threats",
+                "Calculate specific sequences",
+                "Identify opponent weaknesses"
+            ]
+        },
+        {
+            "name": "Risk Management",
+            "description": "Balancing potential gains against potential losses. This involves evaluating the safety of your position and avoiding unnecessary risks.",
+            "difficulty": "intermediate",
+            "examples": ["safe play", "risk assessment", "defensive moves"],
+            "learning_tips": [
+                "Evaluate risk-reward ratios",
+                "Consider opponent counterplay",
+                "Prioritize safety when ahead"
+            ]
+        },
+        {
+            "name": "Strategic Planning",
+            "description": "Developing long-term plans and coordinating your moves toward specific goals. This involves understanding the position's strategic themes.",
+            "difficulty": "advanced",
+            "examples": ["long-term planning", "strategic themes", "positional understanding"],
+            "learning_tips": [
+                "Identify the position's key features",
+                "Develop long-term plans",
+                "Coordinate your pieces"
+            ]
+        }
+    ]
+    
+    return jsonify({
+        "success": True,
+        "concepts": strategic_concepts
+    }) 

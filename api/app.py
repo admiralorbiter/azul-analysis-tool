@@ -19,6 +19,7 @@ from .routes.strategic import strategic_bp
 from .routes.optimization import optimization_bp
 from .routes.dynamic_optimization import dynamic_optimization_bp
 from .routes.game_theory import game_theory_bp
+from .routes.move_quality import move_quality_bp
 from .auth import auth_bp, session_manager
 from .rate_limiter import RateLimiter
 from core.azul_database import AzulDatabase
@@ -80,6 +81,7 @@ def create_app(config=None):
     app.register_blueprint(optimization_bp, url_prefix='/api/v1')
     app.register_blueprint(dynamic_optimization_bp, url_prefix='/api/v1')
     app.register_blueprint(game_theory_bp, url_prefix='/api/v1')
+    app.register_blueprint(move_quality_bp, url_prefix='/api/v1')
     
     # Serve static files from ui directory
     @app.route('/ui/<path:filename>')

@@ -107,7 +107,8 @@ function PerformanceAnalytics({ gameState, setStatusMessage }) {
                     return React.createElement('div', {
                         key: index,
                         className: 'flex-1 mx-1 bg-blue-500 rounded-t',
-                        style: { height: `${Math.max(height, 10)}%` },
+                        style: { height: `${Math.max(height, 10)}%` }
+                    },
                         React.createElement('div', { className: 'text-xs text-center mt-1' }, point.rating)
                     );
                 })
