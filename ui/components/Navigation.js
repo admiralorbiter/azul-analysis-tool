@@ -21,7 +21,11 @@ function Navigation({ currentPage, onPageChange }) {
                 React.createElement('button', {
                     className: `px-4 py-2 rounded ${currentPage === 'dynamic-optimization' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`,
                     onClick: () => onPageChange('dynamic-optimization')
-                }, '⚡ Dynamic Optimization')
+                }, '⚡ Dynamic Optimization'),
+                React.createElement('button', {
+                    className: `px-4 py-2 rounded ${currentPage === 'test-move-quality' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                    onClick: () => onPageChange('test-move-quality')
+                }, '🧪 Test Move Quality')
             )
         )
     );

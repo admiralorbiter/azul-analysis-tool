@@ -152,28 +152,28 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     React.createElement('label', { className: 'result-label' }, 'Confidence:'),
                     renderConfidenceChart(results.confidence || 0)
                 ),
-                results.strategies && React.createElement('div', { className: 'result-item full-width' },
+                results.strategies ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Optimal Strategies:'),
                     React.createElement('div', { className: 'strategies-list' },
-                        results.strategies.map((strategy, index) => 
-                            React.createElement('div', { 
+                        results.strategies.map((strategy, index) => {
+                            return React.createElement('div', { 
                                 key: index, 
                                 className: 'strategy-item' 
                             },
                                 React.createElement('span', { className: 'strategy-name' }, strategy.name),
                                 React.createElement('span', { className: 'strategy-probability' }, `${(strategy.probability * 100).toFixed(1)}%`)
-                            )
-                        )
+                            );
+                        })
                     )
-                ),
-                results.insights && React.createElement('div', { className: 'result-item full-width' },
+                ) : null,
+                results.insights ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Strategic Insights:'),
                     React.createElement('ul', { className: 'insights-list' },
-                        results.insights.map((insight, index) => 
-                            React.createElement('li', { key: index }, insight)
-                        )
+                        results.insights.map((insight, index) => {
+                            return React.createElement('li', { key: index }, insight);
+                        })
                     )
-                )
+                ) : null
             )
         );
     };
@@ -196,20 +196,20 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     React.createElement('label', { className: 'result-label' }, 'Strategic Tendency:'),
                     React.createElement('span', { className: 'strategic-tendency' }, results.strategic_tendency || 'Balanced')
                 ),
-                results.predicted_moves && React.createElement('div', { className: 'result-item full-width' },
+                results.predicted_moves ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Predicted Behavior:'),
                     React.createElement('div', { className: 'predicted-behavior' },
-                        results.predicted_moves.map((move, index) => 
-                            React.createElement('div', { 
+                        results.predicted_moves.map((move, index) => {
+                            return React.createElement('div', { 
                                 key: index, 
                                 className: 'behavior-item' 
                             },
                                 React.createElement('span', { className: 'behavior-type' }, move.type),
                                 React.createElement('span', { className: 'behavior-confidence' }, `${(move.confidence * 100).toFixed(1)}%`)
-                            )
-                        )
+                            );
+                        })
                     )
-                )
+                ) : null
             )
         );
     };
@@ -234,14 +234,14 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     React.createElement('label', { className: 'result-label' }, 'Position Strength:'),
                     renderMetricBar('Strength', results.position_strength || 0, 100, '#2ecc71')
                 ),
-                results.recommendations && React.createElement('div', { className: 'result-item full-width' },
+                results.recommendations ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Strategic Recommendations:'),
                     React.createElement('ul', { className: 'recommendations-list' },
-                        results.recommendations.map((rec, index) => 
-                            React.createElement('li', { key: index }, rec)
-                        )
+                        results.recommendations.map((rec, index) => {
+                            return React.createElement('li', { key: index }, rec);
+                        })
                     )
-                )
+                ) : null
             )
         );
     };
@@ -260,21 +260,21 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     React.createElement('label', { className: 'result-label' }, 'Overall Confidence:'),
                     renderConfidenceChart(results.confidence || 0)
                 ),
-                results.predicted_moves && React.createElement('div', { className: 'result-item full-width' },
+                results.predicted_moves ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Predicted Move Sequence:'),
                     React.createElement('div', { className: 'predicted-moves' },
-                        results.predicted_moves.map((move, index) => 
-                            React.createElement('div', { 
+                        results.predicted_moves.map((move, index) => {
+                            return React.createElement('div', { 
                                 key: index, 
                                 className: 'predicted-move' 
                             },
                                 React.createElement('span', { className: 'move-turn' }, `Turn ${index + 1}`),
                                 React.createElement('span', { className: 'move-strategy' }, move.strategy),
                                 React.createElement('span', { className: 'move-confidence' }, `${(move.confidence * 100).toFixed(1)}%`)
-                            )
-                        )
+                            );
+                        })
                     )
-                )
+                ) : null
             )
         );
     };
@@ -293,24 +293,24 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     React.createElement('label', { className: 'result-label' }, 'Confidence:'),
                     renderConfidenceChart(results.confidence || 0)
                 ),
-                results.value_components && React.createElement('div', { className: 'result-item full-width' },
+                results.value_components ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Value Components:'),
                     React.createElement('div', { className: 'value-components' },
-                        results.value_components.map((component, index) => 
-                            React.createElement('div', { 
+                        results.value_components.map((component, index) => {
+                            return React.createElement('div', { 
                                 key: index, 
                                 className: 'component-item' 
                             },
                                 React.createElement('span', { className: 'component-name' }, component.name),
                                 React.createElement('span', { className: 'component-value' }, component.value)
-                            )
-                        )
+                            );
+                        })
                     )
-                ),
-                results.reasoning && React.createElement('div', { className: 'result-item full-width' },
+                ) : null,
+                results.reasoning ? React.createElement('div', { className: 'result-item full-width' },
                     React.createElement('label', { className: 'result-label' }, 'Strategic Reasoning:'),
                     React.createElement('p', { className: 'reasoning' }, results.reasoning)
-                )
+                ) : null
             )
         );
     };
@@ -340,8 +340,8 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
         return React.createElement('div', { className: 'analysis-history' },
             React.createElement('h4', { className: 'history-title' }, '📊 Recent Analyses'),
             React.createElement('div', { className: 'history-list' },
-                analysisHistory.map((analysis, index) => 
-                    React.createElement('div', { 
+                analysisHistory.map((analysis, index) => {
+                    return React.createElement('div', { 
                         key: index, 
                         className: 'history-item' 
                     },
@@ -351,8 +351,8 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                         React.createElement('span', { className: 'history-status' }, 
                             analysis.success ? '✅' : '❌'
                         )
-                    )
-                )
+                    );
+                })
             )
         );
     };
@@ -371,9 +371,9 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     onChange: (e) => setAnalysisType(e.target.value),
                     className: 'analysis-type-select enhanced-select'
                 },
-                    analysisTypes.map(type => 
-                        React.createElement('option', { key: type.value, value: type.value }, type.label)
-                    )
+                    analysisTypes.map(type => {
+                        return React.createElement('option', { key: type.value, value: type.value }, type.label);
+                    })
                 ),
                 React.createElement('div', { className: 'analysis-description enhanced-description' },
                     analysisTypes.find(t => t.value === analysisType)?.description
@@ -393,7 +393,7 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     })
                 ),
 
-                {(analysisType === 'opponent_modeling' || analysisType === 'move_prediction') && 
+                (analysisType === 'opponent_modeling' || analysisType === 'move_prediction') ? 
                     React.createElement('div', { className: 'opponent-controls' },
                         React.createElement('label', { className: 'control-label' }, 'Opponent ID:'),
                         React.createElement('input', { 
@@ -404,10 +404,9 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                             max: '3',
                             className: 'opponent-input enhanced-input'
                         })
-                    )
-                },
+                    ) : null,
 
-                {analysisType === 'move_prediction' && 
+                analysisType === 'move_prediction' ? 
                     React.createElement('div', { className: 'depth-controls' },
                         React.createElement('label', { className: 'control-label' }, 'Prediction Depth:'),
                         React.createElement('input', { 
@@ -418,8 +417,7 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                             max: '5',
                             className: 'depth-input enhanced-input'
                         })
-                    )
-                }
+                    ) : null
             ),
 
             React.createElement('div', { className: 'control-group action-controls' },
@@ -436,7 +434,7 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
             )
         ),
 
-        {showAdvancedOptions && React.createElement('div', { className: 'advanced-options' },
+        showAdvancedOptions ? React.createElement('div', { className: 'advanced-options' },
             React.createElement('h4', { className: 'advanced-title' }, 'Advanced Options'),
             React.createElement('div', { className: 'advanced-grid' },
                 React.createElement('div', { className: 'advanced-item' },
@@ -453,12 +451,12 @@ const GameTheoryAnalysis = ({ gameState, onAnalysisComplete, onAnalysisStart, on
                     React.createElement('input', { type: 'checkbox', defaultChecked: true, className: 'advanced-checkbox' })
                 )
             )
-        )},
+        ) : null,
 
-        {error && React.createElement('div', { className: 'error-message enhanced-error' },
+        error ? React.createElement('div', { className: 'error-message enhanced-error' },
             React.createElement('span', { className: 'error-icon' }, '❌'),
             React.createElement('span', { className: 'error-text' }, `Error: ${error}`)
-        )},
+        ) : null,
 
         renderAnalysisHistory(),
         renderResults()

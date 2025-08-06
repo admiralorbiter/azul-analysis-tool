@@ -25,6 +25,7 @@ const BoardEditor = window.BoardEditor;
 const PositionLibrary = window.PositionLibrary;
 const ContextMenu = window.ContextMenu;
 const NeuralTrainingPage = window.NeuralTrainingPage;
+const TestMoveQualityPage = window.TestMoveQualityPage;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -351,21 +352,51 @@ function App() {
                     }),
                     
                     // Right - Game Board (75% width for maximum board space)
-                    React.createElement(GameBoard, {
-                        gameState: gameState,
-                        editMode: editMode,
-                        selectedTile: selectedTile,
-                        setSelectedTile: setSelectedTile,
-                        handleElementSelect: handleElementSelect,
-                        selectedElements: selectedElements,
-                        heatmapEnabled: heatmapEnabled,
-                        heatmapData: heatmapData,
-                        handlePatternLineDrop: handlePatternLineDrop,
-                        onPlayerSwitch: setCurrentPlayer,
-                        currentPlayer: currentPlayer,
-                        loading: loading,
-                        engineThinking: engineThinking
-                    })
+                    React.createElement('div', {
+                        className: 'relative flex-1'
+                    },
+                        React.createElement(GameBoard, {
+                            gameState: gameState,
+                            editMode: editMode,
+                            selectedTile: selectedTile,
+                            setSelectedTile: setSelectedTile,
+                            handleElementSelect: handleElementSelect,
+                            selectedElements: selectedElements,
+                            heatmapEnabled: heatmapEnabled,
+                            heatmapData: heatmapData,
+                            handlePatternLineDrop: handlePatternLineDrop,
+                            onPlayerSwitch: setCurrentPlayer,
+                            currentPlayer: currentPlayer,
+                            loading: loading,
+                            engineThinking: engineThinking
+                        }),
+                        
+                        // Move Quality Display - Floating panel
+                        gameState && window.MoveQualityDisplay && React.createElement('div', {
+                            style: {
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                width: '350px',
+                                maxHeight: '400px',
+                                zIndex: 1000,
+                                backgroundColor: 'white',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                overflow: 'hidden'
+                            }
+                        },
+                            React.createElement(window.MoveQualityDisplay, {
+                                gameState: gameState,
+                                currentPlayer: currentPlayer,
+                                onMoveRecommendation: (data) => {
+                                    console.log('Move recommendation:', data);
+                                    setStatusMessage('Move quality analysis completed');
+                                }
+                            })
+                        )
+                    )
                 )
             )
         ),
@@ -407,6 +438,12 @@ function App() {
         
         // Game Theory Page
         currentPage === 'game-theory' && React.createElement(GameTheoryPage, {
+            gameState: gameState,
+            setStatusMessage: setStatusMessage
+        }),
+        
+        // Test Move Quality Page
+        currentPage === 'test-move-quality' && React.createElement(TestMoveQualityPage, {
             gameState: gameState,
             setStatusMessage: setStatusMessage
         }),
