@@ -13,6 +13,14 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 - **[QUICK_START.md](./QUICK_START.md)** - Quick setup and usage guide
 - **[STATUS.md](./STATUS.md)** - Current project status and achievements
 
+### **🏗️ Systems** (`systems/`)
+- **[Systems Overview](systems/README.md)** - Complete overview of all major systems
+- **[Neural System](systems/neural/README.md)** - Neural network integration and training
+- **[Move Quality System](systems/move-quality/README.md)** - Move evaluation and assessment
+- **[Position Library System](systems/position-library/README.md)** - Position management and library
+- **[Competitive Analysis System](systems/competitive/README.md)** - Advanced competitive tools
+- **[FEN System](systems/fen/README.md)** - Game state representation and standardization
+
 ### **📚 User Guides** (`guides/`)
 - **[Guides Index](guides/index.md)** - Complete navigation for all user guides
 - **[Getting Started](guides/getting-started/)** - Installation and basic usage
