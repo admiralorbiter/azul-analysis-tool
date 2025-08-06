@@ -1323,38 +1323,179 @@ class AzulState(GameState):
     @classmethod
     def _apply_factories(cls, state, factories_data):
         """Apply factory data to state."""
-        # Implementation for applying factory data
-        pass
+        try:
+            for i, factory_str in enumerate(factories_data):
+                if i < len(state.factories):
+                    # Clear existing tiles
+                    state.factories[i].tiles.clear()
+                    
+                    # Parse factory string (e.g., "YYRW")
+                    for tile_char in factory_str:
+                        if tile_char != '-':
+                            color = cls._letter_to_color(tile_char)
+                            if color is not None:
+                                state.factories[i].tiles[color] = state.factories[i].tiles.get(color, 0) + 1
+        except Exception as e:
+            print(f"DEBUG: Error applying factories: {e}")
     
     @classmethod
     def _apply_center(cls, state, center_data):
         """Apply center pool data to state."""
-        # Implementation for applying center data
-        pass
+        try:
+            # Clear existing center pool
+            state.centre_pool.tiles.clear()
+            
+            # Parse center string (e.g., "BYRW")
+            for tile_char in center_data:
+                if tile_char != '-':
+                    color = cls._letter_to_color(tile_char)
+                    if color is not None:
+                        state.centre_pool.tiles[color] = state.centre_pool.tiles.get(color, 0) + 1
+        except Exception as e:
+            print(f"DEBUG: Error applying center: {e}")
     
     @classmethod
     def _apply_player(cls, state, player_id, player_data):
         """Apply player data to state."""
-        # Implementation for applying player data
-        pass
+        try:
+            if player_id >= len(state.agents):
+                return
+                
+            agent = state.agents[player_id]
+            
+            # Apply wall data
+            if 'wall' in player_data:
+                cls._apply_wall(agent, player_data['wall'])
+            
+            # Apply pattern lines data
+            if 'pattern' in player_data:
+                cls._apply_pattern_lines(agent, player_data['pattern'])
+            
+            # Apply floor data
+            if 'floor' in player_data:
+                cls._apply_floor(agent, player_data['floor'])
+                
+        except Exception as e:
+            print(f"DEBUG: Error applying player {player_id}: {e}")
+    
+    @classmethod
+    def _apply_wall(cls, agent, wall_data):
+        """Apply wall data to agent."""
+        try:
+            # Reset wall state
+            agent.grid_state.fill(0)
+            
+            # Parse wall rows (e.g., ["B----", "Y----", ...])
+            for row_idx, row_str in enumerate(wall_data):
+                if row_idx < 5:
+                    for col_idx, tile_char in enumerate(row_str):
+                        if col_idx < 5 and tile_char != '-':
+                            # Check if this position should have a tile
+                            expected_color = cls._get_wall_color_static(row_idx, col_idx)
+                            actual_color = cls._letter_to_color(tile_char)
+                            if expected_color == actual_color:
+                                agent.grid_state[row_idx][col_idx] = 1
+        except Exception as e:
+            print(f"DEBUG: Error applying wall: {e}")
+    
+    @staticmethod
+    def _get_wall_color_static(row: int, col: int) -> int:
+        """Get the color that should be at wall position (static version)."""
+        # This is the Azul wall color scheme
+        color_scheme = [
+            [0, 1, 2, 3, 4],  # Row 0: B,Y,R,K,W
+            [4, 0, 1, 2, 3],  # Row 1: W,B,Y,R,K
+            [3, 4, 0, 1, 2],  # Row 2: K,W,B,Y,R
+            [2, 3, 4, 0, 1],  # Row 3: R,K,W,B,Y
+            [1, 2, 3, 4, 0]   # Row 4: Y,R,K,W,B
+        ]
+        return color_scheme[row][col]
+    
+    @classmethod
+    def _apply_pattern_lines(cls, agent, pattern_data):
+        """Apply pattern lines data to agent."""
+        try:
+            # Reset pattern lines
+            agent.lines_number = [0] * 5
+            agent.lines_tile = [-1] * 5
+            
+            # Parse pattern lines (e.g., ["B", "YY", "RRR", "WWWW", "KKKKK"])
+            for line_idx, line_str in enumerate(pattern_data):
+                if line_idx < 5 and line_str != '-':
+                    # Count tiles in this line
+                    tile_count = 0
+                    tile_color = None
+                    
+                    for tile_char in line_str:
+                        if tile_char != '-':
+                            color = cls._letter_to_color(tile_char)
+                            if color is not None:
+                                tile_count += 1
+                                tile_color = color
+                    
+                    if tile_count > 0 and tile_color is not None:
+                        agent.lines_number[line_idx] = tile_count
+                        agent.lines_tile[line_idx] = tile_color
+        except Exception as e:
+            print(f"DEBUG: Error applying pattern lines: {e}")
+    
+    @classmethod
+    def _apply_floor(cls, agent, floor_data):
+        """Apply floor data to agent."""
+        try:
+            # Reset floor
+            agent.floor_tiles = []
+            agent.floor = [0] * 7
+            
+            # Parse floor string (e.g., "BYRW")
+            for tile_char in floor_data:
+                if tile_char != '-':
+                    color = cls._letter_to_color(tile_char)
+                    if color is not None:
+                        agent.floor_tiles.append(color)
+                        # Mark floor position as occupied
+                        floor_pos = len(agent.floor_tiles) - 1
+                        if floor_pos < len(agent.floor):
+                            agent.floor[floor_pos] = 1
+        except Exception as e:
+            print(f"DEBUG: Error applying floor: {e}")
     
     @classmethod
     def _apply_scores(cls, state, scores_data):
         """Apply scores data to state."""
-        # Implementation for applying scores data
-        pass
+        try:
+            # Parse scores (e.g., "10,15")
+            score_parts = scores_data.split(',')
+            if len(score_parts) >= 2:
+                state.agents[0].score = int(score_parts[0])
+                state.agents[1].score = int(score_parts[1])
+        except Exception as e:
+            print(f"DEBUG: Error applying scores: {e}")
     
     @classmethod
     def _apply_round(cls, state, round_data):
         """Apply round data to state."""
-        # Implementation for applying round data
-        pass
+        try:
+            # Round information is mostly for display purposes
+            # The actual game state doesn't store round number
+            pass
+        except Exception as e:
+            print(f"DEBUG: Error applying round: {e}")
     
     @classmethod
     def _apply_current_player(cls, state, current_player_data):
         """Apply current player data to state."""
-        # Implementation for applying current player data
-        pass
+        try:
+            # Set current player
+            state.current_player = int(current_player_data)
+        except Exception as e:
+            print(f"DEBUG: Error applying current player: {e}")
+    
+    @staticmethod
+    def _letter_to_color(letter: str) -> int:
+        """Convert letter to color number."""
+        color_map = {'B': 0, 'Y': 1, 'R': 2, 'K': 3, 'W': 4}
+        return color_map.get(letter, None)
 
     def is_game_over(self):
         """Check if the game is over according to Azul rules.
