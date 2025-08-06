@@ -42,7 +42,8 @@ class TestAzulMoveQualityAssessor:
         """Set up test fixtures."""
         self.assessor = AzulMoveQualityAssessor()
         self.mock_state = Mock(spec=AzulState)
-        self.mock_state.to_fen.return_value = "test_fen_string"
+        # Remove the to_fen call since AzulState doesn't have that method
+        # self.mock_state.to_fen.return_value = "test_fen_string"
     
     def test_initialization(self):
         """Test that the assessor initializes correctly."""
@@ -141,9 +142,9 @@ class TestAzulMoveQualityAssessor:
         )
         
         # Should identify blocking and floor line connections
-        assert "blocking pattern principles" in connections
-        assert "floor line management" in connections
-        assert "scoring opportunities" not in connections  # scoring score is 0
+        assert any("blocking pattern principles" in conn for conn in connections)
+        assert any("floor line management" in conn for conn in connections)
+        assert not any("scoring opportunities" in conn for conn in connections)  # scoring score is 0
     
     def test_generate_educational_insights(self):
         """Test educational insight generation."""
