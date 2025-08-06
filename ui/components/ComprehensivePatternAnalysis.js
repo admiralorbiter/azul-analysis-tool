@@ -304,8 +304,8 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
                                             {showEducational && (
                                                 <div className="educational-overlays">
                                                     <PatternExplainer 
-                                                        patternType={pattern.pattern_name?.toLowerCase().replace(/\s+/g, '_') || 'unknown_pattern'}
-                                                        difficulty={pattern.complexity_level?.toLowerCase() || 'intermediate'}
+                                                        patternType={typeof pattern.pattern_name === 'string' ? pattern.pattern_name.toLowerCase().replace(/\s+/g, '_') : 'unknown_pattern'}
+                                                        difficulty={typeof pattern.complexity_level === 'string' ? pattern.complexity_level.toLowerCase() : 'intermediate'}
                                                         patternData={pattern}
                                                     />
                                                     <PatternVisualizer 
