@@ -1,7 +1,7 @@
-// StrategicPatternAnalysis.js - Strategic Pattern Analysis UI Component
+// StrategicPatternAnalysis.js - Strategic Pattern Analysis UI Component with Educational Content
 const { useState, useEffect } = React;
 
-function StrategicPatternAnalysis({ gameState, currentPlayer = 0, onStrategicAnalysis }) {
+function StrategicPatternAnalysis({ gameState, currentPlayer = 0, onStrategicAnalysis, showEducational = true }) {
     const [strategicAnalysis, setStrategicAnalysis] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -182,6 +182,22 @@ function StrategicPatternAnalysis({ gameState, currentPlayer = 0, onStrategicAna
                                                 {opportunity.move_suggestions && (
                                                     <div className="recommended-actions">
                                                         <strong>Move Suggestions:</strong> {opportunity.move_suggestions.join(', ')}
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Educational Content */}
+                                                {showEducational && (
+                                                    <div className="educational-content">
+                                                        <PatternExplainer 
+                                                            patternType="factory_control"
+                                                            difficulty="intermediate"
+                                                            patternData={{
+                                                                pattern_name: opportunity.control_type,
+                                                                urgency_level: opportunity.confidence > 0.8 ? 'HIGH' : 'MEDIUM',
+                                                                complexity_level: 'INTERMEDIATE',
+                                                                description: opportunity.description
+                                                            }}
+                                                        />
                                                     </div>
                                                 )}
                                             </div>

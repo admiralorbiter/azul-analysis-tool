@@ -1,7 +1,7 @@
-// ComprehensivePatternAnalysis.js - Enhanced Pattern Analysis UI Component
+// ComprehensivePatternAnalysis.js - Enhanced Pattern Analysis UI Component with Educational Overlays
 const { useState, useEffect } = React;
 
-function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
+function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected, showEducational = true }) {
     const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -299,6 +299,21 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
                                             <div className="pattern-description">
                                                 {pattern.description}
                                             </div>
+                                            
+                                            {/* Educational Overlays */}
+                                            {showEducational && (
+                                                <div className="educational-overlays">
+                                                    <PatternExplainer 
+                                                        patternType={pattern.pattern_name?.toLowerCase().replace(/\s+/g, '_') || 'unknown_pattern'}
+                                                        difficulty={pattern.complexity_level?.toLowerCase() || 'intermediate'}
+                                                        patternData={pattern}
+                                                    />
+                                                    <PatternVisualizer 
+                                                        pattern={pattern}
+                                                        animationSpeed={1500}
+                                                    />
+                                                </div>
+                                            )}
                                             
                                             {showDetails && (
                                                 <div className="pattern-details">

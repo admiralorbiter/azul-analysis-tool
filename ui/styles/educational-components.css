@@ -1,0 +1,774 @@
+/* Educational Components CSS - Pattern Recognition Enhancement */
+
+/* Pattern Explainer Component */
+.pattern-explainer {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pattern-explainer .learn-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.pattern-explainer .learn-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.pattern-explainer .educational-content {
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.pattern-explainer .content-header {
+    margin-bottom: 16px;
+}
+
+.pattern-explainer .pattern-title {
+    margin: 0 0 12px 0;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.pattern-explainer .pattern-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pattern-explainer .difficulty-badge,
+.pattern-explainer .category-badge,
+.pattern-explainer .success-rate-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.pattern-explainer .difficulty-beginner {
+    background: #d4edda;
+    color: #155724;
+}
+
+.pattern-explainer .difficulty-intermediate {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.pattern-explainer .difficulty-advanced {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.pattern-explainer .difficulty-expert {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.pattern-explainer .category-defensive {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.pattern-explainer .category-offensive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.pattern-explainer .category-strategic {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.pattern-explainer .category-control {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.pattern-explainer .category-endgame {
+    background: #d4edda;
+    color: #155724;
+}
+
+.pattern-explainer .success-rate-badge {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.pattern-explainer .content-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pattern-explainer .content-section {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #667eea;
+}
+
+.pattern-explainer .section-title {
+    margin: 0 0 8px 0;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.pattern-explainer .explanation-text,
+.pattern-explainer .strategic-reasoning {
+    margin: 0;
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.pattern-explainer .learning-tips {
+    margin: 0;
+    padding-left: 16px;
+}
+
+.pattern-explainer .learning-tip {
+    margin: 4px 0;
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.pattern-explainer .examples-list {
+    margin: 0;
+    padding-left: 16px;
+}
+
+.pattern-explainer .example-item {
+    margin: 4px 0;
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.pattern-explainer .current-pattern-info {
+    background: #e9ecef;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.pattern-explainer .current-pattern-info p {
+    margin: 4px 0;
+    color: #495057;
+}
+
+.pattern-explainer .content-footer {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.pattern-explainer .practice-button {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pattern-explainer .practice-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+}
+
+/* Pattern Visualizer Component */
+.pattern-visualizer {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pattern-visualizer .visualizer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.pattern-visualizer .visualizer-title {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.pattern-visualizer .animation-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.pattern-visualizer .play-button,
+.pattern-visualizer .reset-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pattern-visualizer .play-button {
+    background: #28a745;
+    color: white;
+}
+
+.pattern-visualizer .play-button.paused {
+    background: #ffc107;
+    color: #212529;
+}
+
+.pattern-visualizer .reset-button {
+    background: #6c757d;
+    color: white;
+}
+
+.pattern-visualizer .play-button:hover,
+.pattern-visualizer .reset-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pattern-visualizer .animation-prompt {
+    text-align: center;
+    padding: 24px;
+    color: #6c757d;
+}
+
+.pattern-visualizer .prompt-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.pattern-visualizer .prompt-text {
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.pattern-visualizer .start-animation-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pattern-visualizer .start-animation-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.pattern-visualizer .animation-content {
+    background: white;
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid #dee2e6;
+}
+
+.pattern-visualizer .current-step-display {
+    text-align: center;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 6px;
+}
+
+.pattern-visualizer .step-number {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.pattern-visualizer .step-description {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.pattern-visualizer .step-action {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.pattern-visualizer .steps-progress {
+    margin-bottom: 16px;
+}
+
+.pattern-visualizer .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.pattern-visualizer .progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+}
+
+.pattern-visualizer .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pattern-visualizer .step-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.pattern-visualizer .step-item:hover {
+    background: #f8f9fa;
+}
+
+.pattern-visualizer .step-item.step-current {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.pattern-visualizer .step-item.step-completed {
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.pattern-visualizer .step-item.step-pending {
+    background: white;
+}
+
+.pattern-visualizer .step-icon {
+    font-size: 16px;
+    margin-right: 12px;
+    min-width: 20px;
+}
+
+.pattern-visualizer .step-content {
+    flex: 1;
+}
+
+.pattern-visualizer .step-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.pattern-visualizer .step-action-text {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.pattern-visualizer .pattern-info {
+    margin-top: 16px;
+    padding: 12px;
+    background: #e9ecef;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.pattern-visualizer .info-item {
+    margin: 4px 0;
+    color: #495057;
+}
+
+/* Pattern Exercises Component */
+.pattern-exercises {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pattern-exercises .exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.pattern-exercises .exercise-header h5 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.pattern-exercises .exercise-info {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.pattern-exercises .exercise-counter,
+.pattern-exercises .score-display,
+.pattern-exercises .timer {
+    padding: 4px 8px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.pattern-exercises .exercise-content {
+    background: white;
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid #dee2e6;
+}
+
+.pattern-exercises .question {
+    margin-bottom: 16px;
+}
+
+.pattern-exercises .question h6 {
+    margin: 0 0 8px 0;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.pattern-exercises .question p {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.pattern-exercises .answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pattern-exercises .answer-option {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.pattern-exercises .answer-option:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+}
+
+.pattern-exercises .answer-option.correct {
+    border-color: #28a745;
+    background: #d4edda;
+}
+
+.pattern-exercises .answer-option.incorrect {
+    border-color: #dc3545;
+    background: #f8d7da;
+}
+
+.pattern-exercises .option-letter {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 12px;
+}
+
+.pattern-exercises .answer-option:hover .option-letter {
+    background: #667eea;
+}
+
+.pattern-exercises .answer-option.correct .option-letter {
+    background: #28a745;
+}
+
+.pattern-exercises .answer-option.incorrect .option-letter {
+    background: #dc3545;
+}
+
+.pattern-exercises .option-text {
+    flex: 1;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+.pattern-exercises .feedback {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid;
+}
+
+.pattern-exercises .feedback.correct {
+    background: #d4edda;
+    border-left-color: #28a745;
+}
+
+.pattern-exercises .feedback.incorrect {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+}
+
+.pattern-exercises .feedback-message {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.pattern-exercises .feedback.correct .feedback-message {
+    color: #155724;
+}
+
+.pattern-exercises .feedback.incorrect .feedback-message {
+    color: #721c24;
+}
+
+.pattern-exercises .explanation {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.pattern-exercises .feedback.correct .explanation {
+    color: #155724;
+}
+
+.pattern-exercises .feedback.incorrect .explanation {
+    color: #721c24;
+}
+
+.pattern-exercises .exercise-progress {
+    margin-top: 16px;
+}
+
+.pattern-exercises .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.pattern-exercises .progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+}
+
+/* Results View */
+.pattern-exercises.results {
+    background: white;
+    border: 2px solid #dee2e6;
+}
+
+.pattern-exercises .results-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.pattern-exercises .results-header h5 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.pattern-exercises .results-content {
+    text-align: center;
+}
+
+.pattern-exercises .score-display {
+    margin-bottom: 20px;
+}
+
+.pattern-exercises .score-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: #667eea;
+    line-height: 1;
+}
+
+.pattern-exercises .score-percentage {
+    font-size: 18px;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.pattern-exercises .performance-feedback {
+    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.pattern-exercises .perfect-score {
+    background: #d4edda;
+    color: #155724;
+}
+
+.pattern-exercises .good-score {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.pattern-exercises .decent-score {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.pattern-exercises .needs-improvement {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.pattern-exercises .pattern-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.pattern-exercises .summary-item {
+    font-size: 13px;
+    color: #495057;
+}
+
+.pattern-exercises .results-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.pattern-exercises .restart-button,
+.pattern-exercises .close-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pattern-exercises .restart-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.pattern-exercises .close-button {
+    background: #6c757d;
+    color: white;
+}
+
+.pattern-exercises .restart-button:hover,
+.pattern-exercises .close-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading States */
+.pattern-explainer.loading,
+.pattern-visualizer.loading,
+.pattern-exercises.loading {
+    text-align: center;
+    padding: 24px;
+    color: #6c757d;
+}
+
+.pattern-explainer .loading-spinner,
+.pattern-visualizer .loading-spinner,
+.pattern-exercises .loading-spinner {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pattern-explainer,
+    .pattern-visualizer,
+    .pattern-exercises {
+        padding: 12px;
+        margin: 8px 0;
+    }
+    
+    .pattern-explainer .pattern-badges,
+    .pattern-visualizer .animation-controls,
+    .pattern-exercises .exercise-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .pattern-visualizer .visualizer-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .pattern-exercises .exercise-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .pattern-exercises .results-actions {
+        flex-direction: column;
+    }
+} 
