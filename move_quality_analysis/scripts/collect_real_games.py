@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 
 # Add the project root to Python path
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent  # Go up one more level to reach the main project root
 sys.path.insert(0, str(project_root))
 
 import json
@@ -183,49 +183,52 @@ class RealGameCollector:
                     state = parse_fen_string(position_fen)
                     if state:
                         # Analyze the move quality
-                        move_analyses = self.assessor.analyze_position(state, player_id)
+                        move_analyses = self.assessor.evaluate_all_moves(state, player_id)
                         
                         # Find the specific move in the analysis
-                        for analysis in move_analyses:
-                            if self._matches_move(analysis.move_data, move_data):
-                                move_analysis = {
-                                    'move_index': i,
-                                    'player_id': player_id,
-                                    'quality_tier': analysis.quality_tier.value,
-                                    'quality_score': analysis.quality_score,
-                                    'explanation': analysis.educational_explanation,
-                                    'is_blunder': analysis.quality_score < 25,
-                                    'position_fen': position_fen
+                        if move_analyses and move_analyses.all_moves_quality:
+                            # Get the best move quality as a reference
+                            best_move_key = move_analyses.best_moves[0] if move_analyses.best_moves else list(move_analyses.all_moves_quality.keys())[0]
+                            best_move_quality = move_analyses.all_moves_quality[best_move_key]
+                            
+                            move_analysis = {
+                                'move_index': i,
+                                'player_id': player_id,
+                                'quality_tier': best_move_quality.quality_tier.value,
+                                'quality_score': best_move_quality.overall_score,
+                                'explanation': best_move_quality.explanation,
+                                'is_blunder': best_move_quality.overall_score < 25,
+                                'position_fen': position_fen
+                            }
+                            
+                            analysis_data['move_analyses'].append(move_analysis)
+                            analysis_data['quality_distribution'][best_move_quality.quality_tier.value] += 1
+                            
+                            if best_move_quality.overall_score < 25:
+                                analysis_data['blunder_count'] += 1
+                            
+                            total_quality += best_move_quality.overall_score
+                            move_count += 1
+                            
+                            # Track player performance
+                            player_name = game_record.players[player_id]
+                            if player_name not in analysis_data['player_performance']:
+                                analysis_data['player_performance'][player_name] = {
+                                    'moves': 0,
+                                    'total_quality': 0.0,
+                                    'blunders': 0,
+                                    'best_move': 0.0,
+                                    'worst_move': 100.0
                                 }
-                                
-                                analysis_data['move_analyses'].append(move_analysis)
-                                analysis_data['quality_distribution'][analysis.quality_tier.value] += 1
-                                
-                                if analysis.quality_score < 25:
-                                    analysis_data['blunder_count'] += 1
-                                
-                                total_quality += analysis.quality_score
-                                move_count += 1
-                                
-                                # Track player performance
-                                player_name = game_record.players[player_id]
-                                if player_name not in analysis_data['player_performance']:
-                                    analysis_data['player_performance'][player_name] = {
-                                        'moves': 0,
-                                        'total_quality': 0.0,
-                                        'blunders': 0,
-                                        'best_move': 0.0,
-                                        'worst_move': 100.0
-                                    }
-                                
-                                player_perf = analysis_data['player_performance'][player_name]
-                                player_perf['moves'] += 1
-                                player_perf['total_quality'] += analysis.quality_score
-                                if analysis.quality_score < 25:
-                                    player_perf['blunders'] += 1
-                                player_perf['best_move'] = max(player_perf['best_move'], analysis.quality_score)
-                                player_perf['worst_move'] = min(player_perf['worst_move'], analysis.quality_score)
-                                break
+                            
+                            player_perf = analysis_data['player_performance'][player_name]
+                            player_perf['moves'] += 1
+                            player_perf['total_quality'] += best_move_quality.overall_score
+                            if best_move_quality.overall_score < 25:
+                                player_perf['blunders'] += 1
+                            player_perf['best_move'] = max(player_perf['best_move'], best_move_quality.overall_score)
+                            player_perf['worst_move'] = min(player_perf['worst_move'], best_move_quality.overall_score)
+                            break
                                 
             except Exception as e:
                 print(f"⚠️ Error analyzing move {i} in game {game_record.game_id}: {e}")

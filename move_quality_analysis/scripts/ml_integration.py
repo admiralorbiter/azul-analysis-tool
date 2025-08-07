@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 # Add the project root to Python path
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent  # Go up one more level to reach the main project root
 sys.path.insert(0, str(project_root))
 
 import json

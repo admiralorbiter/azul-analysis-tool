@@ -1,0 +1,98 @@
+[
+  {
+    "game_id": "sample_game_001",
+    "platform": "local",
+    "players": ["Alice", "Bob"],
+    "ratings": [1500, 1450],
+    "date": "2024-01-15T14:30:00",
+    "moves": [
+      {
+        "player_id": 0,
+        "move_type": "tile_grab",
+        "tile_color": "blue",
+        "row": 0,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/0",
+        "score": 45
+      },
+      {
+        "player_id": 1,
+        "move_type": "tile_grab",
+        "tile_color": "red",
+        "row": 1,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/1",
+        "score": 52
+      },
+      {
+        "player_id": 0,
+        "move_type": "tile_grab",
+        "tile_color": "yellow",
+        "row": 2,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/2",
+        "score": 38
+      },
+      {
+        "player_id": 1,
+        "move_type": "tile_grab",
+        "tile_color": "black",
+        "row": 3,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/3",
+        "score": 61
+      }
+    ],
+    "final_scores": [78, 85],
+    "winner": 1,
+    "metadata": {
+      "game_length": 4,
+      "difficulty": "medium",
+      "notes": "Sample game for testing"
+    }
+  },
+  {
+    "game_id": "sample_game_002",
+    "platform": "local",
+    "players": ["Charlie", "Diana"],
+    "ratings": [1600, 1550],
+    "date": "2024-01-16T16:45:00",
+    "moves": [
+      {
+        "player_id": 0,
+        "move_type": "tile_grab",
+        "tile_color": "white",
+        "row": 0,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/0",
+        "score": 55
+      },
+      {
+        "player_id": 1,
+        "move_type": "tile_grab",
+        "tile_color": "blue",
+        "row": 1,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/1",
+        "score": 48
+      },
+      {
+        "player_id": 0,
+        "move_type": "tile_grab",
+        "tile_color": "red",
+        "row": 2,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/2",
+        "score": 42
+      },
+      {
+        "player_id": 1,
+        "move_type": "tile_grab",
+        "tile_color": "yellow",
+        "row": 3,
+        "position_fen": "azul/1/player_0_board_center_pool_factories/3/3",
+        "score": 67
+      }
+    ],
+    "final_scores": [92, 88],
+    "winner": 0,
+    "metadata": {
+      "game_length": 4,
+      "difficulty": "hard",
+      "notes": "Another sample game"
+    }
+  }
+]
