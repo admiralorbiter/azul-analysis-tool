@@ -7,7 +7,7 @@
 ### **🚀 Getting Started**
 - **[README.md](README.md)** - Main project overview and setup
 - **[QUICK_START.md](QUICK_START.md)** - Quick start guide and examples
-- **[STATUS.md](STATUS.md)** - Current project status and completed features
+- **[CONSOLIDATED_STATUS.md](CONSOLIDATED_STATUS.md)** - Current project status and completed features
 
 ### **📋 Development & Planning**
 - **[DEVELOPMENT_PRIORITIES.md](DEVELOPMENT_PRIORITIES.md)** - Current development priorities (P0-P3)
@@ -31,11 +31,9 @@ docs/
 ├── 📖 Core Documentation (Always Current)
 │   ├── README.md                           # Main project overview
 │   ├── QUICK_START.md                     # Getting started guide
-│   ├── STATUS.md                          # Current project status
+│   ├── CONSOLIDATED_STATUS.md             # Current project status
 │   ├── DEVELOPMENT_PRIORITIES.md          # Development priorities (P0-P3)
 │   ├── MAINTENANCE_CHECKLIST.md           # Maintenance procedures
-│   ├── DOCUMENTATION_CLEANUP_PLAN.md     # Cleanup plan
-│   ├── DOCUMENTATION_CLEANUP_SUMMARY.md  # Cleanup summary
 │   └── DOCUMENTATION_OVERVIEW.md         # This overview
 │
 ├── 🔧 Technical Documentation
@@ -160,7 +158,7 @@ docs/
 ### **For New Contributors**
 1. Start with **[README.md](README.md)** for project overview
 2. Check **[QUICK_START.md](QUICK_START.md)** for setup instructions
-3. Review **[STATUS.md](STATUS.md)** for current project status
+3. Review **[CONSOLIDATED_STATUS.md](CONSOLIDATED_STATUS.md)** for current project status
 4. Check **[DEVELOPMENT_PRIORITIES.md](DEVELOPMENT_PRIORITIES.md)** for current priorities
 
 ### **For Developers**
@@ -173,7 +171,7 @@ docs/
 1. Start with **[QUICK_START.md](QUICK_START.md)** for quick setup
 2. Check **[guides/](guides/)** for detailed user guides
 3. Review **[api/](api/)** for API usage
-4. Check **[STATUS.md](STATUS.md)** for feature status
+4. Check **[CONSOLIDATED_STATUS.md](CONSOLIDATED_STATUS.md)** for feature status
 
 ---
 
