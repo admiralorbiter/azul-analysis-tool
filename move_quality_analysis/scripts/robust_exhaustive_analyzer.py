@@ -132,7 +132,8 @@ class RobustExhaustiveAnalyzer:
         
         # Initialize neural evaluator with error handling
         try:
-            self.neural_evaluator = BatchNeuralEvaluator()
+            from neural.batch_evaluator import create_batch_evaluator
+            self.neural_evaluator = create_batch_evaluator()
             print("✅ Neural evaluator initialized")
         except Exception as e:
             print(f"⚠️ Neural evaluator failed: {e}")
@@ -356,13 +357,20 @@ class RobustExhaustiveAnalyzer:
             if new_state is None:
                 return 0.0
             
+            # Check if there are legal moves for MCTS
+            from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
+            move_generator = FastMoveGenerator()
+            legal_moves = move_generator.generate_moves_fast(new_state, 0)
+            
+            if not legal_moves:
+                return 0.0
+            
             # Run MCTS search with conservative parameters
             result = self.mcts_searcher.search(
                 new_state,
                 agent_id=0,
                 max_time=min(self.config['mcts_time_limit'], 3),
-                max_rollouts=min(self.config['mcts_simulations'], 50),
-                fen_string=new_state.to_fen()
+                max_rollouts=min(self.config['mcts_simulations'], 50)
             )
             
             score = result.best_score if result and result.best_score is not None else 0.0
@@ -370,6 +378,7 @@ class RobustExhaustiveAnalyzer:
                 self.stats['engine_stats']['mcts_success'] += 1
             return score
         except Exception as e:
+            print(f"⚠️ MCTS analysis failed: {e}")
             return 0.0
     
     def _analyze_with_neural_robust(self, state: AzulState, move_data: Dict) -> float:
@@ -500,18 +509,61 @@ class RobustExhaustiveAnalyzer:
         else:
             return 0.0
     
-    def _calculate_quality_distribution_robust(self, quality_scores: List[float]) -> Dict[str, int]:
-        """Calculate quality tier distribution with improved thresholds."""
+    def _calculate_quality_distribution_robust(self, quality_scores: List[float], game_phase: GamePhase = None) -> Dict[str, int]:
+        """Calculate quality tier distribution with position-specific thresholds."""
         distribution = {'!!': 0, '!': 0, '=': 0, '?!': 0, '?': 0}
         
+        # Position-specific thresholds based on game phase
+        if game_phase == GamePhase.EARLY_GAME:
+            thresholds = {
+                '!!': 18.0,  # Lower for early game
+                '!': 16.0,
+                '=': 13.0,
+                '?!': 10.0,
+                '?': 0.0
+            }
+        elif game_phase == GamePhase.MID_GAME:
+            thresholds = {
+                '!!': 19.0,
+                '!': 16.5,
+                '=': 13.5,
+                '?!': 10.5,
+                '?': 0.0
+            }
+        elif game_phase == GamePhase.LATE_GAME:
+            thresholds = {
+                '!!': 20.0,
+                '!': 17.0,
+                '=': 14.0,
+                '?!': 11.0,
+                '?': 0.0
+            }
+        elif game_phase == GamePhase.END_GAME:
+            thresholds = {
+                '!!': 21.0,  # Higher for endgame
+                '!': 17.5,
+                '=': 14.5,
+                '?!': 11.5,
+                '?': 0.0
+            }
+        else:
+            # Default thresholds (original)
+            thresholds = {
+                '!!': 20.0,
+                '!': 17.0,
+                '=': 14.0,
+                '?!': 11.0,
+                '?': 0.0
+            }
+        
         for score in quality_scores:
-            if score >= 85:
+            if score >= thresholds['!!']:
                 distribution['!!'] += 1
-            elif score >= 70:
+            elif score >= thresholds['!']:
                 distribution['!'] += 1
-            elif score >= 45:
+            elif score >= thresholds['=']:
                 distribution['='] += 1
-            elif score >= 20:
+            elif score >= thresholds['?!']:
                 distribution['?!'] += 1
             else:
                 distribution['?'] += 1
@@ -595,7 +647,7 @@ class RobustExhaustiveAnalyzer:
             
             # Calculate position-level metrics
             quality_scores = [a.overall_quality_score for a in move_analyses]
-            quality_distribution = self._calculate_quality_distribution_robust(quality_scores)
+            quality_distribution = self._calculate_quality_distribution_robust(quality_scores, game_phase)
             
             # Calculate engine consensus
             engine_consensus = self._calculate_engine_consensus_robust(move_analyses)
