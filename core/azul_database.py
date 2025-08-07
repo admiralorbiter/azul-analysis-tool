@@ -117,6 +117,68 @@ class NeuralEvaluationSession:
     created_at: Optional[datetime] = None
 
 
+@dataclass
+class MoveQualityAnalysis:
+    """Represents a comprehensive move quality analysis for a position."""
+    position_id: int
+    session_id: str
+    game_phase: str
+    total_moves_analyzed: int
+    quality_distribution: Dict[str, int]
+    average_quality_score: float
+    best_move_score: float
+    worst_move_score: float
+    engine_consensus: Dict[str, float]
+    disagreement_level: float
+    position_complexity: float
+    strategic_themes: List[str]
+    tactical_opportunities: List[str]
+    analysis_time: float
+    created_at: Optional[datetime] = None
+
+
+@dataclass
+class ComprehensiveMoveAnalysis:
+    """Represents a comprehensive analysis of a single move."""
+    position_analysis_id: int
+    move_data: Dict[str, Any]
+    alpha_beta_score: Optional[float]
+    mcts_score: Optional[float]
+    neural_score: Optional[float]
+    pattern_score: Optional[float]
+    overall_quality_score: float
+    quality_tier: str
+    confidence_score: float
+    strategic_value: float
+    tactical_value: float
+    risk_assessment: float
+    opportunity_value: float
+    blocking_score: float
+    scoring_score: float
+    floor_line_score: float
+    timing_score: float
+    analysis_time: float
+    engines_used: List[str]
+    explanation: str
+    created_at: Optional[datetime] = None
+
+
+@dataclass
+class ExhaustiveAnalysisSession:
+    """Represents an exhaustive analysis session."""
+    session_id: str
+    mode: str  # 'quick', 'standard', 'deep', 'exhaustive'
+    positions_analyzed: int = 0
+    total_moves_analyzed: int = 0
+    total_analysis_time: float = 0.0
+    successful_analyses: int = 0
+    failed_analyses: int = 0
+    engine_stats: Optional[Dict[str, Any]] = None
+    created_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    status: str = 'running'  # 'running', 'completed', 'failed', 'stopped'
+
+
 class AzulDatabase:
     """
     SQLite database interface for caching Azul positions and analysis results.
@@ -466,6 +528,69 @@ class AzulDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 
+                -- Move quality analysis tables for exhaustive search integration
+                CREATE TABLE IF NOT EXISTS move_quality_analyses (
+                    id INTEGER PRIMARY KEY,
+                    position_id INTEGER NOT NULL,
+                    session_id TEXT NOT NULL,
+                    game_phase TEXT NOT NULL,
+                    total_moves_analyzed INTEGER NOT NULL,
+                    quality_distribution TEXT, -- JSON distribution of quality tiers
+                    average_quality_score REAL,
+                    best_move_score REAL,
+                    worst_move_score REAL,
+                    engine_consensus TEXT, -- JSON engine agreement scores
+                    disagreement_level REAL,
+                    position_complexity REAL,
+                    strategic_themes TEXT, -- JSON strategic themes identified
+                    tactical_opportunities TEXT, -- JSON tactical opportunities
+                    analysis_time REAL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE
+                );
+                
+                -- Comprehensive move analyses table
+                CREATE TABLE IF NOT EXISTS comprehensive_move_analyses (
+                    id INTEGER PRIMARY KEY,
+                    position_analysis_id INTEGER NOT NULL,
+                    move_data TEXT NOT NULL, -- JSON move data
+                    alpha_beta_score REAL,
+                    mcts_score REAL,
+                    neural_score REAL,
+                    pattern_score REAL,
+                    overall_quality_score REAL,
+                    quality_tier TEXT,
+                    confidence_score REAL,
+                    strategic_value REAL,
+                    tactical_value REAL,
+                    risk_assessment REAL,
+                    opportunity_value REAL,
+                    blocking_score REAL,
+                    scoring_score REAL,
+                    floor_line_score REAL,
+                    timing_score REAL,
+                    analysis_time REAL,
+                    engines_used TEXT, -- JSON list of engines used
+                    explanation TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (position_analysis_id) REFERENCES move_quality_analyses(id) ON DELETE CASCADE
+                );
+                
+                -- Exhaustive analysis sessions table
+                CREATE TABLE IF NOT EXISTS exhaustive_analysis_sessions (
+                    session_id TEXT PRIMARY KEY,
+                    mode TEXT NOT NULL, -- 'quick', 'standard', 'deep', 'exhaustive'
+                    positions_analyzed INTEGER DEFAULT 0,
+                    total_moves_analyzed INTEGER DEFAULT 0,
+                    total_analysis_time REAL DEFAULT 0.0,
+                    successful_analyses INTEGER DEFAULT 0,
+                    failed_analyses INTEGER DEFAULT 0,
+                    engine_stats TEXT, -- JSON engine performance statistics
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    completed_at TIMESTAMP,
+                    status TEXT DEFAULT 'running' -- 'running', 'completed', 'failed', 'stopped'
+                );
+                
                 -- Indexes for neural training tables
                 CREATE INDEX IF NOT EXISTS idx_neural_sessions_status ON neural_training_sessions(status);
                 CREATE INDEX IF NOT EXISTS idx_neural_sessions_created ON neural_training_sessions(created_at DESC);
@@ -485,6 +610,29 @@ class AzulDatabase:
                 CREATE INDEX IF NOT EXISTS idx_neural_sessions_progress_status ON neural_training_sessions(progress DESC, status);
                 CREATE INDEX IF NOT EXISTS idx_neural_models_session_created ON neural_models(training_session_id, created_at DESC);
                 CREATE INDEX IF NOT EXISTS idx_neural_configs_default_created ON neural_configurations(is_default, created_at DESC);
+                
+                -- Indexes for move quality analysis tables
+                CREATE INDEX IF NOT EXISTS idx_move_quality_position ON move_quality_analyses(position_id);
+                CREATE INDEX IF NOT EXISTS idx_move_quality_session ON move_quality_analyses(session_id);
+                CREATE INDEX IF NOT EXISTS idx_move_quality_phase ON move_quality_analyses(game_phase);
+                CREATE INDEX IF NOT EXISTS idx_move_quality_created ON move_quality_analyses(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_move_quality_score ON move_quality_analyses(average_quality_score DESC);
+                
+                -- Indexes for comprehensive move analyses
+                CREATE INDEX IF NOT EXISTS idx_comprehensive_position_analysis ON comprehensive_move_analyses(position_analysis_id);
+                CREATE INDEX IF NOT EXISTS idx_comprehensive_quality_tier ON comprehensive_move_analyses(quality_tier);
+                CREATE INDEX IF NOT EXISTS idx_comprehensive_score ON comprehensive_move_analyses(overall_quality_score DESC);
+                CREATE INDEX IF NOT EXISTS idx_comprehensive_created ON comprehensive_move_analyses(created_at DESC);
+                
+                -- Indexes for exhaustive analysis sessions
+                CREATE INDEX IF NOT EXISTS idx_exhaustive_sessions_status ON exhaustive_analysis_sessions(status);
+                CREATE INDEX IF NOT EXISTS idx_exhaustive_sessions_mode ON exhaustive_analysis_sessions(mode);
+                CREATE INDEX IF NOT EXISTS idx_exhaustive_sessions_created ON exhaustive_analysis_sessions(created_at DESC);
+                
+                -- Composite indexes for move quality analysis
+                CREATE INDEX IF NOT EXISTS idx_move_quality_position_session ON move_quality_analyses(position_id, session_id);
+                CREATE INDEX IF NOT EXISTS idx_move_quality_session_created ON move_quality_analyses(session_id, created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_comprehensive_analysis_score ON comprehensive_move_analyses(position_analysis_id, overall_quality_score DESC);
                 
                 -- Enable foreign key constraints
                 PRAGMA foreign_keys = ON;
@@ -1506,114 +1654,300 @@ class AzulDatabase:
             return None
 
     def delete_neural_configuration(self, config_id: str) -> bool:
-        """
-        Delete a neural configuration from the database.
-        
-        Args:
-            config_id: Configuration ID to delete
+        """Delete a neural configuration."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                DELETE FROM neural_configurations WHERE config_id = ?
+            """, (config_id,), "delete_neural_configuration")
             
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            with self.get_connection() as conn:
+            conn.commit()
+            return cursor.rowcount > 0
+    
+    # Move Quality Analysis Integration Methods
+    
+    def save_move_quality_analysis(self, analysis: MoveQualityAnalysis) -> int:
+        """Save a move quality analysis to the database."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                INSERT INTO move_quality_analyses (
+                    position_id, session_id, game_phase, total_moves_analyzed,
+                    quality_distribution, average_quality_score, best_move_score,
+                    worst_move_score, engine_consensus, disagreement_level,
+                    position_complexity, strategic_themes, tactical_opportunities,
+                    analysis_time, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                analysis.position_id, analysis.session_id, analysis.game_phase,
+                analysis.total_moves_analyzed, json.dumps(analysis.quality_distribution),
+                analysis.average_quality_score, analysis.best_move_score,
+                analysis.worst_move_score, json.dumps(analysis.engine_consensus),
+                analysis.disagreement_level, analysis.position_complexity,
+                json.dumps(analysis.strategic_themes), json.dumps(analysis.tactical_opportunities),
+                analysis.analysis_time, analysis.created_at or datetime.now()
+            ), "save_move_quality_analysis")
+            
+            analysis_id = cursor.lastrowid
+            conn.commit()
+            return analysis_id
+    
+    def save_comprehensive_move_analysis(self, move_analysis: ComprehensiveMoveAnalysis) -> int:
+        """Save a comprehensive move analysis to the database."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                INSERT INTO comprehensive_move_analyses (
+                    position_analysis_id, move_data, alpha_beta_score, mcts_score,
+                    neural_score, pattern_score, overall_quality_score, quality_tier,
+                    confidence_score, strategic_value, tactical_value, risk_assessment,
+                    opportunity_value, blocking_score, scoring_score, floor_line_score,
+                    timing_score, analysis_time, engines_used, explanation, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                move_analysis.position_analysis_id, json.dumps(move_analysis.move_data),
+                move_analysis.alpha_beta_score, move_analysis.mcts_score,
+                move_analysis.neural_score, move_analysis.pattern_score,
+                move_analysis.overall_quality_score, move_analysis.quality_tier,
+                move_analysis.confidence_score, move_analysis.strategic_value,
+                move_analysis.tactical_value, move_analysis.risk_assessment,
+                move_analysis.opportunity_value, move_analysis.blocking_score,
+                move_analysis.scoring_score, move_analysis.floor_line_score,
+                move_analysis.timing_score, move_analysis.analysis_time,
+                json.dumps(move_analysis.engines_used), move_analysis.explanation,
+                move_analysis.created_at or datetime.now()
+            ), "save_comprehensive_move_analysis")
+            
+            move_analysis_id = cursor.lastrowid
+            conn.commit()
+            return move_analysis_id
+    
+    def save_exhaustive_analysis_session(self, session: ExhaustiveAnalysisSession) -> bool:
+        """Save an exhaustive analysis session."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                INSERT OR REPLACE INTO exhaustive_analysis_sessions (
+                    session_id, mode, positions_analyzed, total_moves_analyzed,
+                    total_analysis_time, successful_analyses, failed_analyses,
+                    engine_stats, created_at, completed_at, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                session.session_id, session.mode, session.positions_analyzed,
+                session.total_moves_analyzed, session.total_analysis_time,
+                session.successful_analyses, session.failed_analyses,
+                json.dumps(session.engine_stats) if session.engine_stats else None,
+                session.created_at or datetime.now(), session.completed_at, session.status
+            ), "save_exhaustive_analysis_session")
+            
+            conn.commit()
+            return True
+    
+    def get_move_quality_analysis(self, position_id: int, session_id: str) -> Optional[MoveQualityAnalysis]:
+        """Get move quality analysis for a position and session."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                SELECT * FROM move_quality_analyses 
+                WHERE position_id = ? AND session_id = ?
+                ORDER BY created_at DESC LIMIT 1
+            """, (position_id, session_id), "get_move_quality_analysis")
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return MoveQualityAnalysis(
+                position_id=row['position_id'],
+                session_id=row['session_id'],
+                game_phase=row['game_phase'],
+                total_moves_analyzed=row['total_moves_analyzed'],
+                quality_distribution=json.loads(row['quality_distribution']),
+                average_quality_score=row['average_quality_score'],
+                best_move_score=row['best_move_score'],
+                worst_move_score=row['worst_move_score'],
+                engine_consensus=json.loads(row['engine_consensus']),
+                disagreement_level=row['disagreement_level'],
+                position_complexity=row['position_complexity'],
+                strategic_themes=json.loads(row['strategic_themes']),
+                tactical_opportunities=json.loads(row['tactical_opportunities']),
+                analysis_time=row['analysis_time'],
+                created_at=datetime.fromisoformat(row['created_at'])
+            )
+    
+    def get_comprehensive_move_analyses(self, position_analysis_id: int) -> List[ComprehensiveMoveAnalysis]:
+        """Get all comprehensive move analyses for a position analysis."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                SELECT * FROM comprehensive_move_analyses 
+                WHERE position_analysis_id = ?
+                ORDER BY overall_quality_score DESC
+            """, (position_analysis_id,), "get_comprehensive_move_analyses")
+            
+            results = []
+            for row in cursor.fetchall():
+                results.append(ComprehensiveMoveAnalysis(
+                    position_analysis_id=row['position_analysis_id'],
+                    move_data=json.loads(row['move_data']),
+                    alpha_beta_score=row['alpha_beta_score'],
+                    mcts_score=row['mcts_score'],
+                    neural_score=row['neural_score'],
+                    pattern_score=row['pattern_score'],
+                    overall_quality_score=row['overall_quality_score'],
+                    quality_tier=row['quality_tier'],
+                    confidence_score=row['confidence_score'],
+                    strategic_value=row['strategic_value'],
+                    tactical_value=row['tactical_value'],
+                    risk_assessment=row['risk_assessment'],
+                    opportunity_value=row['opportunity_value'],
+                    blocking_score=row['blocking_score'],
+                    scoring_score=row['scoring_score'],
+                    floor_line_score=row['floor_line_score'],
+                    timing_score=row['timing_score'],
+                    analysis_time=row['analysis_time'],
+                    engines_used=json.loads(row['engines_used']),
+                    explanation=row['explanation'],
+                    created_at=datetime.fromisoformat(row['created_at'])
+                ))
+            
+            return results
+    
+    def get_exhaustive_analysis_session(self, session_id: str) -> Optional[ExhaustiveAnalysisSession]:
+        """Get an exhaustive analysis session."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                SELECT * FROM exhaustive_analysis_sessions WHERE session_id = ?
+            """, (session_id,), "get_exhaustive_analysis_session")
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return ExhaustiveAnalysisSession(
+                session_id=row['session_id'],
+                mode=row['mode'],
+                positions_analyzed=row['positions_analyzed'],
+                total_moves_analyzed=row['total_moves_analyzed'],
+                total_analysis_time=row['total_analysis_time'],
+                successful_analyses=row['successful_analyses'],
+                failed_analyses=row['failed_analyses'],
+                engine_stats=json.loads(row['engine_stats']) if row['engine_stats'] else None,
+                created_at=datetime.fromisoformat(row['created_at']),
+                completed_at=datetime.fromisoformat(row['completed_at']) if row['completed_at'] else None,
+                status=row['status']
+            )
+    
+    def get_all_exhaustive_sessions(self, status: Optional[str] = None, limit: int = 50) -> List[ExhaustiveAnalysisSession]:
+        """Get all exhaustive analysis sessions."""
+        with self.get_connection() as conn:
+            if status:
                 cursor = self._execute_with_monitoring(conn, """
-                    DELETE FROM neural_configurations WHERE config_id = ?
-                """, (config_id,), "delete_neural_configuration")
-                
-                # Explicitly commit the transaction
-                conn.commit()
-                
-                return cursor.rowcount > 0
-        except Exception as e:
-            print(f"Error deleting neural configuration: {e}")
-            return False
-
+                    SELECT * FROM exhaustive_analysis_sessions 
+                    WHERE status = ? ORDER BY created_at DESC LIMIT ?
+                """, (status, limit), "get_all_exhaustive_sessions")
+            else:
+                cursor = self._execute_with_monitoring(conn, """
+                    SELECT * FROM exhaustive_analysis_sessions 
+                    ORDER BY created_at DESC LIMIT ?
+                """, (limit,), "get_all_exhaustive_sessions")
+            
+            results = []
+            for row in cursor.fetchall():
+                results.append(ExhaustiveAnalysisSession(
+                    session_id=row['session_id'],
+                    mode=row['mode'],
+                    positions_analyzed=row['positions_analyzed'],
+                    total_moves_analyzed=row['total_moves_analyzed'],
+                    total_analysis_time=row['total_analysis_time'],
+                    successful_analyses=row['successful_analyses'],
+                    failed_analyses=row['failed_analyses'],
+                    engine_stats=json.loads(row['engine_stats']) if row['engine_stats'] else None,
+                    created_at=datetime.fromisoformat(row['created_at']),
+                    completed_at=datetime.fromisoformat(row['completed_at']) if row['completed_at'] else None,
+                    status=row['status']
+                ))
+            
+            return results
+    
+    def get_best_move_quality_analyses(self, limit: int = 10) -> List[MoveQualityAnalysis]:
+        """Get the best move quality analyses (highest average scores)."""
+        with self.get_connection() as conn:
+            cursor = self._execute_with_monitoring(conn, """
+                SELECT mqa.*, p.fen_string FROM move_quality_analyses mqa
+                JOIN positions p ON mqa.position_id = p.id
+                ORDER BY mqa.average_quality_score DESC LIMIT ?
+            """, (limit,), "get_best_move_quality_analyses")
+            
+            results = []
+            for row in cursor.fetchall():
+                results.append(MoveQualityAnalysis(
+                    position_id=row['position_id'],
+                    session_id=row['session_id'],
+                    game_phase=row['game_phase'],
+                    total_moves_analyzed=row['total_moves_analyzed'],
+                    quality_distribution=json.loads(row['quality_distribution']),
+                    average_quality_score=row['average_quality_score'],
+                    best_move_score=row['best_move_score'],
+                    worst_move_score=row['worst_move_score'],
+                    engine_consensus=json.loads(row['engine_consensus']),
+                    disagreement_level=row['disagreement_level'],
+                    position_complexity=row['position_complexity'],
+                    strategic_themes=json.loads(row['strategic_themes']),
+                    tactical_opportunities=json.loads(row['tactical_opportunities']),
+                    analysis_time=row['analysis_time'],
+                    created_at=datetime.fromisoformat(row['created_at'])
+                ))
+            
+            return results 
+    
     def save_neural_evaluation_session(self, session: NeuralEvaluationSession) -> bool:
-        """
-        Save a neural evaluation session to the database.
-        
-        Args:
-            session: NeuralEvaluationSession object to save
+        """Save a neural evaluation session to the database."""
+        with self.get_connection() as conn:
+            config_json = json.dumps(session.config) if session.config else None
+            results_json = json.dumps(session.results) if session.results else None
             
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            with self.get_connection() as conn:
-                config_json = json.dumps(session.config) if session.config else None
-                results_json = json.dumps(session.results) if session.results else None
-                
-                cursor = self._execute_with_monitoring(conn, """
-                    INSERT OR REPLACE INTO neural_evaluation_sessions (
-                        session_id, status, progress, start_time, end_time,
-                        config, results, error, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    session.session_id, session.status, session.progress,
-                    session.start_time.isoformat() if session.start_time else None,
-                    session.end_time.isoformat() if session.end_time else None,
-                    config_json, results_json, session.error,
-                    session.created_at.isoformat() if session.created_at else datetime.now().isoformat()
-                ), "save_neural_evaluation_session")
-                
-                # Explicitly commit the transaction
-                conn.commit()
-                
-                return True
-        except Exception as e:
-            print(f"Error saving neural evaluation session: {e}")
-            return False
-
+            cursor = self._execute_with_monitoring(conn, """
+                INSERT OR REPLACE INTO neural_evaluation_sessions (
+                    session_id, status, progress, start_time, end_time,
+                    config, results, error, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                session.session_id, session.status, session.progress,
+                session.start_time.isoformat() if session.start_time else None,
+                session.end_time.isoformat() if session.end_time else None,
+                config_json, results_json, session.error,
+                session.created_at.isoformat() if session.created_at else datetime.now().isoformat()
+            ), "save_neural_evaluation_session")
+            
+            conn.commit()
+            return True
+    
     def get_neural_evaluation_sessions(self, status: Optional[str] = None, 
                                      limit: int = 50) -> List[NeuralEvaluationSession]:
-        """
-        Get neural evaluation sessions from the database.
-        
-        Args:
-            status: Optional status filter
-            limit: Maximum number of sessions to return
-            
-        Returns:
-            List of NeuralEvaluationSession objects
-        """
-        try:
-            with self.get_connection() as conn:
-                query = """
+        """Get neural evaluation sessions from the database."""
+        with self.get_connection() as conn:
+            if status:
+                cursor = self._execute_with_monitoring(conn, """
                     SELECT * FROM neural_evaluation_sessions 
-                    WHERE 1=1
-                """
-                params = []
+                    WHERE status = ? ORDER BY created_at DESC LIMIT ?
+                """, (status, limit), "get_neural_evaluation_sessions")
+            else:
+                cursor = self._execute_with_monitoring(conn, """
+                    SELECT * FROM neural_evaluation_sessions 
+                    ORDER BY created_at DESC LIMIT ?
+                """, (limit,), "get_neural_evaluation_sessions")
+            
+            sessions = []
+            for row in cursor.fetchall():
+                config = json.loads(row['config']) if row['config'] else None
+                results = json.loads(row['results']) if row['results'] else None
                 
-                if status:
-                    query += " AND status = ?"
-                    params.append(status)
-                
-                query += " ORDER BY created_at DESC LIMIT ?"
-                params.append(limit)
-                
-                cursor = self._execute_with_monitoring(conn, query, tuple(params), 
-                                                    "get_neural_evaluation_sessions")
-                
-                sessions = []
-                for row in cursor.fetchall():
-                    config = json.loads(row['config']) if row['config'] else None
-                    results = json.loads(row['results']) if row['results'] else None
-                    
-                    session = NeuralEvaluationSession(
-                        session_id=row['session_id'],
-                        status=row['status'],
-                        progress=row['progress'],
-                        start_time=datetime.fromisoformat(row['start_time']) if row['start_time'] else None,
-                        end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
-                        config=config,
-                        results=results,
-                        error=row['error'],
-                        created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None
-                    )
-                    sessions.append(session)
-                
-                return sessions
-        except Exception as e:
-            print(f"Error getting neural evaluation sessions: {e}")
-            return [] 
+                session = NeuralEvaluationSession(
+                    session_id=row['session_id'],
+                    status=row['status'],
+                    progress=row['progress'],
+                    start_time=datetime.fromisoformat(row['start_time']) if row['start_time'] else None,
+                    end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
+                    config=config,
+                    results=results,
+                    error=row['error'],
+                    created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None
+                )
+                sessions.append(session)
+            
+            return sessions 
