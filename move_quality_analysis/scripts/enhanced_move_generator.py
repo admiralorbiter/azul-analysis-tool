@@ -128,21 +128,22 @@ class EnhancedMoveGenerator:
                 if count == 0:
                     continue
                 
-                # Generate pattern line moves
-                for target_line in range(5):
-                    if self._is_valid_pattern_line_move(state, player_id, color, target_line):
-                        move = GeneratedMove(
-                            move_type=MoveType.FACTORY_TO_PATTERN,
-                            factory_id=factory_id,
-                            color=color,
-                            count=count,
-                            target_line=target_line,
-                            priority=self._calculate_move_priority(state, player_id, color, target_line, count),
-                            strategic_value=self._calculate_strategic_value(state, player_id, color, target_line),
-                            likelihood=self._calculate_move_likelihood(state, player_id, color, target_line, count),
-                            validation_score=self._validate_move(state, player_id, color, target_line, count)
-                        )
-                        moves.append(move)
+                # Generate pattern line moves for ALL possible tile counts
+                for tile_count in range(1, count + 1):  # ✅ 1, 2, 3, ..., count
+                    for target_line in range(5):
+                        if self._is_valid_pattern_line_move(state, player_id, color, target_line):
+                            move = GeneratedMove(
+                                move_type=MoveType.FACTORY_TO_PATTERN,
+                                factory_id=factory_id,
+                                color=color,
+                                count=tile_count,  # ✅ Use partial counts
+                                target_line=target_line,
+                                priority=self._calculate_move_priority(state, player_id, color, target_line, count),
+                                strategic_value=self._calculate_strategic_value(state, player_id, color, target_line),
+                                likelihood=self._calculate_move_likelihood(state, player_id, color, target_line, count),
+                                validation_score=self._validate_move(state, player_id, color, target_line, count)
+                            )
+                            moves.append(move)
                 
                 # Generate floor moves
                 move = GeneratedMove(
