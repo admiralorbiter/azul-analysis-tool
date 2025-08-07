@@ -29,6 +29,7 @@ const TestMoveQualityPage = window.TestMoveQualityPage;
 const PerformanceAnalytics = window.PerformanceAnalytics;
 const AdvancedAnalysisLab = window.AdvancedAnalysisLab;
 const TacticalTrainingCenter = window.TacticalTrainingCenter;
+const ExhaustiveAnalysisDashboard = window.ExhaustiveAnalysisDashboard;
 
 // Import API dependencies from window
 const defaultGameAPI = window.gameAPI || {};
@@ -439,6 +440,12 @@ function App() {
         
         // Tactical Training Center Page
         currentPage === 'tactical-training' && React.createElement(TacticalTrainingCenter, {
+            gameState: gameState,
+            setStatusMessage: setStatusMessage
+        }),
+        
+        // Exhaustive Analysis Dashboard Page
+        currentPage === 'exhaustive-analysis' && React.createElement(ExhaustiveAnalysisDashboard, {
             gameState: gameState,
             setStatusMessage: setStatusMessage
         }),

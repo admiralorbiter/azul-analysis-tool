@@ -134,9 +134,9 @@ class RobustExhaustiveAnalyzer:
         try:
             from neural.batch_evaluator import create_batch_evaluator
             self.neural_evaluator = create_batch_evaluator()
-            print("✅ Neural evaluator initialized")
+            print("[OK] Neural evaluator initialized")
         except Exception as e:
-            print(f"⚠️ Neural evaluator failed: {e}")
+            print(f"[WARNING] Neural evaluator failed: {e}")
             self.neural_evaluator = None
         
         # Initialize database
@@ -197,11 +197,12 @@ class RobustExhaustiveAnalyzer:
     
     def _init_database(self):
         """Initialize database for storing analysis results."""
-        db_path = Path(__file__).parent.parent.parent / "data" / "robust_exhaustive_analysis.db"
+        # Use the same database as the API
+        db_path = Path(__file__).parent.parent.parent / "data" / "azul_research.db"
         db_path.parent.mkdir(exist_ok=True)
         
         self.db_path = db_path
-        print(f"📊 Database: {self.db_path}")
+        print(f"[DB] Database: {self.db_path}")
         
         # Create tables if they don't exist
         self._create_database_tables()
@@ -229,6 +230,29 @@ class RobustExhaustiveAnalyzer:
                 strategic_themes TEXT,
                 tactical_opportunities TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Move quality analyses table (API compatible)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS move_quality_analyses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                position_id INTEGER,
+                game_phase TEXT,
+                total_moves_analyzed INTEGER,
+                quality_distribution TEXT,
+                average_quality_score REAL,
+                best_move_score REAL,
+                worst_move_score REAL,
+                engine_consensus TEXT,
+                disagreement_level REAL,
+                position_complexity REAL,
+                strategic_themes TEXT,
+                tactical_opportunities TEXT,
+                analysis_time REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (position_id) REFERENCES position_analyses (id)
             )
         ''')
         
@@ -261,7 +285,25 @@ class RobustExhaustiveAnalyzer:
             )
         ''')
         
-        # Statistics table
+        # Exhaustive analysis sessions table (compatible with API)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS exhaustive_analysis_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT UNIQUE,
+                mode TEXT,
+                positions_analyzed INTEGER DEFAULT 0,
+                total_moves_analyzed INTEGER DEFAULT 0,
+                total_analysis_time REAL DEFAULT 0.0,
+                successful_analyses INTEGER DEFAULT 0,
+                failed_analyses INTEGER DEFAULT 0,
+                engine_stats TEXT,
+                status TEXT DEFAULT 'running',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP NULL
+            )
+        ''')
+        
+        # Statistics table (for backward compatibility)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS analysis_stats (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -378,7 +420,7 @@ class RobustExhaustiveAnalyzer:
                 self.stats['engine_stats']['mcts_success'] += 1
             return score
         except Exception as e:
-            print(f"⚠️ MCTS analysis failed: {e}")
+            print(f"[WARNING] MCTS analysis failed: {e}")
             return 0.0
     
     def _analyze_with_neural_robust(self, state: AzulState, move_data: Dict) -> float:
@@ -607,39 +649,50 @@ class RobustExhaustiveAnalyzer:
         start_time = time.time()
         
         try:
-            # Generate moves using the enhanced move generator
-            from enhanced_move_generator import EnhancedMoveGenerator
-            move_generator = EnhancedMoveGenerator(max_moves_per_position=self.config['max_moves_per_position'])
-            generated_moves = move_generator.generate_all_moves(state, 0)
+            # Generate moves using the fast move generator
+            from analysis_engine.mathematical_optimization.azul_move_generator import FastMoveGenerator
+            move_generator = FastMoveGenerator()
+            generated_moves = move_generator.generate_moves_fast(state, 0)
+            print(f"   [DEBUG] Generated {len(generated_moves)} moves")
             
-            # Convert to proper move data format
+            # Convert FastMove objects to move data format
             moves = []
             for move in generated_moves:
-                move_data = move.move_data.copy()
-                
-                # Add missing fields for move simulation
-                if move_data['move_type'] == 'factory_to_pattern':
-                    move_data['num_to_pattern_line'] = move_data['count']
-                    move_data['num_to_floor_line'] = 0
-                elif move_data['move_type'] == 'factory_to_floor':
-                    move_data['num_to_pattern_line'] = 0
-                    move_data['num_to_floor_line'] = move_data['count']
-                elif move_data['move_type'] == 'center_to_pattern':
-                    move_data['num_to_pattern_line'] = move_data['count']
-                    move_data['num_to_floor_line'] = 0
-                else:  # center_to_floor
-                    move_data['num_to_pattern_line'] = 0
-                    move_data['num_to_floor_line'] = move_data['count']
-                
-                moves.append(move_data)
+                try:
+                    # Convert FastMove to dictionary format
+                    if move.action_type == 1:  # TAKE_FROM_FACTORY
+                        move_type = 'factory_to_pattern' if move.pattern_line_dest >= 0 else 'factory_to_floor'
+                        source_id = move.source_id
+                    else:  # TAKE_FROM_CENTRE
+                        move_type = 'center_to_pattern' if move.pattern_line_dest >= 0 else 'center_to_floor'
+                        source_id = -1
+                    
+                    move_data = {
+                        'move_type': move_type,
+                        'factory_id': source_id if move_type.startswith('factory') else None,
+                        'color': move.tile_type,
+                        'count': move.num_to_pattern_line + move.num_to_floor_line,
+                        'target_line': move.pattern_line_dest,
+                        'num_to_pattern_line': move.num_to_pattern_line,
+                        'num_to_floor_line': move.num_to_floor_line
+                    }
+                    
+                    print(f"   [DEBUG] Processing move: {move_data}")
+                    moves.append(move_data)
+                except Exception as e:
+                    print(f"   [ERROR] Failed to process move: {e}")
+                    continue
             
             # Analyze each move
             move_analyses = []
-            for move_data in moves:
+            print(f"   [DEBUG] Analyzing {len(moves)} moves")
+            for i, move_data in enumerate(moves):
                 try:
+                    print(f"   [DEBUG] Analyzing move {i+1}/{len(moves)}")
                     analysis = self._analyze_single_move_robust(state, move_data, game_phase)
                     move_analyses.append(analysis)
                 except Exception as e:
+                    print(f"   [ERROR] Failed to analyze move {i+1}: {e}")
                     continue
             
             if not move_analyses:
@@ -928,7 +981,34 @@ class RobustExhaustiveAnalyzer:
                     move_analysis.analysis_time
                 ))
             
+            # Also save to move_quality_analyses table for API compatibility
+            cursor.execute('''
+                INSERT INTO move_quality_analyses (
+                    session_id, position_id, game_phase, total_moves_analyzed,
+                    quality_distribution, average_quality_score, best_move_score,
+                    worst_move_score, engine_consensus, disagreement_level,
+                    position_complexity, strategic_themes, tactical_opportunities,
+                    analysis_time
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                getattr(self, 'current_session_id', None),  # Will be set during analysis
+                position_id,
+                position_analysis.game_phase.value,
+                position_analysis.total_moves,
+                json.dumps(position_analysis.quality_distribution),
+                position_analysis.average_quality_score,
+                position_analysis.best_move_score,
+                position_analysis.worst_move_score,
+                json.dumps(position_analysis.engine_consensus),
+                position_analysis.disagreement_level,
+                position_analysis.position_complexity,
+                json.dumps(position_analysis.strategic_themes),
+                json.dumps(position_analysis.tactical_opportunities),
+                position_analysis.analysis_time
+            ))
+            
             conn.commit()
+            print(f"[SAVED] Analysis saved to database (ID: {position_id})")
             
         except Exception as e:
             conn.rollback()
@@ -941,12 +1021,18 @@ class RobustExhaustiveAnalyzer:
         if session_id is None:
             session_id = f"session_{int(time.time())}"
         
-        print(f"🚀 Starting large-scale analysis")
+        print(f"[START] Starting large-scale analysis")
         print(f"   Mode: {self.analysis_mode.value}")
         print(f"   Positions: {num_positions}")
         print(f"   Workers: {self.max_workers}")
         print(f"   Session ID: {session_id}")
         print()
+        
+        # Create initial session record for API tracking
+        self._create_initial_session_record(session_id, num_positions)
+        
+        # Set current session ID for database saves
+        self.current_session_id = session_id
         
         # Generate test positions
         positions = self._generate_test_positions(num_positions)
@@ -956,20 +1042,20 @@ class RobustExhaustiveAnalyzer:
         successful_analyses = 0
         
         for i, (state, game_phase) in enumerate(positions):
-            print(f"📊 Analyzing position {i+1}/{num_positions}")
+            print(f"[ANALYSIS] Analyzing position {i+1}/{num_positions}")
             
             result = self.analyze_position_robust(state, game_phase)
             
             if result:
                 successful_analyses += 1
-                print(f"   ✅ Success - {result.total_moves} moves, {result.analysis_time:.2f}s")
-                print(f"   📈 Quality: {result.average_quality_score:.1f} avg, {result.best_move_score:.1f} best")
-                print(f"   🎯 Distribution: {result.quality_distribution}")
+                print(f"   [SUCCESS] Success - {result.total_moves} moves, {result.analysis_time:.2f}s")
+                print(f"   [QUALITY] Quality: {result.average_quality_score:.1f} avg, {result.best_move_score:.1f} best")
+                print(f"   [DIST] Distribution: {result.quality_distribution}")
                 
                 # Save to database
                 self.save_analysis_to_database(result, [])  # Empty move_analyses for now
             else:
-                print(f"   ❌ Failed")
+                print(f"   [FAILED] Failed")
         
         total_time = time.time() - start_time
         
@@ -985,6 +1071,26 @@ class RobustExhaustiveAnalyzer:
         cursor = conn.cursor()
         
         try:
+            # Update the exhaustive_analysis_sessions table (API compatible)
+            cursor.execute('''
+                INSERT OR REPLACE INTO exhaustive_analysis_sessions (
+                    session_id, mode, positions_analyzed, total_moves_analyzed,
+                    total_analysis_time, successful_analyses, failed_analyses,
+                    engine_stats, status, completed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (
+                session_id,
+                self.analysis_mode.value,
+                self.stats['positions_analyzed'],
+                self.stats['total_moves_analyzed'],
+                self.stats['total_analysis_time'],
+                self.stats['successful_analyses'],
+                self.stats['failed_analyses'],
+                json.dumps(self.stats['engine_stats']),
+                'completed'
+            ))
+            
+            # Also save to analysis_stats for backward compatibility
             cursor.execute('''
                 INSERT INTO analysis_stats (
                     session_id, mode, positions_analyzed, total_moves_analyzed,
@@ -1003,16 +1109,49 @@ class RobustExhaustiveAnalyzer:
             ))
             
             conn.commit()
+            print(f"[SAVED] Session stats saved to database (ID: {session_id})")
             
         except Exception as e:
             print(f"Failed to save session stats: {e}")
         finally:
             conn.close()
     
+    def _create_initial_session_record(self, session_id: str, num_positions: int):
+        """Create initial session record for API tracking."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT OR IGNORE INTO exhaustive_analysis_sessions (
+                    session_id, mode, positions_analyzed, total_moves_analyzed,
+                    total_analysis_time, successful_analyses, failed_analyses,
+                    engine_stats, status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (
+                session_id,
+                self.analysis_mode.value,
+                0,  # positions_analyzed
+                0,  # total_moves_analyzed
+                0.0,  # total_analysis_time
+                0,  # successful_analyses
+                0,  # failed_analyses
+                json.dumps({}),  # engine_stats
+                'running'  # status
+            ))
+            
+            conn.commit()
+            print(f"[CREATED] Created initial session record (ID: {session_id})")
+            
+        except Exception as e:
+            print(f"Failed to create initial session record: {e}")
+        finally:
+            conn.close()
+    
     def _print_final_stats(self, total_time: float, successful_analyses: int, total_positions: int):
         """Print final analysis statistics."""
         print("\n" + "="*60)
-        print("📊 FINAL ANALYSIS STATISTICS")
+        print("[STATS] FINAL ANALYSIS STATISTICS")
         print("="*60)
         print(f"Total positions: {total_positions}")
         print(f"Successful analyses: {successful_analyses}")
@@ -1021,14 +1160,17 @@ class RobustExhaustiveAnalyzer:
         print(f"Total time: {total_time:.2f}s")
         print(f"Average time per position: {total_time/total_positions:.2f}s")
         print(f"Total moves analyzed: {self.stats['total_moves_analyzed']}")
-        print(f"Average moves per position: {self.stats['total_moves_analyzed']/successful_analyses:.1f}")
+        if successful_analyses > 0:
+            print(f"Average moves per position: {self.stats['total_moves_analyzed']/successful_analyses:.1f}")
+        else:
+            print("Average moves per position: 0 (no successful analyses)")
         print()
         print("Engine Statistics:")
         for engine, count in self.stats['engine_stats'].items():
             print(f"  {engine}: {count} successful evaluations")
         print()
         print(f"Database: {self.db_path}")
-        print("🎉 Analysis complete!")
+        print("[COMPLETE] Analysis complete!")
 
 def main():
     """Main function for running the robust exhaustive analyzer."""

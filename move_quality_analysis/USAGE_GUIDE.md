@@ -89,14 +89,43 @@ Database: C:\Users\admir\Github\azul-analysis-tool\data\robust_exhaustive_analys
 - **100 positions**: ~1 hour
 - **500 positions**: ~5 hours
 
+## 🖥️ **Web Interface Usage**
+
+### **Access the UI**
+1. Start the Flask server: `python start_server.py`
+2. Open your browser to: `http://localhost:8000`
+3. Navigate to the "🔬 Exhaustive" tab in the navigation
+
+### **UI Features**
+- **Analysis Configuration**: Select mode (Quick/Standard/Deep/Exhaustive)
+- **Position Count**: Set number of positions to analyze (1-10,000)
+- **Real-time Progress**: Live updates with spinning indicators
+- **Session Management**: Automatic reconnection to running analyses
+- **Results Display**: Quality distribution charts and statistics
+- **Recent Sessions**: History of all analysis runs
+
+### **UI Workflow**
+1. **Configure Analysis**: Select mode and position count
+2. **Start Analysis**: Click "🚀 Start Analysis" button
+3. **Monitor Progress**: Watch real-time updates and progress bar
+4. **View Results**: Automatic display when analysis completes
+5. **Session History**: Browse recent sessions with success rates
+
+### **Session Reconnection**
+- **Page Reload**: UI automatically reconnects to running sessions
+- **Visual Feedback**: Clear indicators show analysis status
+- **Persistent State**: Analysis continues even after browser refresh
+
 ## 🔍 **Database Results**
 
-All results are stored in: `data/robust_exhaustive_analysis.db`
+All results are stored in: `data/azul_research.db`
 
 ### **Tables Available**
-1. **position_analyses**: High-level position analysis
-2. **move_analyses**: Detailed move-by-move analysis
-3. **analysis_stats**: Session statistics and metadata
+1. **exhaustive_analysis_sessions**: Session tracking and metadata
+2. **move_quality_analyses**: Detailed position analysis results
+3. **position_analyses**: High-level position analysis
+4. **move_analyses**: Detailed move-by-move analysis
+5. **analysis_stats**: Session statistics and metadata
 
 ### **Sample Queries**
 ```sql

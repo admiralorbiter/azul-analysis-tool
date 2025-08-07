@@ -879,6 +879,9 @@ class IntegratedExhaustiveAnalyzer:
         )
         self.db.save_exhaustive_analysis_session(session)
         
+        # Store session for later updates
+        self.current_session = session
+        
         # Generate test positions
         positions = self._generate_test_positions(num_positions)
         
@@ -939,15 +942,15 @@ class IntegratedExhaustiveAnalyzer:
         
         # Update session statistics
         total_time = time.time() - start_time
-        session.positions_analyzed = successful_analyses
-        session.total_moves_analyzed = total_moves_analyzed
-        session.total_analysis_time = total_time
-        session.successful_analyses = successful_analyses
-        session.failed_analyses = failed_analyses
-        session.status = 'completed'
-        session.completed_at = datetime.now()
+        self.current_session.positions_analyzed = successful_analyses
+        self.current_session.total_moves_analyzed = total_moves_analyzed
+        self.current_session.total_analysis_time = total_time
+        self.current_session.successful_analyses = successful_analyses
+        self.current_session.failed_analyses = failed_analyses
+        self.current_session.status = 'completed'
+        self.current_session.completed_at = datetime.now()
         
-        self.db.save_exhaustive_analysis_session(session)
+        self.db.save_exhaustive_analysis_session(self.current_session)
         
         # Print final statistics
         self._print_final_stats(total_time, successful_analyses, num_positions)

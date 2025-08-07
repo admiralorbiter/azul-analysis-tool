@@ -11,6 +11,10 @@ function Navigation({ currentPage, onPageChange }) {
                     onClick: () => onPageChange('main')
                 }, 'Main Interface'),
                 React.createElement('button', {
+                    className: `px-3 py-2 rounded text-sm ${currentPage === 'exhaustive-analysis' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`,
+                    onClick: () => onPageChange('exhaustive-analysis')
+                }, '🔬 Exhaustive'),
+                React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'performance-analytics' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`,
                     onClick: () => onPageChange('performance-analytics')
                 }, '📈 Analytics'),
