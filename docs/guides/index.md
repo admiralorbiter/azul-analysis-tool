@@ -57,8 +57,8 @@ Integrate neural models with search algorithms.
 
 ## 📖 **Technical Documentation**
 
-### **[API Reference](../technical/api/endpoints.md)**
-Complete REST API documentation.
+### **API Reference (technical/api/)**
+Complete REST API documentation by category.
 
 ### **[Architecture](../technical/architecture.md)**
 System architecture and component overview.
@@ -80,7 +80,7 @@ Setting up the development environment.
 4. **[Floor Line Patterns](analysis/floor-line-patterns.md)** - Manage penalties
 
 ### **For Developers**
-1. **[API Reference](../technical/api/endpoints.md)** - Understand the API
+1. **API Reference (technical/api/)** - Understand the API
 2. **[Architecture](../technical/architecture.md)** - Learn the system
 3. **[Development Setup](../technical/development/setup.md)** - Set up development
 

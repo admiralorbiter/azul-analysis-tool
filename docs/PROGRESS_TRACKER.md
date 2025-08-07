@@ -204,7 +204,7 @@
 - **Analysis Cache**: < 10ms response time for analysis operations
 - **Bulk Operations**: Efficient batch processing with progress tracking
 - **Search Performance**: Fast position and analysis search with pagination
-- **Authentication**: Session-based auth with rate limiting
+- **Authentication**: Session-based auth with rate limiting (via X-Session-ID)
 
 ### **Search Performance**
 - **Alpha-Beta**: Depth-3 search < 4 seconds

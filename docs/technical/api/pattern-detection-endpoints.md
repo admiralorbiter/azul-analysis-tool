@@ -10,6 +10,14 @@ The Pattern Detection API provides endpoints for analyzing game positions and id
 POST /api/v1/detect-patterns
 ```
 
+## Authentication
+
+Protected endpoints require a valid session. Include your session ID:
+
+```
+X-Session-ID: YOUR_SESSION_ID
+```
+
 ## Endpoints
 
 ### Detect Patterns
@@ -125,7 +133,7 @@ The API supports several predefined test positions for development and testing:
 ```python
 import requests
 
-url = "http://localhost:5000/api/v1/detect-patterns"
+url = "http://localhost:8000/api/v1/detect-patterns"
 data = {
     "fen_string": "high_urgency_red_blocking",
     "current_player": 0,
@@ -147,6 +155,7 @@ const response = await fetch('/api/v1/detect-patterns', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
+        'X-Session-ID': sessionId
     },
     body: JSON.stringify({
         fen_string: 'high_urgency_red_blocking',

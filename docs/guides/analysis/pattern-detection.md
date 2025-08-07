@@ -33,7 +33,7 @@ Pattern detection helps you identify **tile blocking opportunities** - situation
 import requests
 
 # Detect blocking opportunities
-response = requests.post('http://localhost:5000/api/v1/detect-patterns', json={
+response = requests.post('http://localhost:8000/api/v1/detect-patterns', json={
     "fen_string": "high_urgency_red_blocking",
     "current_player": 0,
     "include_blocking_opportunities": True,

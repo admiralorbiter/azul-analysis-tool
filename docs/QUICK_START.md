@@ -42,7 +42,7 @@ The server will start on `http://localhost:8000`
 import requests
 
 # Get current game state
-response = requests.get('http://localhost:8000/api/v1/get_game_state')
+response = requests.get('http://localhost:8000/api/v1/game_state', params={'fen_string': 'initial'})
 game_state = response.json()
 
 # Execute a move

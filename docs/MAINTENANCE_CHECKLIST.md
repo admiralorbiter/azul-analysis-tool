@@ -5,7 +5,7 @@
 ## 🔄 **Regular Review Checklist**
 
 ### **Core Documentation Updates**
-- [ ] **Update `STATUS.md`**
+- [ ] **Update `PROGRESS_TRACKER.md`**
   - [ ] Review current feature status
   - [ ] Update priority assignments
   - [ ] Remove outdated information
@@ -27,7 +27,7 @@
 - [ ] **API Documentation**
   - [ ] Check for new endpoints
   - [ ] Update endpoint descriptions
-  - [ ] Verify authentication requirements
+  - [ ] Verify authentication requirements (X-Session-ID vs public)
   - [ ] Update usage examples
 
 - [ ] **Implementation Guides**

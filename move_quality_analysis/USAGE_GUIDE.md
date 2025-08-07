@@ -2,7 +2,7 @@
 
 ## 🚀 **Ready to Run!**
 
-The robust exhaustive analyzer is **FULLY OPERATIONAL** and ready for immediate use.
+The robust exhaustive analyzer is **operational** and ready for immediate use. MCTS early-game rollout behavior is under active improvement.
 
 ## 📋 **Quick Start Commands**
 
@@ -149,11 +149,11 @@ SELECT * FROM analysis_stats ORDER BY created_at DESC LIMIT 5;
 - **Error Handling**: Robust failure recovery
 - **Command Line Interface**: Easy to use with arguments
 
-### **✅ Engine Performance**
-- **Pattern Analysis**: 100% success rate
-- **Neural Evaluation**: 80% success rate
-- **Alpha-Beta Search**: 80% success rate
-- **MCTS Search**: Working (returns 0.0 for early game)
+### **✅ Engine Notes**
+- **Pattern Analysis**: Stable
+- **Neural Evaluation**: Stable
+- **Alpha-Beta Search**: Stable
+- **MCTS Search**: Early-game rollout policy under development (may return placeholder values)
 
 ### **✅ Quality Metrics**
 - **Overall Quality Score**: Weighted combination of all engines
@@ -163,12 +163,9 @@ SELECT * FROM analysis_stats ORDER BY created_at DESC LIMIT 5;
 - **Risk Assessment**: Move risk evaluation
 - **Confidence Score**: Analysis confidence level
 
-## 🎉 **Ready for Production**
-
-The system is **FULLY OPERATIONAL** and ready for:
+## 🎉 **Operational Readiness**
 
 - ✅ **Large-scale analysis** (thousands of positions)
-- ✅ **Reliable operation** (100% success rate)
 - ✅ **Comprehensive tracking** (detailed statistics)
 - ✅ **Database storage** (SQLite with indexing)
 - ✅ **Error recovery** (robust failure handling)

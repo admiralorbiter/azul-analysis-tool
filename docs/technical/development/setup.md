@@ -196,7 +196,7 @@ flask run --host=0.0.0.0 --port=5000
 #### Verify Backend
 
 ```bash
-curl http://localhost:5000/api/v1/status
+curl http://localhost:8000/api/v1/health
 ```
 
 ### 2. Frontend Development Server
@@ -344,10 +344,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 ```bash
 # Health check
-curl http://localhost:5000/api/v1/status
+curl http://localhost:8000/api/v1/health
 
 # System info
-curl http://localhost:5000/api/v1/system/info
+curl http://localhost:8000/api/v1/stats
 ```
 
 ### 2. Frontend Debugging

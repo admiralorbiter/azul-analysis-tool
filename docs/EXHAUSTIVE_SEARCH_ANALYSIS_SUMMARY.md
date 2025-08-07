@@ -75,11 +75,11 @@ python robust_exhaustive_analyzer.py --mode exhaustive --positions 50
 - **Database Efficiency**: Sub-millisecond query times
 - **Memory Usage**: Optimized for large-scale analysis
 
-### **Engine Statistics**
-- **Pattern Analysis**: 100% success rate
-- **Neural Evaluation**: 80% success rate
-- **Alpha-Beta Search**: 80% success rate
-- **MCTS Search**: Working (returns 0.0 for early game)
+### **Engine Status Notes**
+- **Pattern Analysis**: Stable
+- **Neural Evaluation**: Stable
+- **Alpha-Beta Search**: Stable
+- **MCTS Search**: Early-game rollout policy under development (may return placeholder values)
 
 ## 🖥️ **UI Integration & Session Management**
 

@@ -173,7 +173,7 @@
 #### **Afternoon Tasks (2-3 hours)**
 - [ ] **Test API endpoint manually**
   ```bash
-  curl -X POST http://localhost:5000/api/v1/enhanced-pattern-analysis \
+  curl -X POST http://localhost:8000/api/v1/enhanced-pattern-analysis \
     -H "Content-Type: application/json" \
     -d '{"fen_string": "test_position", "player_id": 0}'
   ```
@@ -370,7 +370,7 @@ def test_api_health():
     
     for endpoint in endpoints:
         try:
-            response = requests.get(f"http://localhost:5000{endpoint}")
+            response = requests.get(f"http://localhost:8000{endpoint}")
             print(f"✓ {endpoint}: Status {response.status_code}")
         except Exception as e:
             print(f"✗ {endpoint}: Error {str(e)}")

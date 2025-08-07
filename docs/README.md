@@ -11,7 +11,8 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 ### **📖 Core Documentation**
 - **[README.md](./README.md)** - This file: Main project overview and documentation guide
 - **[QUICK_START.md](./QUICK_START.md)** - Quick setup and usage guide
-- **[STATUS.md](./STATUS.md)** - Current project status and achievements
+- **[PROGRESS_TRACKER.md](./PROGRESS_TRACKER.md)** - Current project status and achievements
+- **[KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md)** - Current limitations and in-progress items
 
 ### **🏗️ Systems** (`systems/`)
 - **[Systems Overview](systems/README.md)** - Complete overview of all major systems
@@ -29,7 +30,7 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 - **[Neural Guides](guides/neural/)** - Neural model training and evaluation
 
 ### **🔧 Technical Documentation** (`technical/`)
-- **[API Reference](technical/api/)** - Complete API documentation
+- **[API Reference](technical/api/INDEX.md)** - API index and category pages
 - **[Architecture](technical/architecture.md)** - System architecture overview
 - **[Development Setup](technical/development/setup.md)** - Development environment setup
 - **[Implementation Guides](technical/implementation/)** - Technical implementation details
@@ -54,7 +55,7 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 5. **Advanced Strategy**: [Floor Line Patterns](guides/analysis/floor-line-patterns.md) - Floor line management
 
 ### **For Developers**
-1. **API Integration**: [API Reference](technical/api/endpoints.md) - REST API documentation
+1. **API Integration**: See API docs under `technical/api/` (e.g., pattern detection and neural endpoints)
 2. **Architecture**: [System Architecture](technical/architecture.md) - System architecture overview
 3. **Development**: [Development Setup](technical/development/setup.md) - Development environment
 4. **Implementation**: [Technical Guides](technical/implementation/) - Technical implementation details
@@ -62,7 +63,7 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 ### **For Researchers**
 1. **Research Platform**: [Roadmap](planning/roadmap.md) - Development roadmap
 2. **Analysis Methods**: [Analysis Guides](guides/analysis/) - Pattern detection and analysis
-3. **Data Access**: [API Reference](technical/api/endpoints.md) - Programmatic access
+3. **Data Access**: See API docs under `technical/api/` - Programmatic access
 4. **Neural Models**: [Neural Guides](guides/neural/) - AI model training and evaluation
 
 ## 📊 **Current Status**
@@ -115,26 +116,23 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 ```
 docs/
 ├── README.md                    # Main project overview
-├── PROGRESS_SUMMARY.md         # Consolidated progress
-├── SETUP_SUMMARY.md            # Setup instructions
-├── guides/                     # Implementation guides
-│   ├── IMPLEMENTATION_GUIDES.md
-│   ├── PATTERN_DETECTION_GUIDE.md
-│   ├── SCORING_OPTIMIZATION_PATTERNS.md
-│   └── FLOOR_LINE_PATTERNS.md
-├── competitive/                # Competitive research documentation
-│   ├── COMPETITIVE_RESEARCH_ROADMAP.md
-│   └── COMPETITIVE_FEATURES_SUMMARY.md
-├── api/                       # API documentation
+├── PROGRESS_TRACKER.md          # Consolidated progress
+├── QUICK_START.md               # Setup instructions
+├── guides/                      # User guides
+│   ├── analysis/
+│   ├── competitive/
+│   └── getting-started/
+├── technical/                   # Technical docs
+│   ├── api/
+│   ├── architecture.md
+│   └── development/
+├── api/                         # API usage docs
 │   ├── API_USAGE.md
 │   └── QUICK_START.md
-├── status/                    # Documentation status
-│   ├── DOCUMENTATION_STATUS.md
-│   └── DOCUMENTATION_REORGANIZATION_SUMMARY.md
-└── archive/                   # Historical documentation
-    ├── legacy/
-    ├── milestones/
-    └── research/
+└── archive/                     # Historical documentation
+    ├── completed-features/
+    ├── planning-history/
+    └── cleanup-history/
 ```
 
 ## 📈 **Getting Started**
@@ -143,7 +141,7 @@ docs/
 1. **Setup**: Follow [Quick Start](QUICK_START.md) for basic installation
 2. **Explore**: Check [Competitive Features](planning/competitive-features.md) for available features
 3. **Analyze**: Use [Analysis Guides](guides/analysis/) for tactical analysis
-4. **Integrate**: Use [API Reference](technical/api/endpoints.md) for programmatic access
+4. **Integrate**: Use API docs under `technical/api/` for programmatic access
 
 ### **Development Path**
 1. **Understand**: Read [System Architecture](technical/architecture.md) for architecture

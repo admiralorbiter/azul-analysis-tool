@@ -7,7 +7,7 @@
 ### **🚀 Getting Started**
 - **[README.md](README.md)** - Main project overview and setup
 - **[QUICK_START.md](QUICK_START.md)** - Quick start guide and examples
-- **[CONSOLIDATED_STATUS.md](CONSOLIDATED_STATUS.md)** - Current project status and completed features
+- Current project status: see `PROGRESS_TRACKER.md` and `DEVELOPMENT_PRIORITIES.md`
 
 ### **📋 Development & Planning**
 - **[DEVELOPMENT_PRIORITIES.md](DEVELOPMENT_PRIORITIES.md)** - Current development priorities (P0-P3)
@@ -31,7 +31,7 @@ docs/
 ├── 📖 Core Documentation (Always Current)
 │   ├── README.md                           # Main project overview
 │   ├── QUICK_START.md                     # Getting started guide
-│   ├── CONSOLIDATED_STATUS.md             # Current project status
+│   ├── PROGRESS_TRACKER.md                # Current project status
 │   ├── DEVELOPMENT_PRIORITIES.md          # Development priorities (P0-P3)
 │   ├── MAINTENANCE_CHECKLIST.md           # Maintenance procedures
 │   └── DOCUMENTATION_OVERVIEW.md         # This overview
@@ -113,7 +113,7 @@ docs/
 ## 🔄 **Maintenance System**
 
 ### **Regular Reviews**
-- Update `STATUS.md` with current priorities
+- Update `PROGRESS_TRACKER.md` with current priorities
 - Review and update `DEVELOPMENT_PRIORITIES.md`
 - Check for outdated information
 - Archive completed features
@@ -158,7 +158,7 @@ docs/
 ### **For New Contributors**
 1. Start with **[README.md](README.md)** for project overview
 2. Check **[QUICK_START.md](QUICK_START.md)** for setup instructions
-3. Review **[CONSOLIDATED_STATUS.md](CONSOLIDATED_STATUS.md)** for current project status
+3. Review **[PROGRESS_TRACKER.md](PROGRESS_TRACKER.md)** for current project status
 4. Check **[DEVELOPMENT_PRIORITIES.md](DEVELOPMENT_PRIORITIES.md)** for current priorities
 
 ### **For Developers**
@@ -171,7 +171,7 @@ docs/
 1. Start with **[QUICK_START.md](QUICK_START.md)** for quick setup
 2. Check **[guides/](guides/)** for detailed user guides
 3. Review **[api/](api/)** for API usage
-4. Check **[CONSOLIDATED_STATUS.md](CONSOLIDATED_STATUS.md)** for feature status
+4. See **[PROGRESS_TRACKER.md](PROGRESS_TRACKER.md)** and **[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md)** for feature status and caveats
 
 ---
 

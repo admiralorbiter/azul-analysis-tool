@@ -42,7 +42,7 @@ Floor line management is crucial in Azul - tiles that don't fit on your wall or 
 import requests
 
 # Detect floor line patterns
-response = requests.post('http://localhost:5000/api/v1/detect-floor-line-patterns', json={
+response = requests.post('http://localhost:8000/api/v1/detect-floor-line-patterns', json={
     "fen_string": "floor_line_risk_scenario",
     "current_player": 0,
     "include_risk_mitigation": True,

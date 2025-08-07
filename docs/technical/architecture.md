@@ -69,7 +69,7 @@ api/
 #### Key Features
 
 - **RESTful API**: Standard REST endpoints for all operations
-- **Authentication**: JWT-based authentication system
+- **Authentication**: Session-based authentication via `X-Session-ID` header for protected endpoints
 - **Rate Limiting**: Request rate limiting for API protection
 - **Error Handling**: Comprehensive error handling and logging
 - **CORS Support**: Cross-origin resource sharing support
@@ -288,18 +288,18 @@ Input Layer (Game State) → Hidden Layers → Output Layer (Move Probabilities)
 Local Development → Flask Development Server → SQLite Database → React Dev Server
 ```
 
-### Production Environment
+### Production Environment (Planned)
 
 ```
-Nginx → Gunicorn → Flask App → PostgreSQL → Redis Cache
+Nginx → Gunicorn → Flask App → (SQLite/PostgreSQL) → (Redis)
 ```
 
 #### Components
 
 - **Nginx**: Reverse proxy and static file serving
 - **Gunicorn**: WSGI server for Flask application
-- **PostgreSQL**: Production database (optional)
-- **Redis**: Caching and session storage (optional)
+- **SQLite**: Current default database; PostgreSQL considered for scaling
+- **Redis**: Optional caching/session storage for future scaling
 
 ## Monitoring and Logging
 

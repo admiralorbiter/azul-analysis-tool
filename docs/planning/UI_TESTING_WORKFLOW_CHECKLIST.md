@@ -11,7 +11,7 @@ This checklist helps systematically test all implemented features to identify co
 ### **✅ Initial Setup & Navigation**
 - [x] **Launch Application**
   - [x] Server starts successfully (`python main.py serve`)
-  - [x] Web interface loads at `http://localhost:5000`
+  - [x] Web interface loads at `http://localhost:8000`
   - [x] No console errors on initial load
   - [x] All CSS styles load correctly
   - [x] Navigation buttons are responsive

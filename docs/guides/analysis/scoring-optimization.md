@@ -41,7 +41,7 @@ Scoring optimization helps you identify opportunities to maximize points through
 import requests
 
 # Detect scoring optimization opportunities
-response = requests.post('http://localhost:5000/api/v1/detect-scoring-optimization', json={
+response = requests.post('http://localhost:8000/api/v1/detect-scoring-optimization', json={
     "fen_string": "wall_completion_opportunity",
     "current_player": 0,
     "include_wall_completion": True,

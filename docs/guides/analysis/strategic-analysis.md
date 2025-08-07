@@ -222,5 +222,5 @@ The system helps prepare for endgame:
 - [Scoring Optimization](scoring-optimization.md) - Point maximization strategies
 - [Floor Line Patterns](floor-line-patterns.md) - Penalty management
 - [Move Quality Assessment](move-quality.md) - Move evaluation and ranking
-- [API Reference](../../technical/api/endpoints.md) - Strategic analysis API
+- API Reference: see `../../technical/api/INDEX.md`
 - [Technical Implementation](../../technical/implementation/strategic-analysis.md) - Technical details 

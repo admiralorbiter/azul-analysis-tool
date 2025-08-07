@@ -27,34 +27,26 @@ python main.py serve --host 0.0.0.0 --port 8080 --debug --database azul_cache.db
 
 ### Creating a Session
 ```bash
-curl -X POST http://localhost:8000/api/v1/auth/session \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "test",
-    "password": "test"
-  }'
+curl -X POST http://localhost:8000/api/v1/auth/session
 ```
 
 **Response:**
 ```json
 {
   "session_id": "abc123def456",
-  "expires_at": "2024-01-01T12:00:00Z",
-  "user": {
-    "username": "test",
-    "permissions": ["read", "write", "admin"]
-  }
+  "expires_in_minutes": 60,
+  "message": "Session created successfully"
 }
 ```
 
 ### Using Authentication
 ```bash
-# Include session token in all requests
-curl -H "Authorization: Bearer abc123def456" \
+# Include X-Session-ID header on protected endpoints
+curl -H "X-Session-ID: abc123def456" \
   http://localhost:8000/api/v1/health
 ```
 
-**Note**: Interactive endpoints (`/api/v1/execute_move`, `/api/v1/get_game_state`, `/api/v1/reset_game`) do not require authentication for web UI integration.
+**Note**: Interactive endpoints (`/api/v1/execute_move`, `/api/v1/game_state`, `/api/v1/reset_game`) do not require authentication for web UI integration.
 
 ## 🎮 Interactive Game Play
 
@@ -98,11 +90,7 @@ curl -X POST http://localhost:8000/api/v1/execute_move \
 
 ### Get Game State
 ```bash
-curl -X POST http://localhost:8000/api/v1/get_game_state \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fen_string": "initial"
-  }'
+curl -X GET "http://localhost:8000/api/v1/game_state?fen_string=initial"
 ```
 
 **Response:**
@@ -136,7 +124,7 @@ curl -X POST http://localhost:8000/api/v1/reset_game
 ```bash
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "X-Session-ID: YOUR_SESSION_ID" \
   -d '{
     "fen_string": "start",
     "depth": 3,
@@ -172,7 +160,7 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 ```bash
 curl -X POST http://localhost:8000/api/v1/hint \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "X-Session-ID: YOUR_SESSION_ID" \
   -d '{
     "fen_string": "start",
     "budget": 0.2,
@@ -209,7 +197,7 @@ curl -X POST http://localhost:8000/api/v1/hint \
 ### Store Position
 ```bash
 curl -X PUT http://localhost:8000/api/v1/positions/start \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "X-Session-ID: YOUR_SESSION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "player_count": 2,
@@ -225,25 +213,25 @@ curl -X PUT http://localhost:8000/api/v1/positions/start \
 ### Get Position
 ```bash
 curl -X GET http://localhost:8000/api/v1/positions/start \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 ### Search Positions
 ```bash
 # Basic search
 curl -X GET "http://localhost:8000/api/v1/positions/search?limit=10&offset=0" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 
 # Advanced search with filters
 curl -X GET "http://localhost:8000/api/v1/positions/search?limit=20&offset=0&player_count=2&game_phase=midgame" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 ### Bulk Operations
 ```bash
 # Bulk import
 curl -X POST http://localhost:8000/api/v1/positions/bulk \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "X-Session-ID: YOUR_SESSION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "positions": [
@@ -263,11 +251,11 @@ curl -X POST http://localhost:8000/api/v1/positions/bulk \
 
 # Bulk export
 curl -X GET "http://localhost:8000/api/v1/positions/bulk?limit=100&offset=0" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 
 # Bulk delete
 curl -X DELETE http://localhost:8000/api/v1/positions/bulk \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "X-Session-ID: YOUR_SESSION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "fen_strings": ["position1", "position2"]
@@ -279,13 +267,13 @@ curl -X DELETE http://localhost:8000/api/v1/positions/bulk \
 ### Get Cached Analysis
 ```bash
 curl -X GET http://localhost:8000/api/v1/analyses/start \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 ### Store Analysis Result
 ```bash
 curl -X POST http://localhost:8000/api/v1/analyses/start \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "X-Session-ID: YOUR_SESSION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "agent": 0,
@@ -308,11 +296,11 @@ curl -X POST http://localhost:8000/api/v1/analyses/start \
 ```bash
 # Search by criteria
 curl -X GET "http://localhost:8000/api/v1/analyses/search?search_type=alpha_beta&agent=0&limit=10" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 
 # Get recent analyses
 curl -X GET "http://localhost:8000/api/v1/analyses/recent?limit=20&hours=24" \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 ## 📈 Performance & Monitoring
@@ -339,7 +327,7 @@ curl http://localhost:8000/api/v1/health
 ### Performance Statistics
 ```bash
 curl http://localhost:8000/api/v1/stats \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 **Response:**
@@ -369,13 +357,13 @@ curl http://localhost:8000/api/v1/stats \
 ### Database Analytics
 ```bash
 curl http://localhost:8000/api/v1/performance/analytics \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 ### System Monitoring
 ```bash
 curl http://localhost:8000/api/v1/performance/monitoring \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+  -H "X-Session-ID: YOUR_SESSION_ID"
 ```
 
 ## 🔧 Error Handling
@@ -386,8 +374,8 @@ curl http://localhost:8000/api/v1/performance/monitoring \
 ```json
 {
   "error": "authentication_required",
-  "message": "Valid session token required",
-  "details": "Include Authorization header with Bearer token"
+  "message": "Valid session required",
+  "details": "Include X-Session-ID header"
 }
 ```
 
@@ -426,9 +414,9 @@ curl http://localhost:8000/api/v1/performance/monitoring \
 
 ### CORS Configuration
 The API is configured with CORS support for web UI integration:
-- Allowed origins: `http://localhost:3000`, `http://127.0.0.1:3000`
+- Allowed origins: `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:8000`, `http://127.0.0.1:8000`
 - Methods: GET, POST, PUT, DELETE, OPTIONS
-- Headers: Content-Type, Authorization
+- Headers: Content-Type, X-Session-ID, Authorization
 
 ### Static File Serving
 The API serves static files from the `ui/` directory:
@@ -508,11 +496,7 @@ curl -X POST http://localhost:8000/api/v1/validate-fen \
 Load a game state from FEN using the `/api/v1/game_state` endpoint:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/game_state \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fen_string": "BYRK|WBYR|KWBY|RKWB|YRKW/BYRKW/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/0,0/1/0"
-  }'
+curl -X GET "http://localhost:8000/api/v1/game_state?fen_string=BYRK|WBYR|KWBY|RKWB|YRKW/BYRKW/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/-----|-----|-----|-----|-----/-----|-----|-----|-----|-----/-/0,0/1/0"
 ```
 
 **Response:**

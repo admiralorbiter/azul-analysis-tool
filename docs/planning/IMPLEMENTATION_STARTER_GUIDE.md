@@ -623,7 +623,7 @@ class TestWeek1Integration:
     
     def setup_method(self):
         self.detector = EnhancedPatternDetector()
-        self.api_base_url = "http://localhost:5000/api/v1"
+        self.api_base_url = "http://localhost:8000/api/v1"
         
     def test_enhanced_detector_integration(self):
         """
@@ -834,7 +834,7 @@ def test_api_health():
     
     for endpoint in endpoints:
         try:
-            response = requests.get(f"http://localhost:5000{endpoint}")
+            response = requests.get(f"http://localhost:8000{endpoint}")
             print(f"✓ {endpoint}: Status {response.status_code}")
         except Exception as e:
             print(f"✗ {endpoint}: Error {str(e)}")

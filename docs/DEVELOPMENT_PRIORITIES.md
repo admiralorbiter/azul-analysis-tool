@@ -34,7 +34,7 @@
   - ✅ Move quality assessment system (COMPLETED)
   - ✅ Alternative move analysis (COMPLETED)
   - ✅ Navigation pages Phase 1 (COMPLETED) - Performance Analytics, Advanced Analysis Lab, Tactical Training Center
-  - ✅ **EXHAUSTIVE SEARCH ANALYSIS** - Deep game space exploration (COMPLETED - FULLY OPERATIONAL)
+   - ✅ **EXHAUSTIVE SEARCH ANALYSIS** - Deep game space exploration (Operational; MCTS rollout improvements planned)
   - ✅ **UI Integration & Session Management** (COMPLETED) - Real-time progress tracking, session reconnection, visual indicators
   - 🚧 Educational integration features
   - 📋 Advanced endgame analysis
@@ -79,7 +79,7 @@
      - Comprehensive move quality assessment
      - Strategic insights and engine consensus analysis
      - SQLite database with detailed tracking
-     - 100% success rate with robust error handling
+      - Robust error handling; see notes on MCTS rollout for early-game behavior
      - **UI Integration**: Real-time progress tracking, session reconnection, visual indicators
      - **Session Management**: Automatic reconnection to running analyses, persistent state
    - **Usage**: Ready for immediate production use

@@ -12,10 +12,10 @@ The Neural API provides endpoints for training, evaluating, and integrating neur
 
 ## Authentication
 
-All neural endpoints require authentication. Include your API key in the request headers:
+All neural endpoints require a valid session. Include your session ID in the request headers:
 
 ```
-Authorization: Bearer YOUR_API_KEY
+X-Session-ID: YOUR_SESSION_ID
 ```
 
 ## Endpoints

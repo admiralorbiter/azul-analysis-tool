@@ -269,13 +269,12 @@ CREATE TABLE analysis_stats (
 - [x] **API Integration**: REST API endpoints for web integration
 - [x] **Educational Features**: Learning paths and tutorial system
 
-### **📊 Performance Benchmarks**
-- **Success Rate**: 100% (robust error handling)
-- **Analysis Speed**: 5-60 seconds per position (configurable)
-- **Quality Distribution**: Balanced across all tiers
-- **Engine Performance**: 3 out of 4 engines working optimally
-- **Database Efficiency**: Sub-millisecond query times
-- **Memory Usage**: Optimized for large-scale analysis
+### **📊 Performance Notes**
+- **Stability**: Robust error handling in place
+- **Throughput**: 5–60 seconds per position (configurable by mode)
+- **Quality Distribution**: Balanced across tiers
+- **Engine Status**: All engines integrated; MCTS rollout policy improvements planned
+- **Database**: SQLite storage with efficient queries
 
 ## 🚀 **Production Readiness**
 

@@ -469,7 +469,7 @@ import json
 class TestStrategicIntegration(unittest.TestCase):
     
     def setUp(self):
-        self.base_url = "http://localhost:5000"
+        self.base_url = "http://localhost:8000"
         self.test_state_dict = self.create_test_state_dict()
     
     def test_factory_control_api(self):

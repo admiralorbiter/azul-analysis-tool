@@ -70,17 +70,15 @@ curl -X POST http://localhost:8000/api/v1/execute_move \
   }'
 
 # Create a session (required for analysis endpoints)
-curl -X POST http://localhost:8000/api/v1/auth/session \
-  -H "Content-Type: application/json" \
-  -d '{"username": "test", "password": "test"}'
+curl -X POST http://localhost:8000/api/v1/auth/session
 
-# Get session token from response and use it
-export TOKEN="your_session_token_here"
+# Save session id from response and use it
+export SESSION_ID="your_session_id_here"
 
-# Test exact analysis (requires authentication)
+# Test exact analysis (requires session header)
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Session-ID: $SESSION_ID" \
   -d '{
     "fen_string": "start",
     "depth": 3,
@@ -146,9 +144,9 @@ python main.py profile --budget 4.0 --hint-budget 0.2 --move-budget 0.001
 
 ### Position Caching
 ```bash
-# Store a position (requires authentication)
+# Store a position (requires session header)
 curl -X PUT http://localhost:8000/api/v1/positions/start \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Session-ID: $SESSION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "player_count": 2,
@@ -156,20 +154,20 @@ curl -X PUT http://localhost:8000/api/v1/positions/start \
     "metadata": {"game_phase": "opening"}
   }'
 
-# Search positions (requires authentication)
+# Search positions (requires session header)
 curl -X GET "http://localhost:8000/api/v1/positions/search?limit=10" \
-  -H "Authorization: Bearer $TOKEN"
+  -H "X-Session-ID: $SESSION_ID"
 ```
 
 ### Analysis Caching
 ```bash
-# Get cached analysis (requires authentication)
+# Get cached analysis (requires session header)
 curl -X GET http://localhost:8000/api/v1/analyses/start \
-  -H "Authorization: Bearer $TOKEN"
+  -H "X-Session-ID: $SESSION_ID"
 
-# Search analyses (requires authentication)
+# Search analyses (requires session header)
 curl -X GET "http://localhost:8000/api/v1/analyses/search?search_type=alpha_beta" \
-  -H "Authorization: Bearer $TOKEN"
+  -H "X-Session-ID: $SESSION_ID"
 ```
 
 ## 🧪 Testing
@@ -291,14 +289,13 @@ curl -X POST http://localhost:8000/api/v1/execute_move \
   -H "Content-Type: application/json" \
   -d '{"fen_string": "initial", "move": {...}, "agent_id": 0}'
 
-# Analysis endpoints require authentication
-curl -X POST http://localhost:8000/api/v1/auth/session \
+# Analysis endpoints require a session header
+curl -X POST http://localhost:8000/api/v1/auth/session
+SESSION_ID=... # set from response
+curl -H "X-Session-ID: $SESSION_ID" \
   -H "Content-Type: application/json" \
-  -d '{"username": "test", "password": "test"}'
-
-# Use returned token in Authorization header
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:8000/api/v1/analyze
+  -X POST http://localhost:8000/api/v1/analyze \
+  -d '{"fen_string": "start", "depth": 3, "timeout": 4.0, "agent": 0}'
 ```
 
 **State Persistence Issues:**
@@ -307,9 +304,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 curl -X POST http://localhost:8000/api/v1/reset_game
 
 # Check current state
-curl -X POST http://localhost:8000/api/v1/get_game_state \
-  -H "Content-Type: application/json" \
-  -d '{"fen_string": "initial"}'
+curl -X GET "http://localhost:8000/api/v1/game_state?fen_string=initial"
 ```
 
 **Database Issues:**

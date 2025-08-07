@@ -82,10 +82,10 @@ python -c "from neural.azul_net import download_models; download_models()"
 python start_server.py
 ```
 
-The server will start on `http://localhost:5000`
+The server will start on `http://localhost:8000`
 
 ### **Access the Web Interface**
-1. Open your browser to `http://localhost:5000`
+1. Open your browser to `http://localhost:8000`
 2. You should see the Azul game board
 3. Start analyzing positions immediately
 
@@ -106,10 +106,10 @@ python -m pytest tests/ -v
 ### **Test API Endpoints**
 ```bash
 # Test basic API functionality
-curl http://localhost:5000/api/v1/health
+curl http://localhost:8000/api/v1/health
 
 # Test pattern detection
-curl -X POST http://localhost:5000/api/v1/detect-patterns \
+curl -X POST http://localhost:8000/api/v1/detect-patterns \
   -H "Content-Type: application/json" \
   -d '{"fen_string": "test_position", "current_player": 0}'
 ```
@@ -176,7 +176,7 @@ export AZUL_DISABLE_NEURAL=1
 1. **Read the [Quick Start](../QUICK_START.md)** guide
 2. **Try the [First Steps](first-steps.md)** tutorial
 3. **Explore the [Analysis Guides](../analysis/)** for detailed features
-4. **Check the [API Reference](../../technical/api/endpoints.md)** for programmatic access
+4. **Check the [API Reference](../../technical/api/INDEX.md)** for programmatic access
 
 ### **For Developers**
 1. **Set up development environment** - See [Development Setup](../../technical/development/setup.md)

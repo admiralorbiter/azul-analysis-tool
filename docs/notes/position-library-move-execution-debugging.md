@@ -63,7 +63,7 @@ for tile in fac.tiles.keys():  # Only iterate over tiles actually present
 ### Phase 4: State Synchronization Issue
 **Problem:** After fixing the `KeyError`, moves were being applied successfully but not visually reflected on the frontend.
 
-**Root Cause:** The `execute_move` endpoint was returning a new FEN string, but the frontend was making a separate call to `get_game_state` to retrieve the updated state. The `get_game_state` endpoint wasn't properly reflecting the changes that were just made.
+**Root Cause:** The `execute_move` endpoint was returning a new FEN string, but the frontend was making a separate call to `GET /api/v1/game_state` to retrieve the updated state. The game state endpoint wasn't properly reflecting the changes that were just made.
 
 **Fix:** Modified `execute_move` to return the complete game state directly in the response, eliminating the need for a separate state retrieval call.
 

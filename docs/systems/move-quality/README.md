@@ -22,19 +22,32 @@ The Move Quality Assessment System provides sophisticated analysis of move quali
 4. **Review Results**: Analyze quality indicators and alternative moves
 
 ### **API Usage**
-```python
-# Analyze single move quality
-POST /api/v1/analyze-move-quality
-{
-  "fen": "base64_encoded_game_state",
-  "move": "tile_placement_details"
-}
+```bash
+# Analyze position and get best move (canonical)
+curl -X POST http://localhost:8000/api/v1/analyze-move-quality \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fen_string": "initial",
+    "current_player": 0,
+    "include_alternatives": true
+  }'
 
-# Evaluate all possible moves
-POST /api/v1/evaluate-all-moves
-{
-  "fen": "base64_encoded_game_state"
-}
+# Evaluate all possible moves (canonical)
+curl -X POST http://localhost:8000/api/v1/evaluate-all-moves \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fen_string": "initial",
+    "player_id": 0
+  }'
+
+# Assess a specific move (legacy)
+curl -X POST http://localhost:8000/api/v1/assess-move-quality \
+  -H "Content-Type: application/json" \
+  -d '{
+    "state_fen": "initial",
+    "player_id": 0,
+    "move_key": "factory_0_tile_blue_pattern_line_1"
+  }'
 ```
 
 ## 📚 **Documentation**

@@ -1,8 +1,8 @@
 # Move Quality Analysis - README
 
-## 🎉 **STATUS: FULLY OPERATIONAL**
+## 🎉 **STATUS: OPERATIONAL**
 
-The robust exhaustive analyzer is now **ready for production use** with all major issues resolved and comprehensive analysis capabilities.
+The robust exhaustive analyzer is **operational** with comprehensive analysis capabilities and robust error handling. MCTS early-game rollout behavior is under active improvement.
 
 ## 🚀 **Quick Start**
 
@@ -24,10 +24,10 @@ python robust_exhaustive_analyzer.py --mode deep --positions 1000
 
 ## 📊 **Current Performance**
 
-- **Success Rate**: 100% (all positions analyzed successfully)
-- **Analysis Speed**: 11-12 seconds per position (quick mode)
+- **Stability**: Robust error handling
+- **Analysis Speed**: 11–12 seconds per position (quick mode)
 - **Quality Distribution**: Balanced across tiers (`=`, `?!`, `?`)
-- **Engine Coverage**: 3 out of 4 engines working optimally
+- **Engine Status**: All engines integrated; MCTS early-game rollout improvements planned
 - **Database**: SQLite storage with comprehensive tracking
 
 ## 🔧 **Recent Fixes**
@@ -112,10 +112,10 @@ Analysis results are stored in SQLite with three main tables:
 - **Command Line Interface**: Easy to use with arguments
 
 ### **✅ Analysis Engines**
-- **Pattern Analysis**: 100% success rate
-- **Neural Evaluation**: 80% success rate
-- **Alpha-Beta Search**: 80% success rate
-- **MCTS Search**: Working (returns 0.0 for early game)
+- **Pattern Analysis**: Stable
+- **Neural Evaluation**: Stable
+- **Alpha-Beta Search**: Stable
+- **MCTS Search**: Early-game rollout policy under development (may return placeholder values)
 
 ### **✅ Quality Metrics**
 - **Overall Quality Score**: Weighted combination of all engines
@@ -151,15 +151,12 @@ python robust_exhaustive_analyzer.py --mode deep --positions 1000
 python robust_exhaustive_analyzer.py --mode exhaustive --positions 50
 ```
 
-## 🎉 **Production Ready**
-
-The system is **FULLY OPERATIONAL** and ready for:
+## 🎉 **Operational Readiness**
 
 - ✅ **Large-scale analysis** (thousands of positions)
-- ✅ **Reliable operation** (100% success rate)
+- ✅ **Robust error handling**
 - ✅ **Comprehensive tracking** (detailed statistics)
 - ✅ **Database storage** (SQLite with indexing)
-- ✅ **Error recovery** (robust failure handling)
 - ✅ **Easy usage** (command line interface)
 
 ## 📋 **Next Steps**
@@ -171,6 +168,6 @@ The system is **FULLY OPERATIONAL** and ready for:
 4. **Visualization**: Analysis result visualizations
 
 ### **Production Use**
-The system is ready for immediate production use with all core functionality working reliably.
+Core functionality is reliable; MCTS early-game rollout improvements are planned.
 
 **Ready to analyze thousands of positions!** 🚀
