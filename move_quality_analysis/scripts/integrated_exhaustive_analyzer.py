@@ -45,6 +45,7 @@ from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
 from analysis_engine.move_quality.azul_move_quality_assessor import AzulMoveQualityAssessor
 from neural.azul_net import AzulNet
 from neural.batch_evaluator import BatchNeuralEvaluator
+from core import azul_utils as utils
 
 class AnalysisMode(Enum):
     """Analysis modes for different levels of depth."""
@@ -204,14 +205,36 @@ class IntegratedExhaustiveAnalyzer:
                 action_type = 2  # TAKE_FROM_CENTRE
                 source_id = -1
             
-            # Create TileGrab with proper error checking
+            # Ensure tile_type is an integer
             tile_type = move_data['tile_type']
-            pattern_line = move_data['pattern_line']
-            num_to_floor_line = move_data.get('num_to_floor_line', 0)
+            if isinstance(tile_type, str):
+                # Convert string tile type to integer
+                tile_map = {'blue': 0, 'yellow': 1, 'red': 2, 'black': 3, 'white': 4}
+                tile_type = tile_map.get(tile_type.lower(), 0)
+            elif not isinstance(tile_type, int):
+                tile_type = int(tile_type)
             
-            # Simulate the move
-            result_state = game_rule.simulate_action(state, action_type, source_id, 
-                                                   tile_type, pattern_line, num_to_floor_line)
+            # Create TileGrab object
+            tile_grab = utils.TileGrab()
+            tile_grab.tile_type = tile_type
+            tile_grab.pattern_line_dest = move_data['pattern_line']
+            tile_grab.num_to_pattern_line = move_data.get('num_to_pattern_line', 0)
+            tile_grab.num_to_floor_line = move_data.get('num_to_floor_line', 0)
+            tile_grab.number = tile_grab.num_to_pattern_line + tile_grab.num_to_floor_line
+            
+            # Validate the move
+            if tile_grab.number <= 0:
+                print(f"⚠️ Invalid move: no tiles to grab")
+                return None
+            
+            # Create action tuple
+            action = (action_type, source_id, tile_grab)
+            
+            # Clone the state to avoid modifying the original
+            cloned_state = state.clone()
+            
+            # Simulate the move using generateSuccessor
+            result_state = game_rule.generateSuccessor(cloned_state, action, 0)
             
             return result_state
             
@@ -229,9 +252,9 @@ class IntegratedExhaustiveAnalyzer:
             
             # Analyze with Alpha-Beta
             depth = self.config['alpha_beta_depth']
-            result = self.alpha_beta_search.search(result_state, depth=depth)
+            result = self.alpha_beta_search.search(result_state, 0, max_depth=depth)
             
-            return result.get('best_score', 0.0)
+            return result.best_score
             
         except Exception as e:
             print(f"⚠️ Alpha-Beta analysis failed: {e}")
@@ -246,10 +269,10 @@ class IntegratedExhaustiveAnalyzer:
                 return 0.0
             
             # Analyze with MCTS
-            simulations = self.config['mcts_simulations']
-            result = self.mcts_search.search(result_state, num_simulations=simulations)
+            max_rollouts = self.config['mcts_simulations']
+            result = self.mcts_search.search(result_state, 0, max_rollouts=max_rollouts)
             
-            return result.get('best_score', 0.0)
+            return result.best_score
             
         except Exception as e:
             print(f"⚠️ MCTS analysis failed: {e}")
@@ -407,6 +430,18 @@ class IntegratedExhaustiveAnalyzer:
             player_count = random.randint(2, 4)
             state = AzulState(player_count)
             
+            # Ensure factories have tiles by re-initializing them
+            for factory in state.factories:
+                state.InitialiseFactory(factory)
+            
+            # Add some tiles to center pool for variety
+            if random.random() < 0.3:  # 30% chance to have center tiles
+                for tile_type in range(5):
+                    if random.random() < 0.5:  # 50% chance for each tile type
+                        num_tiles = random.randint(1, 3)
+                        state.centre_pool.tiles[tile_type] += num_tiles
+                        state.centre_pool.total += num_tiles
+            
             # Randomly advance the game to different phases
             game_round = random.randint(1, 9)
             if game_round <= 3:
@@ -429,7 +464,19 @@ class IntegratedExhaustiveAnalyzer:
             
             # Generate all possible moves
             move_generator = self.move_quality_assessor.move_generator
-            all_moves = move_generator.generate_all_moves(state, 0)
+            move_objects = move_generator.generate_moves(state, 0)
+            
+            # Convert Move objects to dictionaries
+            all_moves = []
+            for move_obj in move_objects:
+                move_dict = move_obj.to_dict()
+                # Add additional fields expected by the analyzer
+                move_dict['move_type'] = 'factory_to_pattern' if move_dict['source_id'] >= 0 else 'centre_to_pattern'
+                move_dict['factory_id'] = move_dict['source_id']
+                move_dict['tile_type'] = move_dict['tile_grab']['tile_type']
+                move_dict['pattern_line'] = move_dict['tile_grab']['pattern_line_dest']
+                move_dict['num_to_floor_line'] = move_dict['tile_grab']['num_to_floor_line']
+                all_moves.append(move_dict)
             
             # Limit moves based on configuration
             max_moves = self.config['max_moves_per_position']
@@ -852,7 +899,20 @@ class IntegratedExhaustiveAnalyzer:
             if position_analysis:
                 # Generate move analyses for database storage
                 move_generator = self.move_quality_assessor.move_generator
-                all_moves = move_generator.generate_all_moves(state, 0)
+                move_objects = move_generator.generate_moves(state, 0)
+                
+                # Convert Move objects to dictionaries
+                all_moves = []
+                for move_obj in move_objects:
+                    move_dict = move_obj.to_dict()
+                    # Add additional fields expected by the analyzer
+                    move_dict['move_type'] = 'factory_to_pattern' if move_dict['source_id'] >= 0 else 'centre_to_pattern'
+                    move_dict['factory_id'] = move_dict['source_id']
+                    move_dict['tile_type'] = move_dict['tile_grab']['tile_type']
+                    move_dict['pattern_line'] = move_dict['tile_grab']['pattern_line_dest']
+                    move_dict['num_to_floor_line'] = move_dict['tile_grab']['num_to_floor_line']
+                    all_moves.append(move_dict)
+                
                 max_moves = self.config['max_moves_per_position']
                 if len(all_moves) > max_moves:
                     all_moves = all_moves[:max_moves]
