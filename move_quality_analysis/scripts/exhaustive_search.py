@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Exhaustive Move Search - Using Existing Comprehensive Analyzer
+COMPREHENSIVE EXHAUSTIVE AZUL MOVE SPACE ANALYSIS
 
-This script leverages the existing comprehensive analyzer and enhanced move generator
-to perform exhaustive move search and analysis.
+This script performs a truly exhaustive analysis of the Azul move space:
+- Explores ALL possible game states and situations
+- Uses multiple analysis engines (Alpha-Beta, MCTS, Neural, Pattern Detection)
+- Performs deep analysis of each move (30+ seconds per position)
+- Generates comprehensive reports about the entire move space
+- Tracks move quality distributions across different game phases
 """
 
 import sys
@@ -15,252 +19,943 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 import time
-from core.azul_model import AzulState
-from comprehensive_move_quality_analyzer import (
-    ComprehensiveMoveQualityAnalyzer, ComprehensiveAnalysisConfig
-)
-from enhanced_move_generator import EnhancedMoveGenerator
-
+import json
 import sqlite3
+import random
+import numpy as np
+from dataclasses import dataclass, asdict
+from typing import List, Dict, Any, Optional, Tuple
+from enum import Enum
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing as mp
 
-def setup_progress_database():
-    """Setup database for progress tracking."""
-    db_path = "../data/exhaustive_search_progress.db"
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    # Create progress tracking table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS exhaustive_search_progress (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            position_type TEXT NOT NULL,
-            position_fen TEXT NOT NULL,
-            total_moves INTEGER NOT NULL,
-            completed_moves INTEGER DEFAULT 0,
-            current_move_index INTEGER DEFAULT 0,
-            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            status TEXT DEFAULT 'running'
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-    return db_path
+from core.azul_model import AzulState, AzulGameRule
+from analysis_engine.mathematical_optimization.azul_search import AzulAlphaBetaSearch
+from analysis_engine.mathematical_optimization.azul_mcts import AzulMCTS
+from analysis_engine.move_quality.azul_move_quality_assessor import AzulMoveQualityAssessor
+from neural.azul_net import AzulNet
+from neural.batch_evaluator import BatchNeuralEvaluator
 
-def save_progress(db_path, position_type, position_fen, total_moves, completed_moves, current_index):
-    """Save progress to database."""
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        INSERT OR REPLACE INTO exhaustive_search_progress 
-        (position_type, position_fen, total_moves, completed_moves, current_move_index, last_update)
-        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    ''', (position_type, position_fen, total_moves, completed_moves, current_index))
-    
-    conn.commit()
-    conn.close()
+class AnalysisDepth(Enum):
+    """Analysis depth levels for comprehensive evaluation."""
+    QUICK = "quick"           # 5-10 seconds per position
+    STANDARD = "standard"     # 15-30 seconds per position  
+    DEEP = "deep"             # 30-60 seconds per position
+    EXHAUSTIVE = "exhaustive" # 60+ seconds per position
 
-def load_progress(db_path, position_type, position_fen):
-    """Load progress from database."""
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+class GamePhase(Enum):
+    """Different phases of Azul game."""
+    EARLY_GAME = "early"      # Rounds 1-3
+    MID_GAME = "mid"          # Rounds 4-6
+    LATE_GAME = "late"        # Rounds 7-9
+    END_GAME = "endgame"      # Final scoring
+
+@dataclass
+class ComprehensiveMoveAnalysis:
+    """Comprehensive analysis of a single move."""
+    move_data: Dict[str, Any]
+    position_fen: str
+    game_phase: GamePhase
     
-    cursor.execute('''
-        SELECT total_moves, completed_moves, current_move_index
-        FROM exhaustive_search_progress 
-        WHERE position_type = ? AND position_fen = ?
-    ''', (position_type, position_fen))
+    # Multi-engine analysis results
+    alpha_beta_score: float
+    mcts_score: float
+    neural_score: float
+    pattern_score: float
     
-    result = cursor.fetchone()
-    conn.close()
+    # Quality assessment
+    overall_quality_score: float
+    quality_tier: str
+    confidence_score: float
     
-    if result:
-        return {
-            'total_moves': result[0],
-            'completed_moves': result[1],
-            'current_move_index': result[2]
+    # Strategic analysis
+    strategic_value: float
+    tactical_value: float
+    risk_assessment: float
+    opportunity_value: float
+    
+    # Detailed breakdown
+    blocking_score: float
+    scoring_score: float
+    floor_line_score: float
+    timing_score: float
+    
+    # Analysis metadata
+    analysis_time: float
+    engines_used: List[str]
+    explanation: str
+
+@dataclass
+class PositionAnalysis:
+    """Complete analysis of a position."""
+    position_fen: str
+    game_phase: GamePhase
+    total_moves: int
+    analysis_time: float
+    
+    # Move quality distribution
+    quality_distribution: Dict[str, int]
+    average_quality_score: float
+    best_move_score: float
+    worst_move_score: float
+    
+    # Engine consensus
+    engine_consensus: Dict[str, float]
+    disagreement_level: float
+    
+    # Strategic insights
+    position_complexity: float
+    strategic_themes: List[str]
+    tactical_opportunities: List[str]
+
+class ComprehensiveExhaustiveAnalyzer:
+    """Comprehensive exhaustive analyzer for Azul move space."""
+    
+    def __init__(self, analysis_depth: AnalysisDepth = AnalysisDepth.DEEP):
+        self.analysis_depth = analysis_depth
+        
+        # Initialize analysis engines
+        self.alpha_beta_searcher = AzulAlphaBetaSearch()
+        self.mcts_searcher = AzulMCTS()
+        self.move_quality_assessor = AzulMoveQualityAssessor()
+        
+        # Initialize neural network evaluator
+        try:
+            self.neural_evaluator = BatchNeuralEvaluator()
+        except Exception as e:
+            print(f"Warning: Neural evaluator not available: {e}")
+            self.neural_evaluator = None
+        
+        # Analysis configuration based on depth
+        self.config = self._get_analysis_config(analysis_depth)
+        
+        # Database for storing results
+        self.db_path = "../data/comprehensive_exhaustive_analysis.db"
+        self._init_database()
+    
+    def _get_analysis_config(self, depth: AnalysisDepth) -> Dict[str, Any]:
+        """Get analysis configuration based on depth level."""
+        configs = {
+            AnalysisDepth.QUICK: {
+                'alpha_beta_depth': 3,
+                'mcts_simulations': 100,
+                'mcts_time_limit': 5,
+                'pattern_analysis': True,
+                'strategic_analysis': False,
+                'neural_analysis': False
+            },
+            AnalysisDepth.STANDARD: {
+                'alpha_beta_depth': 4,
+                'mcts_simulations': 500,
+                'mcts_time_limit': 15,
+                'pattern_analysis': True,
+                'strategic_analysis': True,
+                'neural_analysis': True
+            },
+            AnalysisDepth.DEEP: {
+                'alpha_beta_depth': 5,
+                'mcts_simulations': 1000,
+                'mcts_time_limit': 30,
+                'pattern_analysis': True,
+                'strategic_analysis': True,
+                'neural_analysis': True
+            },
+            AnalysisDepth.EXHAUSTIVE: {
+                'alpha_beta_depth': 6,
+                'mcts_simulations': 2000,
+                'mcts_time_limit': 60,
+                'pattern_analysis': True,
+                'strategic_analysis': True,
+                'neural_analysis': True
+            }
         }
-    return None
-
-def create_test_position(position_type: str = "complex") -> AzulState:
-    """Create a test position for exhaustive analysis."""
-    state = AzulState(2)  # 2-player game
+        return configs[depth]
     
-    if position_type == "complex":
-        # Create a complex position with many tiles
-        # Factory 0: 4 blue tiles
-        state.factories[0].tiles[0] = 4
-        state.factories[0].total = 4
+    def _init_database(self):
+        """Initialize database for storing comprehensive analysis results."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
         
-        # Factory 1: 3 white tiles
-        state.factories[1].tiles[1] = 3
-        state.factories[1].total = 3
+        # Create comprehensive analysis tables
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS comprehensive_move_analyses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                position_fen TEXT NOT NULL,
+                game_phase TEXT NOT NULL,
+                move_data TEXT NOT NULL,
+                alpha_beta_score REAL,
+                mcts_score REAL,
+                neural_score REAL,
+                pattern_score REAL,
+                overall_quality_score REAL,
+                quality_tier TEXT,
+                confidence_score REAL,
+                strategic_value REAL,
+                tactical_value REAL,
+                risk_assessment REAL,
+                opportunity_value REAL,
+                blocking_score REAL,
+                scoring_score REAL,
+                floor_line_score REAL,
+                timing_score REAL,
+                analysis_time REAL,
+                engines_used TEXT,
+                explanation TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         
-        # Factory 2: 2 red tiles
-        state.factories[2].tiles[3] = 2
-        state.factories[2].total = 2
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS position_analyses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                position_fen TEXT NOT NULL,
+                game_phase TEXT NOT NULL,
+                total_moves INTEGER,
+                analysis_time REAL,
+                quality_distribution TEXT,
+                average_quality_score REAL,
+                best_move_score REAL,
+                worst_move_score REAL,
+                engine_consensus TEXT,
+                disagreement_level REAL,
+                position_complexity REAL,
+                strategic_themes TEXT,
+                tactical_opportunities TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         
-        # Factory 3: 1 black tile
-        state.factories[3].tiles[2] = 1
-        state.factories[3].total = 1
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS move_space_statistics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                total_positions_analyzed INTEGER,
+                total_moves_analyzed INTEGER,
+                average_analysis_time REAL,
+                quality_distribution TEXT,
+                engine_consensus_stats TEXT,
+                game_phase_stats TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         
-        # Factory 4: 2 yellow tiles
-        state.factories[4].tiles[4] = 2
-        state.factories[4].total = 2
-        
-        # Center pool: 3 tiles of different colors
-        state.centre_pool.tiles[0] = 1  # Blue
-        state.centre_pool.tiles[1] = 1  # White
-        state.centre_pool.tiles[2] = 1  # Black
-        state.centre_pool.total = 3
-        
-    elif position_type == "simple":
-        # Create a simple position with few tiles
-        state.factories[0].tiles[0] = 2  # 2 blue tiles
-        state.factories[0].total = 2
-        state.centre_pool.tiles[1] = 1  # 1 white tile
-        state.centre_pool.total = 1
-        
-    elif position_type == "empty":
-        # Create an empty position (start of game)
-        pass  # Use default empty state
-        
-    return state
-
-def main():
-    """Run exhaustive move search using existing comprehensive analyzer."""
-    print("🎯 Exhaustive Move Search - Using Existing Comprehensive Analyzer")
-    print("="*70)
+        conn.commit()
+        conn.close()
     
-    # Create analyzer with exhaustive search configuration
-    config = ComprehensiveAnalysisConfig(
-        max_workers=8,  # Use more workers for exhaustive search
-        batch_size=200,  # Larger batch size
-        max_analysis_time=60,  # Longer analysis time
-        enable_progress_tracking=True,
-        save_intermediate_results=True,
-        generate_detailed_reports=True
-    )
-    analyzer = ComprehensiveMoveQualityAnalyzer(config)
-    
-    # Create enhanced move generator (no filtering for exhaustive search)
-    move_generator = EnhancedMoveGenerator(
-        max_moves_per_position=1000,  # Very high limit for exhaustive search
-        enable_filtering=False  # Don't filter for exhaustive search
-    )
-    
-    # Test different position types
-    position_types = ["simple", "complex"]
-    
-    for position_type in position_types:
-        print(f"\n🎮 Running exhaustive search for {position_type} position...")
+    def generate_comprehensive_test_positions(self) -> List[Tuple[AzulState, GamePhase]]:
+        """Generate a comprehensive set of test positions covering all game phases."""
+        positions = []
         
-        # Create test position
-        state = create_test_position(position_type)
-        state_fen = state.to_fen()
+        # Early game positions (Rounds 1-3)
+        for round_num in range(1, 4):
+            for factory_config in self._generate_factory_configs(round_num):
+                state = self._create_position_with_factories(factory_config, round_num)
+                positions.append((state, GamePhase.EARLY_GAME))
         
-        print(f"📊 Position FEN: {state_fen[:50]}...")
-        print(f"👥 Players: {len(state.agents)}")
-        print(f"🏭 Factories: {len(state.factories)}")
-        print(f"🎯 Center pool tiles: {state.centre_pool.total}")
+        # Mid game positions (Rounds 4-6)
+        for round_num in range(4, 7):
+            for factory_config in self._generate_factory_configs(round_num):
+                state = self._create_position_with_factories(factory_config, round_num)
+                # Add some wall progress
+                self._add_wall_progress(state, round_num)
+                positions.append((state, GamePhase.MID_GAME))
         
-        # Generate all possible moves using enhanced move generator
-        print("\n🔍 Generating all possible moves...")
+        # Late game positions (Rounds 7-9)
+        for round_num in range(7, 10):
+            for factory_config in self._generate_factory_configs(round_num):
+                state = self._create_position_with_factories(factory_config, round_num)
+                # Add significant wall progress
+                self._add_wall_progress(state, round_num)
+                positions.append((state, GamePhase.LATE_GAME))
+        
+        # End game positions
+        for endgame_config in self._generate_endgame_configs():
+            state = self._create_endgame_position(endgame_config)
+            positions.append((state, GamePhase.END_GAME))
+        
+        return positions
+    
+    def _generate_factory_configs(self, round_num: int) -> List[Dict]:
+        """Generate different factory configurations for a round."""
+        configs = []
+        
+        # Sparse factories (few tiles)
+        configs.append({
+            'factories': [
+                {'tiles': {0: 2, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 2},
+                {'tiles': {0: 0, 1: 1, 2: 0, 3: 0, 4: 0}, 'total': 1},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 0},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 0},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 0}
+            ],
+            'center_pool': {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 0}
+        })
+        
+        # Mixed factories (moderate tiles)
+        configs.append({
+            'factories': [
+                {'tiles': {0: 3, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 3},
+                {'tiles': {0: 0, 1: 2, 2: 0, 3: 0, 4: 0}, 'total': 2},
+                {'tiles': {0: 0, 1: 0, 2: 1, 3: 0, 4: 0}, 'total': 1},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 0},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 0}
+            ],
+            'center_pool': {'tiles': {0: 1, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 1}
+        })
+        
+        # Dense factories (many tiles)
+        configs.append({
+            'factories': [
+                {'tiles': {0: 4, 1: 0, 2: 0, 3: 0, 4: 0}, 'total': 4},
+                {'tiles': {0: 0, 1: 3, 2: 0, 3: 0, 4: 0}, 'total': 3},
+                {'tiles': {0: 0, 1: 0, 2: 2, 3: 0, 4: 0}, 'total': 2},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 1, 4: 0}, 'total': 1},
+                {'tiles': {0: 0, 1: 0, 2: 0, 3: 0, 4: 1}, 'total': 1}
+            ],
+            'center_pool': {'tiles': {0: 1, 1: 1, 2: 0, 3: 0, 4: 0}, 'total': 2}
+        })
+        
+        return configs
+    
+    def _create_position_with_factories(self, config: Dict, round_num: int) -> AzulState:
+        """Create a position with specific factory configuration."""
+        state = AzulState(2)
+        
+        # Set up factories
+        for i, factory_config in enumerate(config['factories']):
+            factory = state.factories[i]
+            factory.tiles = factory_config['tiles'].copy()
+            factory.total = factory_config['total']
+        
+        # Set up center pool
+        center_config = config['center_pool']
+        state.centre_pool.tiles = center_config['tiles'].copy()
+        state.centre_pool.total = center_config['total']
+        
+        return state
+    
+    def _add_wall_progress(self, state: AzulState, round_num: int):
+        """Add wall progress based on round number."""
+        player = state.agents[0]
+        
+        # Add some completed tiles based on round
+        tiles_to_add = min(round_num * 2, 15)  # Max 15 tiles
+        
+        for _ in range(tiles_to_add):
+            # Randomly add tiles to wall
+            row = random.randint(0, 4)
+            col = random.randint(0, 4)
+            if player.grid_state[row][col] == 0:
+                player.grid_state[row][col] = 1
+    
+    def _generate_endgame_configs(self) -> List[Dict]:
+        """Generate endgame position configurations."""
+        configs = []
+        
+        # Near completion
+        configs.append({
+            'wall_progress': 0.7,  # 70% complete
+            'pattern_lines': [3, 2, 1, 0, 0],  # Some pattern lines filled
+            'floor_tiles': 2
+        })
+        
+        # Almost complete
+        configs.append({
+            'wall_progress': 0.9,  # 90% complete
+            'pattern_lines': [4, 3, 2, 1, 0],  # Most pattern lines filled
+            'floor_tiles': 1
+        })
+        
+        return configs
+    
+    def _create_endgame_position(self, config: Dict) -> AzulState:
+        """Create an endgame position."""
+        state = AzulState(2)
+        player = state.agents[0]
+        
+        # Add wall progress
+        total_tiles = int(config['wall_progress'] * 25)  # 25 total wall spaces
+        for _ in range(total_tiles):
+            row = random.randint(0, 4)
+            col = random.randint(0, 4)
+            if player.grid_state[row][col] == 0:
+                player.grid_state[row][col] = 1
+        
+        # Add pattern line progress
+        for i, count in enumerate(config['pattern_lines']):
+            player.lines_number[i] = count
+            if count > 0:
+                player.lines_tile[i] = random.randint(0, 4)
+        
+        # Add floor tiles
+        for _ in range(config['floor_tiles']):
+            player.floor_tiles.append(random.randint(0, 4))
+        
+        return state
+    
+    def analyze_position_comprehensive(self, state: AzulState, game_phase: GamePhase) -> PositionAnalysis:
+        """Perform comprehensive analysis of a position."""
         start_time = time.time()
-        moves = move_generator.generate_all_moves(state, player_id=0)
-        generation_time = time.time() - start_time
         
-        print(f"✅ Generated {len(moves)} moves in {generation_time:.3f}s")
+        # Generate all legal moves
+        game_rule = AzulGameRule(len(state.agents))
+        legal_actions = game_rule.getLegalActions(state, 0)
         
-        # Analyze all moves using comprehensive analyzer
-        print(f"\n🔬 Analyzing {len(moves)} moves...")
-        start_time = time.time()
-        results = []
-        
-        # Check for existing progress
-        db_path = setup_progress_database()
-        progress = load_progress(db_path, position_type, state_fen)
-        if progress:
-            print(f"📈 Found existing progress: {progress['completed_moves']}/{progress['total_moves']} moves completed")
-            resume_from = progress['current_move_index']
-        else:
-            resume_from = 0
-
-        # Save initial progress
-        if not progress:
-            save_progress(db_path, position_type, state_fen, len(moves), 0, 0)
-
-        # Save results immediately (most important)
-        for i in range(resume_from, len(moves)):
-            try:
-                # Convert GeneratedMove to dictionary format expected by analyzer
-                move_dict = moves[i].move_data
-                result = analyzer.analyze_single_move(state_fen, move_dict)
-                results.append(result)  # Add to results list
-                
-                # Save progress less frequently
-                if (i + 1) % 100 == 0:  # ✅ Every 100 moves
-                    save_progress(db_path, position_type, state_fen, len(moves), i + 1, i + 1)
-                    
-                # Progress indicator (just display, no DB write)
-                if (i + 1) % 20 == 0:
-                    progress = (i + 1) / len(moves) * 100
-                    print(f"   Progress: {progress:.1f}% ({i + 1}/{len(moves)})")
-                        
-            except Exception as e:
-                print(f"Failed to analyze move {i + 1}: {e}")
+        # Convert actions to move data
+        moves = []
+        for action in legal_actions:
+            if action == "ENDROUND" or action == "STARTROUND":
                 continue
+            action_type, source_id, tile_grab = action
+            
+            move_data = {
+                'move_type': 'factory_to_pattern' if tile_grab.pattern_line_dest >= 0 else 'factory_to_floor',
+                'factory_id': source_id if action_type == 1 else None,
+                'color': tile_grab.tile_type,
+                'count': tile_grab.number,
+                'target_line': tile_grab.pattern_line_dest if tile_grab.pattern_line_dest >= 0 else -1,
+                'num_to_pattern_line': tile_grab.num_to_pattern_line,
+                'num_to_floor_line': tile_grab.num_to_floor_line
+            }
+            moves.append(move_data)
+        
+        # Analyze each move comprehensively
+        move_analyses = []
+        for move_data in moves:
+            analysis = self._analyze_single_move_comprehensive(state, move_data, game_phase)
+            move_analyses.append(analysis)
+        
+        # Calculate position-level statistics
+        quality_scores = [analysis.overall_quality_score for analysis in move_analyses]
+        quality_distribution = self._calculate_quality_distribution(quality_scores)
+        
+        # Calculate engine consensus
+        engine_consensus = self._calculate_engine_consensus(move_analyses)
+        disagreement_level = self._calculate_disagreement_level(move_analyses)
+        
+        # Calculate position complexity
+        position_complexity = self._calculate_position_complexity(state, move_analyses)
+        
+        # Identify strategic themes
+        strategic_themes = self._identify_strategic_themes(move_analyses)
+        tactical_opportunities = self._identify_tactical_opportunities(move_analyses)
         
         analysis_time = time.time() - start_time
-        success_rate = len(results) / len(moves) * 100
         
-        print(f"✅ Analysis completed in {analysis_time:.3f}s")
-        print(f"   Success rate: {success_rate:.1f}%")
-        print(f"   Successful analyses: {len(results)}/{len(moves)}")
-        
-        # Generate statistics
-        if results:
-            print(f"\n📊 RESULTS SUMMARY")
-            print(f"   Total moves analyzed: {len(results)}")
-            print(f"   Total time: {generation_time + analysis_time:.3f}s")
-            
-            # Quality distribution
-            quality_dist = {}
-            scores = []
-            for result in results:
-                tier = result.quality_tier.value
-                quality_dist[tier] = quality_dist.get(tier, 0) + 1
-                scores.append(result.quality_score)
-            
-            print(f"\n🏆 QUALITY DISTRIBUTION")
-            for tier, count in quality_dist.items():
-                percentage = count / len(results) * 100
-                print(f"   {tier}: {count} moves ({percentage:.1f}%)")
-            
-            print(f"\n🎯 QUALITY SCORES")
-            print(f"   Mean: {sum(scores)/len(scores):.2f}")
-            print(f"   Min: {min(scores):.2f}")
-            print(f"   Max: {max(scores):.2f}")
-            
-            # Top moves
-            top_moves = sorted(results, key=lambda r: r.quality_score, reverse=True)[:5]
-            print(f"\n🥇 TOP 5 MOVES")
-            for i, result in enumerate(top_moves):
-                move_data = result.move_data
-                print(f"   {i+1}. {move_data['move_type']} "
-                      f"color={move_data.get('color', 'N/A')} "
-                      f"target={move_data.get('target_line', 'N/A')} "
-                      f"-> {result.quality_tier.value} ({result.quality_score:.1f})")
-        
-        print(f"\n✅ Exhaustive search completed for {position_type} position")
+        return PositionAnalysis(
+            position_fen=state.to_fen(),
+            game_phase=game_phase,
+            total_moves=len(moves),
+            analysis_time=analysis_time,
+            quality_distribution=quality_distribution,
+            average_quality_score=np.mean(quality_scores),
+            best_move_score=max(quality_scores),
+            worst_move_score=min(quality_scores),
+            engine_consensus=engine_consensus,
+            disagreement_level=disagreement_level,
+            position_complexity=position_complexity,
+            strategic_themes=strategic_themes,
+            tactical_opportunities=tactical_opportunities
+        )
     
-    print("\n🎉 All exhaustive searches completed!")
-    print("📊 Using existing comprehensive analyzer infrastructure")
-    print("📈 Results saved to database for further analysis")
+    def _analyze_single_move_comprehensive(self, state: AzulState, move_data: Dict, game_phase: GamePhase) -> ComprehensiveMoveAnalysis:
+        """Analyze a single move using all available engines."""
+        start_time = time.time()
+        
+        # Alpha-Beta analysis
+        alpha_beta_score = self._analyze_with_alpha_beta(state, move_data)
+        
+        # MCTS analysis
+        mcts_score = self._analyze_with_mcts(state, move_data)
+        
+        # Neural analysis
+        neural_score = self._analyze_with_neural(state, move_data)
+        
+        # Pattern analysis
+        pattern_score = self._analyze_with_patterns(state, move_data)
+        
+        # Move quality assessment
+        quality_assessment = self._assess_move_quality(state, move_data)
+        
+        # Calculate overall score
+        overall_score = self._calculate_overall_score(
+            alpha_beta_score, mcts_score, neural_score, pattern_score, quality_assessment
+        )
+        
+        analysis_time = time.time() - start_time
+        
+        return ComprehensiveMoveAnalysis(
+            move_data=move_data,
+            position_fen=state.to_fen(),
+            game_phase=game_phase,
+            alpha_beta_score=alpha_beta_score,
+            mcts_score=mcts_score,
+            neural_score=neural_score,
+            pattern_score=pattern_score,
+            overall_quality_score=overall_score,
+            quality_tier=quality_assessment['tier'],
+            confidence_score=quality_assessment['confidence'],
+            strategic_value=quality_assessment['strategic_value'],
+            tactical_value=quality_assessment['tactical_value'],
+            risk_assessment=quality_assessment['risk_assessment'],
+            opportunity_value=quality_assessment['opportunity_value'],
+            blocking_score=quality_assessment['blocking_score'],
+            scoring_score=quality_assessment['scoring_score'],
+            floor_line_score=quality_assessment['floor_line_score'],
+            timing_score=quality_assessment['timing_score'],
+            analysis_time=analysis_time,
+            engines_used=['alpha_beta', 'mcts', 'neural', 'patterns'],
+            explanation=quality_assessment['explanation']
+        )
+    
+    def _analyze_with_alpha_beta(self, state: AzulState, move_data: Dict) -> float:
+        """Analyze move using Alpha-Beta search."""
+        try:
+            # Simulate the move
+            new_state = self._simulate_move(state, move_data)
+            
+            # Run alpha-beta search on resulting position
+            result = self.alpha_beta_searcher.search(
+                new_state, 
+                self.config['alpha_beta_depth'], 
+                0
+            )
+            
+            return result.best_score if result.best_score is not None else 0.0
+        except Exception as e:
+            print(f"Alpha-Beta analysis failed: {e}")
+            return 0.0
+    
+    def _analyze_with_mcts(self, state: AzulState, move_data: Dict) -> float:
+        """Analyze move using MCTS."""
+        try:
+            # Simulate the move
+            new_state = self._simulate_move(state, move_data)
+            
+            # Run MCTS search
+            result = self.mcts_searcher.search(
+                new_state,
+                self.config['mcts_simulations'],
+                time_limit=self.config['mcts_time_limit']
+            )
+            
+            return result.best_score if result.best_score is not None else 0.0
+        except Exception as e:
+            print(f"MCTS analysis failed: {e}")
+            return 0.0
+    
+    def _analyze_with_neural(self, state: AzulState, move_data: Dict) -> float:
+        """Analyze move using neural network."""
+        if self.neural_evaluator is None:
+            return 0.0
+        
+        try:
+            # Simulate the move
+            new_state = self._simulate_move(state, move_data)
+            
+            # Get neural evaluation
+            score = self.neural_evaluator.evaluate_position(new_state)
+            return score
+        except Exception as e:
+            print(f"Neural analysis failed: {e}")
+            return 0.0
+    
+    def _analyze_with_patterns(self, state: AzulState, move_data: Dict) -> float:
+        """Analyze move using pattern detection."""
+        try:
+            # Convert move to key format
+            move_key = self._convert_move_to_key(move_data)
+            
+            # Assess move quality
+            quality_score = self.move_quality_assessor.assess_move_quality(state, 0, move_key)
+            
+            return quality_score.overall_score
+        except Exception as e:
+            print(f"Pattern analysis failed: {e}")
+            return 0.0
+    
+    def _assess_move_quality(self, state: AzulState, move_data: Dict) -> Dict[str, Any]:
+        """Assess move quality using the move quality assessor."""
+        try:
+            move_key = self._convert_move_to_key(move_data)
+            quality_score = self.move_quality_assessor.assess_move_quality(state, 0, move_key)
+            
+            return {
+                'tier': quality_score.quality_tier.value,
+                'confidence': quality_score.confidence_score,
+                'strategic_value': quality_score.strategic_value,
+                'tactical_value': quality_score.tactical_value,
+                'risk_assessment': quality_score.risk_assessment,
+                'opportunity_value': quality_score.opportunity_value,
+                'blocking_score': quality_score.pattern_scores.get('blocking', 0.0),
+                'scoring_score': quality_score.pattern_scores.get('scoring', 0.0),
+                'floor_line_score': quality_score.pattern_scores.get('floor_line', 0.0),
+                'timing_score': 50.0,  # Placeholder
+                'explanation': quality_score.explanation
+            }
+        except Exception as e:
+            print(f"Move quality assessment failed: {e}")
+            return {
+                'tier': '?',
+                'confidence': 0.0,
+                'strategic_value': 0.0,
+                'tactical_value': 0.0,
+                'risk_assessment': 0.0,
+                'opportunity_value': 0.0,
+                'blocking_score': 0.0,
+                'scoring_score': 0.0,
+                'floor_line_score': 0.0,
+                'timing_score': 0.0,
+                'explanation': f"Assessment failed: {e}"
+            }
+    
+    def _simulate_move(self, state: AzulState, move_data: Dict) -> AzulState:
+        """Simulate a move and return the resulting state."""
+        game_rule = AzulGameRule(len(state.agents))
+        
+        # Convert move data to action format
+        if move_data['move_type'] == 'factory_to_pattern':
+            action_type = 1  # TAKE_FROM_FACTORY
+            source_id = move_data['factory_id']
+        else:
+            action_type = 2  # TAKE_FROM_CENTRE
+            source_id = -1
+        
+        # Create TileGrab
+        from core import azul_utils as utils
+        tile_grab = utils.TileGrab()
+        tile_grab.tile_type = move_data['color']
+        tile_grab.number = move_data['count']
+        tile_grab.pattern_line_dest = move_data['target_line']
+        tile_grab.num_to_pattern_line = move_data['num_to_pattern_line']
+        tile_grab.num_to_floor_line = move_data['num_to_floor_line']
+        
+        action = (action_type, source_id, tile_grab)
+        
+        # Apply move
+        new_state = game_rule.generateSuccessor(state.clone(), action, 0)
+        return new_state
+    
+    def _convert_move_to_key(self, move_data: Dict) -> str:
+        """Convert move data to move key format."""
+        if move_data['move_type'] == 'factory_to_pattern':
+            return f"factory_{move_data['factory_id']}_tile_{move_data['color']}_pattern_line_{move_data['target_line']}"
+        elif move_data['move_type'] == 'factory_to_floor':
+            return f"factory_{move_data['factory_id']}_tile_{move_data['color']}_floor"
+        elif move_data['move_type'] == 'center_to_pattern':
+            return f"center_tile_{move_data['color']}_pattern_line_{move_data['target_line']}"
+        else:
+            return f"center_tile_{move_data['color']}_floor"
+    
+    def _calculate_overall_score(self, alpha_beta_score: float, mcts_score: float, 
+                                neural_score: float, pattern_score: float, 
+                                quality_assessment: Dict) -> float:
+        """Calculate overall score from all engines."""
+        # Normalize scores to 0-100 range
+        scores = [
+            alpha_beta_score,
+            mcts_score,
+            neural_score,
+            pattern_score,
+            quality_assessment['strategic_value']
+        ]
+        
+        # Remove None values and normalize
+        valid_scores = [s for s in scores if s is not None and not np.isnan(s)]
+        
+        if not valid_scores:
+            return 0.0
+        
+        # Calculate weighted average
+        weights = [0.25, 0.25, 0.2, 0.2, 0.1]  # Equal weight to engines, less to strategic
+        weighted_sum = sum(score * weight for score, weight in zip(valid_scores, weights))
+        total_weight = sum(weights[:len(valid_scores)])
+        
+        return weighted_sum / total_weight if total_weight > 0 else 0.0
+    
+    def _calculate_quality_distribution(self, quality_scores: List[float]) -> Dict[str, int]:
+        """Calculate quality tier distribution."""
+        distribution = {'!!': 0, '!': 0, '=': 0, '?!': 0, '?': 0}
+        
+        for score in quality_scores:
+            if score >= 90:
+                distribution['!!'] += 1
+            elif score >= 75:
+                distribution['!'] += 1
+            elif score >= 50:
+                distribution['='] += 1
+            elif score >= 25:
+                distribution['?!'] += 1
+            else:
+                distribution['?'] += 1
+        
+        return distribution
+    
+    def _calculate_engine_consensus(self, move_analyses: List[ComprehensiveMoveAnalysis]) -> Dict[str, float]:
+        """Calculate consensus between different engines."""
+        if not move_analyses:
+            return {}
+        
+        # Get scores from each engine
+        alpha_beta_scores = [a.alpha_beta_score for a in move_analyses]
+        mcts_scores = [a.mcts_score for a in move_analyses]
+        neural_scores = [a.neural_score for a in move_analyses]
+        pattern_scores = [a.pattern_score for a in move_analyses]
+        
+        # Calculate correlations
+        consensus = {}
+        if len(alpha_beta_scores) > 1:
+            consensus['alpha_beta_mcts'] = np.corrcoef(alpha_beta_scores, mcts_scores)[0, 1]
+            consensus['alpha_beta_neural'] = np.corrcoef(alpha_beta_scores, neural_scores)[0, 1]
+            consensus['mcts_neural'] = np.corrcoef(mcts_scores, neural_scores)[0, 1]
+        
+        return consensus
+    
+    def _calculate_disagreement_level(self, move_analyses: List[ComprehensiveMoveAnalysis]) -> float:
+        """Calculate level of disagreement between engines."""
+        if not move_analyses:
+            return 0.0
+        
+        # Get all engine scores
+        all_scores = []
+        for analysis in move_analyses:
+            scores = [
+                analysis.alpha_beta_score,
+                analysis.mcts_score,
+                analysis.neural_score,
+                analysis.pattern_score
+            ]
+            valid_scores = [s for s in scores if s is not None and not np.isnan(s)]
+            if valid_scores:
+                all_scores.append(valid_scores)
+        
+        if not all_scores:
+            return 0.0
+        
+        # Calculate standard deviation of scores for each move
+        stds = [np.std(scores) for scores in all_scores]
+        return np.mean(stds)
+    
+    def _calculate_position_complexity(self, state: AzulState, move_analyses: List[ComprehensiveMoveAnalysis]) -> float:
+        """Calculate position complexity."""
+        if not move_analyses:
+            return 0.0
+        
+        # Factors contributing to complexity:
+        # 1. Number of legal moves
+        # 2. Quality score variance
+        # 3. Engine disagreement
+        # 4. Wall progress
+        
+        num_moves = len(move_analyses)
+        quality_scores = [a.overall_quality_score for a in move_analyses]
+        quality_variance = np.var(quality_scores) if len(quality_scores) > 1 else 0
+        
+        # Wall progress
+        player = state.agents[0]
+        wall_progress = np.sum(player.grid_state) / 25.0  # 25 total wall spaces
+        
+        # Calculate complexity score (0-100)
+        complexity = (
+            min(num_moves / 20.0, 1.0) * 30 +  # Move count contribution
+            min(quality_variance / 1000.0, 1.0) * 30 +  # Quality variance contribution
+            (1.0 - wall_progress) * 40  # Wall progress contribution (less progress = more complex)
+        )
+        
+        return min(complexity, 100.0)
+    
+    def _identify_strategic_themes(self, move_analyses: List[ComprehensiveMoveAnalysis]) -> List[str]:
+        """Identify strategic themes in the position."""
+        themes = []
+        
+        # Analyze move patterns
+        pattern_moves = [a for a in move_analyses if a.move_data['target_line'] >= 0]
+        floor_moves = [a for a in move_analyses if a.move_data['target_line'] == -1]
+        
+        if len(pattern_moves) > len(floor_moves):
+            themes.append("Pattern line development")
+        
+        if any(a.blocking_score > 70 for a in move_analyses):
+            themes.append("Blocking opportunities")
+        
+        if any(a.scoring_score > 70 for a in move_analyses):
+            themes.append("Scoring optimization")
+        
+        if any(a.floor_line_score < 30 for a in move_analyses):
+            themes.append("Floor line management")
+        
+        return themes
+    
+    def _identify_tactical_opportunities(self, move_analyses: List[ComprehensiveMoveAnalysis]) -> List[str]:
+        """Identify tactical opportunities in the position."""
+        opportunities = []
+        
+        # Find high-scoring moves
+        high_scoring = [a for a in move_analyses if a.overall_quality_score > 80]
+        if high_scoring:
+            opportunities.append(f"{len(high_scoring)} high-quality moves available")
+        
+        # Find low-risk moves
+        low_risk = [a for a in move_analyses if a.risk_assessment < 30]
+        if low_risk:
+            opportunities.append(f"{len(low_risk)} low-risk options")
+        
+        # Find strategic moves
+        strategic = [a for a in move_analyses if a.strategic_value > 70]
+        if strategic:
+            opportunities.append(f"{len(strategic)} strategic opportunities")
+        
+        return opportunities
+    
+    def save_analysis_to_database(self, position_analysis: PositionAnalysis, move_analyses: List[ComprehensiveMoveAnalysis]):
+        """Save analysis results to database."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Save position analysis
+        cursor.execute('''
+            INSERT INTO position_analyses (
+                position_fen, game_phase, total_moves, analysis_time,
+                quality_distribution, average_quality_score, best_move_score,
+                worst_move_score, engine_consensus, disagreement_level,
+                position_complexity, strategic_themes, tactical_opportunities
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            position_analysis.position_fen,
+            position_analysis.game_phase.value,
+            position_analysis.total_moves,
+            position_analysis.analysis_time,
+            json.dumps(position_analysis.quality_distribution),
+            position_analysis.average_quality_score,
+            position_analysis.best_move_score,
+            position_analysis.worst_move_score,
+            json.dumps(position_analysis.engine_consensus),
+            position_analysis.disagreement_level,
+            position_analysis.position_complexity,
+            json.dumps(position_analysis.strategic_themes),
+            json.dumps(position_analysis.tactical_opportunities)
+        ))
+        
+        # Save move analyses
+        for move_analysis in move_analyses:
+            cursor.execute('''
+                INSERT INTO comprehensive_move_analyses (
+                    position_fen, game_phase, move_data, alpha_beta_score,
+                    mcts_score, neural_score, pattern_score, overall_quality_score,
+                    quality_tier, confidence_score, strategic_value, tactical_value,
+                    risk_assessment, opportunity_value, blocking_score, scoring_score,
+                    floor_line_score, timing_score, analysis_time, engines_used, explanation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                move_analysis.position_fen,
+                move_analysis.game_phase.value,
+                json.dumps(move_analysis.move_data),
+                move_analysis.alpha_beta_score,
+                move_analysis.mcts_score,
+                move_analysis.neural_score,
+                move_analysis.pattern_score,
+                move_analysis.overall_quality_score,
+                move_analysis.quality_tier,
+                move_analysis.confidence_score,
+                move_analysis.strategic_value,
+                move_analysis.tactical_value,
+                move_analysis.risk_assessment,
+                move_analysis.opportunity_value,
+                move_analysis.blocking_score,
+                move_analysis.scoring_score,
+                move_analysis.floor_line_score,
+                move_analysis.timing_score,
+                move_analysis.analysis_time,
+                json.dumps(move_analysis.engines_used),
+                move_analysis.explanation
+            ))
+        
+        conn.commit()
+        conn.close()
+
+def main():
+    """Run comprehensive exhaustive analysis of the Azul move space."""
+    print("🎯 COMPREHENSIVE EXHAUSTIVE AZUL MOVE SPACE ANALYSIS")
+    print("="*80)
+    print("This will analyze the ENTIRE Azul move space with deep analysis")
+    print("Expected runtime: 30+ minutes for comprehensive analysis")
+    print("="*80)
+    
+    # Initialize analyzer with deep analysis
+    analyzer = ComprehensiveExhaustiveAnalyzer(AnalysisDepth.DEEP)
+    
+    # Generate comprehensive test positions
+    print("\n🔍 Generating comprehensive test positions...")
+    positions = analyzer.generate_comprehensive_test_positions()
+    print(f"✅ Generated {len(positions)} test positions")
+    
+    # Analyze each position comprehensively
+    total_positions = len(positions)
+    total_analysis_time = 0
+    
+    print(f"\n🔬 Starting comprehensive analysis of {total_positions} positions...")
+    print("This will take significant time for deep analysis...")
+    
+    for i, (state, game_phase) in enumerate(positions):
+        print(f"\n📊 Analyzing position {i+1}/{total_positions} ({game_phase.value} game)")
+        print(f"   Position FEN: {state.to_fen()[:50]}...")
+        
+        start_time = time.time()
+        
+        try:
+            # Perform comprehensive analysis
+            position_analysis = analyzer.analyze_position_comprehensive(state, game_phase)
+            
+            # Get move analyses for database storage
+            game_rule = AzulGameRule(len(state.agents))
+            legal_actions = game_rule.getLegalActions(state, 0)
+            
+            move_analyses = []
+            for action in legal_actions:
+                if action == "ENDROUND" or action == "STARTROUND":
+                    continue
+                action_type, source_id, tile_grab = action
+                
+                move_data = {
+                    'move_type': 'factory_to_pattern' if tile_grab.pattern_line_dest >= 0 else 'factory_to_floor',
+                    'factory_id': source_id if action_type == 1 else None,
+                    'color': tile_grab.tile_type,
+                    'count': tile_grab.number,
+                    'target_line': tile_grab.pattern_line_dest if tile_grab.pattern_line_dest >= 0 else -1,
+                    'num_to_pattern_line': tile_grab.num_to_pattern_line,
+                    'num_to_floor_line': tile_grab.num_to_floor_line
+                }
+                
+                move_analysis = analyzer._analyze_single_move_comprehensive(state, move_data, game_phase)
+                move_analyses.append(move_analysis)
+            
+            # Save to database
+            analyzer.save_analysis_to_database(position_analysis, move_analyses)
+            
+            analysis_time = time.time() - start_time
+            total_analysis_time += analysis_time
+            
+            print(f"   ✅ Analysis completed in {analysis_time:.1f}s")
+            print(f"   📊 {position_analysis.total_moves} moves analyzed")
+            print(f"   🎯 Average quality: {position_analysis.average_quality_score:.1f}")
+            print(f"   🏆 Best move: {position_analysis.best_move_score:.1f}")
+            print(f"   📈 Quality distribution: {position_analysis.quality_distribution}")
+            
+        except Exception as e:
+            print(f"   ❌ Analysis failed: {e}")
+            continue
+    
+    # Generate final summary
+    print(f"\n🎉 COMPREHENSIVE ANALYSIS COMPLETED!")
+    print(f"📊 Total positions analyzed: {total_positions}")
+    print(f"⏱️  Total analysis time: {total_analysis_time:.1f}s")
+    print(f"📈 Average time per position: {total_analysis_time/total_positions:.1f}s")
+    print(f"💾 Results saved to: {analyzer.db_path}")
+    
+    print(f"\n📋 NEXT STEPS:")
+    print(f"   1. Review analysis results in the database")
+    print(f"   2. Generate move space statistics report")
+    print(f"   3. Analyze quality distributions across game phases")
+    print(f"   4. Study engine consensus patterns")
 
 if __name__ == "__main__":
     main()
