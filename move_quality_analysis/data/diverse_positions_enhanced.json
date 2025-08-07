@@ -1,0 +1,1929 @@
+{
+  "metadata": {
+    "total_positions": 120,
+    "generation_time": 1754530009.4962122,
+    "version": "1.0"
+  },
+  "positions": [
+    {
+      "position_id": "pos_0000",
+      "fen_string": "azul_state_2012110371296",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.0,
+      "move_count": 98,
+      "validation_status": "valid",
+      "generation_time": 0.0007598400115966797,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0001",
+      "fen_string": "azul_state_2012110144576",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4,
+      "risk_level": 0.1,
+      "move_count": 96,
+      "validation_status": "valid",
+      "generation_time": 0.011213541030883789,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0002",
+      "fen_string": "azul_state_2012118731616",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.1,
+      "move_count": 94,
+      "validation_status": "valid",
+      "generation_time": 0.024377107620239258,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0003",
+      "fen_string": "azul_state_2012119260416",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 75,
+      "validation_status": "valid",
+      "generation_time": 0.03825855255126953,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0004",
+      "fen_string": "azul_state_2012110371296",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 98,
+      "validation_status": "valid",
+      "generation_time": 0.05280661582946777,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0005",
+      "fen_string": "azul_state_2012119261376",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.0,
+      "move_count": 89,
+      "validation_status": "valid",
+      "generation_time": 0.06777429580688477,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0006",
+      "fen_string": "azul_state_2012119258400",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 76,
+      "validation_status": "valid",
+      "generation_time": 0.08163070678710938,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0007",
+      "fen_string": "azul_state_2012119262144",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.1,
+      "move_count": 78,
+      "validation_status": "valid",
+      "generation_time": 0.09311079978942871,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0008",
+      "fen_string": "azul_state_2012119257152",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 92,
+      "validation_status": "valid",
+      "generation_time": 0.10515379905700684,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0009",
+      "fen_string": "azul_state_2012119261232",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 73,
+      "validation_status": "valid",
+      "generation_time": 0.11831021308898926,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0010",
+      "fen_string": "azul_state_2012119261808",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 76,
+      "validation_status": "valid",
+      "generation_time": 0.13086318969726562,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0011",
+      "fen_string": "azul_state_2012119261760",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 74,
+      "validation_status": "valid",
+      "generation_time": 0.14575934410095215,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0012",
+      "fen_string": "azul_state_2012119261760",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5,
+      "risk_level": 0.1,
+      "move_count": 63,
+      "validation_status": "valid",
+      "generation_time": 0.15871357917785645,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0013",
+      "fen_string": "azul_state_2012119258112",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 46,
+      "validation_status": "valid",
+      "generation_time": 0.17151856422424316,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0014",
+      "fen_string": "azul_state_2012119256624",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.1,
+      "move_count": 88,
+      "validation_status": "valid",
+      "generation_time": 0.18556427955627441,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0015",
+      "fen_string": "azul_state_2012119263584",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4,
+      "risk_level": 0.0,
+      "move_count": 83,
+      "validation_status": "valid",
+      "generation_time": 0.1985921859741211,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0016",
+      "fen_string": "azul_state_2012119262576",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.3333333333333333,
+      "risk_level": 0.0,
+      "move_count": 95,
+      "validation_status": "valid",
+      "generation_time": 0.214308500289917,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0017",
+      "fen_string": "azul_state_2012119263008",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5,
+      "risk_level": 0.0,
+      "move_count": 74,
+      "validation_status": "valid",
+      "generation_time": 0.22769761085510254,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0018",
+      "fen_string": "azul_state_2012119263200",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.1,
+      "move_count": 126,
+      "validation_status": "valid",
+      "generation_time": 0.24067211151123047,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0019",
+      "fen_string": "azul_state_2012119263920",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 75,
+      "validation_status": "valid",
+      "generation_time": 0.25336575508117676,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0020",
+      "fen_string": "azul_state_2012119263632",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.1,
+      "move_count": 98,
+      "validation_status": "valid",
+      "generation_time": 0.26718950271606445,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0021",
+      "fen_string": "azul_state_2012119261568",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.36666666666666664,
+      "risk_level": 0.1,
+      "move_count": 93,
+      "validation_status": "valid",
+      "generation_time": 0.28122973442077637,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0022",
+      "fen_string": "azul_state_2012119264832",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 80,
+      "validation_status": "valid",
+      "generation_time": 0.2952115535736084,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0023",
+      "fen_string": "azul_state_2012119264976",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.3333333333333333,
+      "risk_level": 0.0,
+      "move_count": 108,
+      "validation_status": "valid",
+      "generation_time": 0.30831432342529297,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0024",
+      "fen_string": "azul_state_2012119258976",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.1,
+      "move_count": 68,
+      "validation_status": "valid",
+      "generation_time": 0.3204667568206787,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0025",
+      "fen_string": "azul_state_2012119258976",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5,
+      "risk_level": 0.0,
+      "move_count": 81,
+      "validation_status": "valid",
+      "generation_time": 0.3345522880554199,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0026",
+      "fen_string": "azul_state_2012119261712",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.30000000000000004,
+      "move_count": 64,
+      "validation_status": "valid",
+      "generation_time": 0.34797143936157227,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0027",
+      "fen_string": "azul_state_2012119262768",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5,
+      "risk_level": 0.1,
+      "move_count": 88,
+      "validation_status": "valid",
+      "generation_time": 0.36268067359924316,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0028",
+      "fen_string": "azul_state_2012119264448",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.2,
+      "move_count": 105,
+      "validation_status": "valid",
+      "generation_time": 0.3764469623565674,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0029",
+      "fen_string": "azul_state_2012119264208",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.3333333333333333,
+      "risk_level": 0.0,
+      "move_count": 114,
+      "validation_status": "valid",
+      "generation_time": 0.38929224014282227,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0030",
+      "fen_string": "azul_state_2012119262240",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.36666666666666664,
+      "risk_level": 0.1,
+      "move_count": 76,
+      "validation_status": "valid",
+      "generation_time": 0.40223002433776855,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0031",
+      "fen_string": "azul_state_2012119261328",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 90,
+      "validation_status": "valid",
+      "generation_time": 0.41396164894104004,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0032",
+      "fen_string": "azul_state_2012119262192",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 55,
+      "validation_status": "valid",
+      "generation_time": 0.4270796775817871,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0033",
+      "fen_string": "azul_state_2012119257152",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.1,
+      "move_count": 93,
+      "validation_status": "valid",
+      "generation_time": 0.4430546760559082,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0034",
+      "fen_string": "azul_state_2012119265120",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.1,
+      "move_count": 71,
+      "validation_status": "valid",
+      "generation_time": 0.4549713134765625,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0035",
+      "fen_string": "azul_state_2012119259216",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5,
+      "risk_level": 0.1,
+      "move_count": 84,
+      "validation_status": "valid",
+      "generation_time": 0.468353271484375,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0036",
+      "fen_string": "azul_state_2012119262336",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.2,
+      "move_count": 103,
+      "validation_status": "valid",
+      "generation_time": 0.48185205459594727,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0037",
+      "fen_string": "azul_state_2012119262384",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 68,
+      "validation_status": "valid",
+      "generation_time": 0.4956057071685791,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0038",
+      "fen_string": "azul_state_2012119266032",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4,
+      "risk_level": 0.1,
+      "move_count": 90,
+      "validation_status": "valid",
+      "generation_time": 0.5106785297393799,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0039",
+      "fen_string": "azul_state_2012119265744",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.2,
+      "move_count": 95,
+      "validation_status": "valid",
+      "generation_time": 0.5239331722259521,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0040",
+      "fen_string": "azul_state_2012119265792",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.3333333333333333,
+      "risk_level": 0.0,
+      "move_count": 96,
+      "validation_status": "valid",
+      "generation_time": 0.5375289916992188,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0041",
+      "fen_string": "azul_state_2012119258112",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.5,
+      "risk_level": 0.0,
+      "move_count": 74,
+      "validation_status": "valid",
+      "generation_time": 0.5506198406219482,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0042",
+      "fen_string": "azul_state_2012119265888",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 44,
+      "validation_status": "valid",
+      "generation_time": 0.563805103302002,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0043",
+      "fen_string": "azul_state_2012119262624",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.3333333333333333,
+      "risk_level": 0.1,
+      "move_count": 108,
+      "validation_status": "valid",
+      "generation_time": 0.5793256759643555,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0044",
+      "fen_string": "azul_state_2012119265600",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.0,
+      "move_count": 68,
+      "validation_status": "valid",
+      "generation_time": 0.5926079750061035,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0045",
+      "fen_string": "azul_state_2012119259504",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 57,
+      "validation_status": "valid",
+      "generation_time": 0.6069290637969971,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0046",
+      "fen_string": "azul_state_2012119262144",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.43333333333333335,
+      "risk_level": 0.1,
+      "move_count": 79,
+      "validation_status": "valid",
+      "generation_time": 0.6214921474456787,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0047",
+      "fen_string": "azul_state_2012119263344",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.0,
+      "move_count": 87,
+      "validation_status": "valid",
+      "generation_time": 0.6333293914794922,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0048",
+      "fen_string": "azul_state_2012119265504",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.4,
+      "risk_level": 0.0,
+      "move_count": 102,
+      "validation_status": "valid",
+      "generation_time": 0.6471073627471924,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0049",
+      "fen_string": "azul_state_2012119265504",
+      "game_phase": "opening",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.36666666666666664,
+      "risk_level": 0.0,
+      "move_count": 109,
+      "validation_status": "valid",
+      "generation_time": 0.6627652645111084,
+      "tags": [
+        "opening",
+        "factory_control"
+      ],
+      "description": "opening factory_control position"
+    },
+    {
+      "position_id": "pos_0050",
+      "fen_string": "azul_state_2012119263680",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.5,
+      "move_count": 56,
+      "validation_status": "valid",
+      "generation_time": 0.6776919364929199,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0051",
+      "fen_string": "azul_state_2012119263296",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5666666666666667,
+      "risk_level": 0.1,
+      "move_count": 64,
+      "validation_status": "valid",
+      "generation_time": 0.6923086643218994,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0052",
+      "fen_string": "azul_state_2012119264208",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 62,
+      "validation_status": "valid",
+      "generation_time": 0.7038640975952148,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0053",
+      "fen_string": "azul_state_2012119266320",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.30000000000000004,
+      "move_count": 76,
+      "validation_status": "valid",
+      "generation_time": 0.7151656150817871,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0054",
+      "fen_string": "azul_state_2012119264016",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 64,
+      "validation_status": "valid",
+      "generation_time": 0.7271997928619385,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0055",
+      "fen_string": "azul_state_2012119266944",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 94,
+      "validation_status": "valid",
+      "generation_time": 0.7403814792633057,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0056",
+      "fen_string": "azul_state_2012119267184",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 48,
+      "validation_status": "valid",
+      "generation_time": 0.7511293888092041,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0057",
+      "fen_string": "azul_state_2012119266080",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.6,
+      "move_count": 34,
+      "validation_status": "valid",
+      "generation_time": 0.7640833854675293,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0058",
+      "fen_string": "azul_state_2012119265216",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.5,
+      "move_count": 45,
+      "validation_status": "valid",
+      "generation_time": 0.777346134185791,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0059",
+      "fen_string": "azul_state_2012119265312",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.1,
+      "move_count": 84,
+      "validation_status": "valid",
+      "generation_time": 0.7912702560424805,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0060",
+      "fen_string": "azul_state_2012119262192",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 59,
+      "validation_status": "valid",
+      "generation_time": 0.8042242527008057,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0061",
+      "fen_string": "azul_state_2012119262240",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.5,
+      "move_count": 36,
+      "validation_status": "valid",
+      "generation_time": 0.8207559585571289,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0062",
+      "fen_string": "azul_state_2012119266848",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 37,
+      "validation_status": "valid",
+      "generation_time": 0.8343203067779541,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0063",
+      "fen_string": "azul_state_2012119256624",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 38,
+      "validation_status": "valid",
+      "generation_time": 0.8481576442718506,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0064",
+      "fen_string": "azul_state_2012119267328",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.4666666666666667,
+      "risk_level": 0.1,
+      "move_count": 65,
+      "validation_status": "valid",
+      "generation_time": 0.8619582653045654,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0065",
+      "fen_string": "azul_state_2012119266752",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 33,
+      "validation_status": "valid",
+      "generation_time": 0.8737597465515137,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0066",
+      "fen_string": "azul_state_2012119265456",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 47,
+      "validation_status": "valid",
+      "generation_time": 0.8880465030670166,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0067",
+      "fen_string": "azul_state_2012119261568",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 23,
+      "validation_status": "valid",
+      "generation_time": 0.901296854019165,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0068",
+      "fen_string": "azul_state_2012119258112",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.1,
+      "move_count": 59,
+      "validation_status": "valid",
+      "generation_time": 0.913947343826294,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0069",
+      "fen_string": "azul_state_2012119256576",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.1,
+      "move_count": 67,
+      "validation_status": "valid",
+      "generation_time": 0.9265787601470947,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0070",
+      "fen_string": "azul_state_2012119266944",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.2,
+      "move_count": 68,
+      "validation_status": "valid",
+      "generation_time": 0.9404101371765137,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0071",
+      "fen_string": "azul_state_2012119264304",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.30000000000000004,
+      "move_count": 49,
+      "validation_status": "valid",
+      "generation_time": 0.9528160095214844,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0072",
+      "fen_string": "azul_state_2012119264592",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5666666666666667,
+      "risk_level": 0.2,
+      "move_count": 80,
+      "validation_status": "valid",
+      "generation_time": 0.9635438919067383,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0073",
+      "fen_string": "azul_state_2012119263008",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 80,
+      "validation_status": "valid",
+      "generation_time": 0.9758031368255615,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0074",
+      "fen_string": "azul_state_2012119261520",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.1,
+      "move_count": 60,
+      "validation_status": "valid",
+      "generation_time": 0.9921607971191406,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0075",
+      "fen_string": "azul_state_2012119262912",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5,
+      "risk_level": 0.0,
+      "move_count": 75,
+      "validation_status": "valid",
+      "generation_time": 1.0063197612762451,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0076",
+      "fen_string": "azul_state_2012119266992",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.1,
+      "move_count": 56,
+      "validation_status": "valid",
+      "generation_time": 1.0183970928192139,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0077",
+      "fen_string": "azul_state_2012119267616",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5666666666666667,
+      "risk_level": 0.2,
+      "move_count": 64,
+      "validation_status": "valid",
+      "generation_time": 1.0316414833068848,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0078",
+      "fen_string": "azul_state_2012119266608",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5666666666666667,
+      "risk_level": 0.30000000000000004,
+      "move_count": 68,
+      "validation_status": "valid",
+      "generation_time": 1.0450303554534912,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0079",
+      "fen_string": "azul_state_2012119260320",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 26,
+      "validation_status": "valid",
+      "generation_time": 1.0584022998809814,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0080",
+      "fen_string": "azul_state_2012119267088",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 80,
+      "validation_status": "valid",
+      "generation_time": 1.0725512504577637,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0081",
+      "fen_string": "azul_state_2012119262768",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 52,
+      "validation_status": "valid",
+      "generation_time": 1.0854973793029785,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0082",
+      "fen_string": "azul_state_2012119262144",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 65,
+      "validation_status": "valid",
+      "generation_time": 1.0984442234039307,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0083",
+      "fen_string": "azul_state_2012119262384",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5666666666666667,
+      "risk_level": 0.2,
+      "move_count": 58,
+      "validation_status": "valid",
+      "generation_time": 1.1126549243927002,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0084",
+      "fen_string": "azul_state_2012119267040",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 44,
+      "validation_status": "valid",
+      "generation_time": 1.1298129558563232,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0085",
+      "fen_string": "azul_state_2012119267328",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 25,
+      "validation_status": "valid",
+      "generation_time": 1.1421608924865723,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0086",
+      "fen_string": "azul_state_2012119262336",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 75,
+      "validation_status": "valid",
+      "generation_time": 1.1552724838256836,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0087",
+      "fen_string": "azul_state_2012119257152",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.1,
+      "move_count": 49,
+      "validation_status": "valid",
+      "generation_time": 1.1687166690826416,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0088",
+      "fen_string": "azul_state_2012119267664",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 38,
+      "validation_status": "valid",
+      "generation_time": 1.182617425918579,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0089",
+      "fen_string": "azul_state_2012119267424",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.5,
+      "move_count": 19,
+      "validation_status": "valid",
+      "generation_time": 1.1952478885650635,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0090",
+      "fen_string": "azul_state_2012119267040",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.5,
+      "move_count": 25,
+      "validation_status": "valid",
+      "generation_time": 1.2114970684051514,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0091",
+      "fen_string": "azul_state_2012119264928",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.4,
+      "move_count": 24,
+      "validation_status": "valid",
+      "generation_time": 1.2262039184570312,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0092",
+      "fen_string": "azul_state_2012119267280",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 64,
+      "validation_status": "valid",
+      "generation_time": 1.239347219467163,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0093",
+      "fen_string": "azul_state_2012119267664",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 57,
+      "validation_status": "valid",
+      "generation_time": 1.2523245811462402,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0094",
+      "fen_string": "azul_state_2012119268000",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.2,
+      "move_count": 54,
+      "validation_status": "valid",
+      "generation_time": 1.2643651962280273,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0095",
+      "fen_string": "azul_state_2012119268048",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.5333333333333333,
+      "risk_level": 0.1,
+      "move_count": 76,
+      "validation_status": "valid",
+      "generation_time": 1.285548210144043,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0096",
+      "fen_string": "azul_state_2012119267232",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.2,
+      "move_count": 57,
+      "validation_status": "valid",
+      "generation_time": 1.300736904144287,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0097",
+      "fen_string": "azul_state_2012119264784",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.1,
+      "move_count": 47,
+      "validation_status": "valid",
+      "generation_time": 1.316732406616211,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0098",
+      "fen_string": "azul_state_2012119265552",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 76,
+      "validation_status": "valid",
+      "generation_time": 1.331373929977417,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0099",
+      "fen_string": "azul_state_2012119260416",
+      "game_phase": "opening",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.6,
+      "risk_level": 0.30000000000000004,
+      "move_count": 59,
+      "validation_status": "valid",
+      "generation_time": 1.3454060554504395,
+      "tags": [
+        "opening",
+        "pattern_building"
+      ],
+      "description": "opening pattern_building position"
+    },
+    {
+      "position_id": "pos_0100",
+      "fen_string": "azul_state_2012119265456",
+      "game_phase": "opening",
+      "strategic_scenario": "blocking",
+      "complexity_score": 0.6,
+      "risk_level": 0.1,
+      "move_count": 32,
+      "validation_status": "valid",
+      "generation_time": 1.3596560955047607,
+      "tags": [
+        "opening",
+        "blocking"
+      ],
+      "description": "opening blocking position"
+    },
+    {
+      "position_id": "pos_0101",
+      "fen_string": "azul_state_2012119265360",
+      "game_phase": "opening",
+      "strategic_scenario": "scoring",
+      "complexity_score": 0.6333333333333333,
+      "risk_level": 0.1,
+      "move_count": 57,
+      "validation_status": "valid",
+      "generation_time": 1.3725621700286865,
+      "tags": [
+        "opening",
+        "scoring"
+      ],
+      "description": "opening scoring position"
+    },
+    {
+      "position_id": "pos_0102",
+      "fen_string": "azul_state_2012119263776",
+      "game_phase": "opening",
+      "strategic_scenario": "floor_line",
+      "complexity_score": 0.7666666666666666,
+      "risk_level": 0.5857142857142856,
+      "move_count": 55,
+      "validation_status": "valid",
+      "generation_time": 1.386664628982544,
+      "tags": [
+        "opening",
+        "floor_line"
+      ],
+      "description": "opening floor_line position"
+    },
+    {
+      "position_id": "pos_0103",
+      "fen_string": "azul_state_2012119261520",
+      "game_phase": "opening",
+      "strategic_scenario": "risk_management",
+      "complexity_score": 0.8,
+      "risk_level": 1.0,
+      "move_count": 34,
+      "validation_status": "valid",
+      "generation_time": 1.4004096984863281,
+      "tags": [
+        "opening",
+        "risk_management"
+      ],
+      "description": "opening risk_management position"
+    },
+    {
+      "position_id": "pos_0104",
+      "fen_string": "azul_state_2012119266368",
+      "game_phase": "opening",
+      "strategic_scenario": "bonus_optimization",
+      "complexity_score": 0.7,
+      "risk_level": 0.1,
+      "move_count": 30,
+      "validation_status": "valid",
+      "generation_time": 1.417736530303955,
+      "tags": [
+        "opening",
+        "bonus_optimization"
+      ],
+      "description": "opening bonus_optimization position"
+    },
+    {
+      "position_id": "pos_0105",
+      "fen_string": "azul_state_2012119262240",
+      "game_phase": "opening",
+      "strategic_scenario": "wall_completion",
+      "complexity_score": 0.7333333333333334,
+      "risk_level": 0.1,
+      "move_count": 31,
+      "validation_status": "valid",
+      "generation_time": 1.4317426681518555,
+      "tags": [
+        "opening",
+        "wall_completion"
+      ],
+      "description": "opening wall_completion position"
+    },
+    {
+      "position_id": "pos_0106",
+      "fen_string": "azul_state_2012119262144",
+      "game_phase": "middlegame",
+      "strategic_scenario": "blocking",
+      "complexity_score": 0.8,
+      "risk_level": 0.0,
+      "move_count": 30,
+      "validation_status": "valid",
+      "generation_time": 1.4450571537017822,
+      "tags": [
+        "middlegame",
+        "blocking"
+      ],
+      "description": "middlegame blocking position"
+    },
+    {
+      "position_id": "pos_0107",
+      "fen_string": "azul_state_2012119268432",
+      "game_phase": "middlegame",
+      "strategic_scenario": "scoring",
+      "complexity_score": 0.8,
+      "risk_level": 0.4,
+      "move_count": 82,
+      "validation_status": "valid",
+      "generation_time": 1.4590017795562744,
+      "tags": [
+        "middlegame",
+        "scoring"
+      ],
+      "description": "middlegame scoring position"
+    },
+    {
+      "position_id": "pos_0108",
+      "fen_string": "azul_state_2012119259744",
+      "game_phase": "middlegame",
+      "strategic_scenario": "floor_line",
+      "complexity_score": 1.0,
+      "risk_level": 0.8714285714285713,
+      "move_count": 42,
+      "validation_status": "valid",
+      "generation_time": 1.4712848663330078,
+      "tags": [
+        "middlegame",
+        "floor_line"
+      ],
+      "description": "middlegame floor_line position"
+    },
+    {
+      "position_id": "pos_0109",
+      "fen_string": "azul_state_2012119261280",
+      "game_phase": "middlegame",
+      "strategic_scenario": "wall_completion",
+      "complexity_score": 0.8,
+      "risk_level": 0.1,
+      "move_count": 37,
+      "validation_status": "valid",
+      "generation_time": 1.4826149940490723,
+      "tags": [
+        "middlegame",
+        "wall_completion"
+      ],
+      "description": "middlegame wall_completion position"
+    },
+    {
+      "position_id": "pos_0110",
+      "fen_string": "azul_state_2012119263440",
+      "game_phase": "middlegame",
+      "strategic_scenario": "factory_control",
+      "complexity_score": 0.8,
+      "risk_level": 0.30000000000000004,
+      "move_count": 54,
+      "validation_status": "valid",
+      "generation_time": 1.4957427978515625,
+      "tags": [
+        "middlegame",
+        "factory_control"
+      ],
+      "description": "middlegame factory_control position"
+    },
+    {
+      "position_id": "pos_0111",
+      "fen_string": "azul_state_2012119260416",
+      "game_phase": "middlegame",
+      "strategic_scenario": "risk_management",
+      "complexity_score": 1.0,
+      "risk_level": 1.0,
+      "move_count": 17,
+      "validation_status": "valid",
+      "generation_time": 1.5094959735870361,
+      "tags": [
+        "middlegame",
+        "risk_management"
+      ],
+      "description": "middlegame risk_management position"
+    },
+    {
+      "position_id": "pos_0112",
+      "fen_string": "azul_state_2012119268048",
+      "game_phase": "middlegame",
+      "strategic_scenario": "pattern_building",
+      "complexity_score": 0.8,
+      "risk_level": 0.30000000000000004,
+      "move_count": 19,
+      "validation_status": "valid",
+      "generation_time": 1.5242490768432617,
+      "tags": [
+        "middlegame",
+        "pattern_building"
+      ],
+      "description": "middlegame pattern_building position"
+    },
+    {
+      "position_id": "pos_0113",
+      "fen_string": "azul_state_2012119262192",
+      "game_phase": "middlegame",
+      "strategic_scenario": "bonus_optimization",
+      "complexity_score": 0.7666666666666666,
+      "risk_level": 0.1,
+      "move_count": 25,
+      "validation_status": "valid",
+      "generation_time": 1.5395731925964355,
+      "tags": [
+        "middlegame",
+        "bonus_optimization"
+      ],
+      "description": "middlegame bonus_optimization position"
+    },
+    {
+      "position_id": "pos_0114",
+      "fen_string": "azul_state_2012119260320",
+      "game_phase": "endgame",
+      "strategic_scenario": "wall_completion",
+      "complexity_score": 0.8,
+      "risk_level": 0.2,
+      "move_count": 27,
+      "validation_status": "valid",
+      "generation_time": 1.5538275241851807,
+      "tags": [
+        "endgame",
+        "wall_completion"
+      ],
+      "description": "endgame wall_completion position"
+    },
+    {
+      "position_id": "pos_0115",
+      "fen_string": "azul_state_2012119267424",
+      "game_phase": "endgame",
+      "strategic_scenario": "scoring",
+      "complexity_score": 0.8,
+      "risk_level": 0.4,
+      "move_count": 53,
+      "validation_status": "valid",
+      "generation_time": 1.5666589736938477,
+      "tags": [
+        "endgame",
+        "scoring"
+      ],
+      "description": "endgame scoring position"
+    },
+    {
+      "position_id": "pos_0116",
+      "fen_string": "azul_state_2012119266752",
+      "game_phase": "endgame",
+      "strategic_scenario": "floor_line",
+      "complexity_score": 1.0,
+      "risk_level": 1.0,
+      "move_count": 31,
+      "validation_status": "valid",
+      "generation_time": 1.5803685188293457,
+      "tags": [
+        "endgame",
+        "floor_line"
+      ],
+      "description": "endgame floor_line position"
+    },
+    {
+      "position_id": "pos_0117",
+      "fen_string": "azul_state_2012119261760",
+      "game_phase": "endgame",
+      "strategic_scenario": "bonus_optimization",
+      "complexity_score": 0.8,
+      "risk_level": 0.1,
+      "move_count": 17,
+      "validation_status": "valid",
+      "generation_time": 1.5945098400115967,
+      "tags": [
+        "endgame",
+        "bonus_optimization"
+      ],
+      "description": "endgame bonus_optimization position"
+    },
+    {
+      "position_id": "pos_0118",
+      "fen_string": "azul_state_2012119261616",
+      "game_phase": "endgame",
+      "strategic_scenario": "risk_management",
+      "complexity_score": 1.0,
+      "risk_level": 1.0,
+      "move_count": 22,
+      "validation_status": "valid",
+      "generation_time": 1.6078801155090332,
+      "tags": [
+        "endgame",
+        "risk_management"
+      ],
+      "description": "endgame risk_management position"
+    },
+    {
+      "position_id": "pos_0119",
+      "fen_string": "azul_state_2012119263248",
+      "game_phase": "endgame",
+      "strategic_scenario": "blocking",
+      "complexity_score": 0.8,
+      "risk_level": 0.0,
+      "move_count": 30,
+      "validation_status": "valid",
+      "generation_time": 1.621448278427124,
+      "tags": [
+        "endgame",
+        "blocking"
+      ],
+      "description": "endgame blocking position"
+    }
+  ]
+}

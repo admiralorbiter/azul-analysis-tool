@@ -1,0 +1,199 @@
+{
+  "pipeline_summary": {
+    "total_stages": 5,
+    "successful_stages": 5,
+    "failed_stages": 0,
+    "total_duration": 4.412005424499512
+  },
+  "stage_results": [
+    {
+      "stage": "position_generation",
+      "status": "completed",
+      "start_time": 1754530007.8618848,
+      "end_time": 1754530009.5019739,
+      "duration": 1.6400890350341797,
+      "metrics": {
+        "total_positions": 120,
+        "positions_by_phase": {
+          "opening": 106,
+          "middlegame": 8,
+          "endgame": 6
+        },
+        "positions_by_scenario": {
+          "factory_control": 51,
+          "pattern_building": 51,
+          "blocking": 3,
+          "scoring": 3,
+          "floor_line": 3,
+          "risk_management": 3,
+          "bonus_optimization": 3,
+          "wall_completion": 3
+        },
+        "complexity_distribution": {
+          "simple": 0,
+          "medium": 47,
+          "complex": 59,
+          "expert": 14
+        }
+      },
+      "error_message": null
+    },
+    {
+      "stage": "position_validation",
+      "status": "completed",
+      "start_time": 1754530009.515571,
+      "end_time": 1754530009.530959,
+      "duration": 0.015387773513793945,
+      "metrics": {
+        "total_positions": 120,
+        "valid_positions": 120,
+        "invalid_positions": 0,
+        "validation_errors": []
+      },
+      "error_message": null
+    },
+    {
+      "stage": "move_analysis",
+      "status": "completed",
+      "start_time": 1754530009.54404,
+      "end_time": 1754530012.27724,
+      "duration": 2.7332000732421875,
+      "metrics": {
+        "total_moves_analyzed": 1200,
+        "cache_hit_rate": 0.9291666666666667,
+        "average_analysis_time": 0.0031144837538401287,
+        "quality_distribution": {
+          "!!": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "!": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "=": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "?!": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "?": {
+            "count": 1200,
+            "percentage": 100.0
+          }
+        },
+        "average_scores": {
+          "neural": 1.8827471098119755,
+          "pattern": 2.153576892843312,
+          "quality": 1.99107902302451
+        }
+      },
+      "error_message": null
+    },
+    {
+      "stage": "quality_classification",
+      "status": "completed",
+      "start_time": 1754530012.2923489,
+      "end_time": 1754530012.3064141,
+      "duration": 0.014065265655517578,
+      "metrics": {
+        "total_moves": 4850,
+        "quality_distribution": {
+          "!!": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "!": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "=": {
+            "count": 50,
+            "percentage": 1.0309278350515463
+          },
+          "?!": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "?": {
+            "count": 4800,
+            "percentage": 98.96907216494846
+          }
+        },
+        "score_statistics": {
+          "neural": {
+            "min": 0.0,
+            "max": 50.0,
+            "avg": 2.9429198440943036
+          },
+          "pattern": {
+            "min": 0.014109149075411498,
+            "max": 50.0,
+            "avg": 2.442166941844898
+          },
+          "quality": {
+            "min": 0.0056436596301646,
+            "max": 50.0,
+            "avg": 2.742618683194541
+          }
+        }
+      },
+      "error_message": null
+    },
+    {
+      "stage": "data_validation",
+      "status": "completed",
+      "start_time": 1754530012.3226826,
+      "end_time": 1754530012.331946,
+      "duration": 0.009263277053833008,
+      "metrics": {
+        "validation_checks": {
+          "total_results": 4850,
+          "unique_positions": 120,
+          "results_per_position": 40.416666666666664,
+          "coverage": "GOOD",
+          "position_diversity": "GOOD",
+          "quality_balance": "UNBALANCED"
+        },
+        "data_quality_score": 0.6,
+        "recommendations": [
+          "Adjust quality thresholds for better balance"
+        ]
+      },
+      "error_message": null
+    }
+  ],
+  "final_metrics": {
+    "total_positions": 4850,
+    "total_moves": 4850,
+    "quality_distribution": {
+      "!!": {
+        "count": 0,
+        "percentage": 0.0
+      },
+      "!": {
+        "count": 0,
+        "percentage": 0.0
+      },
+      "=": {
+        "count": 50,
+        "percentage": 1.0309278350515463
+      },
+      "?!": {
+        "count": 0,
+        "percentage": 0.0
+      },
+      "?": {
+        "count": 4800,
+        "percentage": 98.96907216494846
+      }
+    },
+    "average_scores": {
+      "neural": 2.9429198440943036,
+      "pattern": 2.442166941844898,
+      "quality": 2.742618683194541
+    }
+  }
+}
