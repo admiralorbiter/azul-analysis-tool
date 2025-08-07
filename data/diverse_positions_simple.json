@@ -1,0 +1,272 @@
+[
+  {
+    "id": 0,
+    "fen_string": "BBBB|BYYY|YYRR|BBBY|BBBB/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 1",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 1,
+    "fen_string": "BYYY|BBYY|BBBB|BYYY|RRRR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 2",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 2,
+    "fen_string": "BYYY|YYYY|BBBY|YYRR|BBBR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 3",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 3,
+    "fen_string": "BYRK|BYYR|BRRK|BBYR|BYRR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 4",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 4,
+    "fen_string": "BYRK|BYYY|YYYR|BBYY|BBBR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 5",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 5,
+    "fen_string": "BBBB|BBYY|BBBB|BYYR|BYYR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 6",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 6,
+    "fen_string": "BBRR|YYYR|BBYY|BBBR|BBBR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 7",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 7,
+    "fen_string": "BBYY|BBYR|BRRK|BYYY|YYRK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 8",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 8,
+    "fen_string": "BBYY|BBBB|BRRR|BYYY|BYYK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 9",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 9,
+    "fen_string": "BBBY|YYYR|BBYY|BBYR|BYYK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 10",
+    "created_at": 1754522566.8865418
+  },
+  {
+    "id": 10,
+    "fen_string": "BBBY|BBBY|BBYY|BBYY|BBYY/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 11",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 11,
+    "fen_string": "BBBB|BBBB|BBYY|BBYR|BYYR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 12",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 12,
+    "fen_string": "YYYR|BBBY|BYRR|BBBY|BYYR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 13",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 13,
+    "fen_string": "BBBK|BYRR|BBYY|BBBY|BBYY/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 14",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 14,
+    "fen_string": "BYYY|BBYY|BBBY|BYRR|BYYR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 15",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 15,
+    "fen_string": "BBYR|BYYY|BBYY|BBBY|BYYY/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 16",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 16,
+    "fen_string": "BRRK|BBBB|BBBR|BBYY|BBYY/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 17",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 17,
+    "fen_string": "BYYY|BYYR|BBYY|BBBY|BBRR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 18",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 18,
+    "fen_string": "BYRK|BBBB|BYRR|BYRR|BYKK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 19",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 19,
+    "fen_string": "BBRK|YYYR|BYYR|BBYR|BBBK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 20",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 20,
+    "fen_string": "YRRK|BBYY|BBYY|BBRK|BBBR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 21",
+    "created_at": 1754522566.887045
+  },
+  {
+    "id": 21,
+    "fen_string": "BBBB|YYYY|BBYY|BBYR|BBYY/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 22",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 22,
+    "fen_string": "BBBY|BYRR|BYYY|YYYW|BBYY/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 23",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 23,
+    "fen_string": "BYRR|BBYY|BYRR|BBYR|BBYR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 24",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 24,
+    "fen_string": "BYYY|BBYK|BYYR|YRRR|YRKK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 25",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 25,
+    "fen_string": "BYYY|BBYR|BYYR|BYKW|BYYK/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 26",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 26,
+    "fen_string": "BBBY|BYYY|BYYR|BRRK|BYYR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 27",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 27,
+    "fen_string": "YYRK|BBBY|YYYR|BBBY|BBBR/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/-----|-----|-----|-----|-----/-|--|---|----|-----/-/0,0/1/0",
+    "description": "Generated position 28",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 28,
+    "fen_string": "BYRK|BYRW|BBYY|BKWW|RKWW/-/---K-|--YRK|K-B--|---B-|-----/-|RR|Y--|KKK-|Y----/Y/B----|--YR-|-W---|-----|Y--W-/R|WW|---|WW--|KK---/B/0,0/1/0",
+    "description": "Generated position 29",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 29,
+    "fen_string": "BYRK|BRKK|YYYY|BRKW|BBRR/-/-----|-B-R-|-W---|---B-|Y-K--/B|B-|KK-|----|RR---/B/-----|--Y-K|K---R|---B-|---W-/-|--|WW-|RRR-|RRRRR/B/0,0/1/0",
+    "description": "Generated position 30",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 30,
+    "fen_string": "BYYK|BBYY|BBYY|YRRW|KKWW/-/-----|W-Y--|-WB--|---BY|-----/-|RR|BB-|RR--|BBB--/R/---K-|W-Y--|-W---|-----|YR---/W|KK|KK-|----|W----/R/0,0/1/0",
+    "description": "Generated position 31",
+    "created_at": 1754522566.8875515
+  },
+  {
+    "id": 31,
+    "fen_string": "BBYY|YYRR|BBYR|RRRW|YKKW/-/----W|W-Y-K|-WB-R|R----|Y-KW-/K|B-|---|----|-----/YK/-Y---|-B---|-WBYR|-----|-RK--/-|Y-|WW-|----|-----/YW/0,0/1/0",
+    "description": "Generated position 32",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 32,
+    "fen_string": "BYYR|BBYY|BBYR|BYRK|BYYR/-/B----|--YR-|K--YR|R--BY|---WB/R|WW|YYY|----|-----/WB/B--K-|--YRK|--B-R|RK--Y|Y-KWB/B|BB|YYY|----|-----/BB/0,0/1/0",
+    "description": "Generated position 33",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 33,
+    "fen_string": "BBBR|BBBB|BBYK|BBKW|BBBW/-/--R-W|--YR-|K-BYR|--W--|-R-WB/Y|--|---|----|-----/KK/B-RK-|W--RK|KW---|R-W--|YRKWB/K|KK|BB-|----|-----/KY/0,0/1/0",
+    "description": "Generated position 34",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 34,
+    "fen_string": "YYRK|YRRK|YYYK|BBYR|RRWW/-/BY-K-|--YRK|--BY-|-K-B-|--KW-/B|BB|---|----|-----/BY/B-R--|--YRK|KW-YR|RK-BY|Y-K--/Y|BB|YY-|----|-----/KR/0,0/1/0",
+    "description": "Generated position 35",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 35,
+    "fen_string": "BBYR|BBBY|BBYR|BYYK|YYKW/-/BY-K-|WBY-K|--B-R|---B-|Y----/-|--|KK-|----|-----/KB/--R-W|---R-|-WBYR|RK---|Y-K--/-|W-|RR-|----|-----/WW/0,0/1/0",
+    "description": "Generated position 36",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 36,
+    "fen_string": "BYYY|BYRR|BBRR|BYKK|BYYY/-/-Y--W|WB-RK|-WB-R|-KW--|Y----/R|--|RR-|----|-----/YB/---KW|W----|KW--R|-KWB-|YR-WB/R|--|WW-|----|-----/BR/0,0/1/0",
+    "description": "Generated position 37",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 37,
+    "fen_string": "BYYY|BYYR|BBBR|BRWW|BYKW/-/B--K-|W-Y--|--BYR|RKW--|-RK-B/B|W-|RRR|----|-----/YY/B-R-W|-----|---YR|-KW--|--KWB/-|W-|---|----|-----/BY/0,0/1/0",
+    "description": "Generated position 38",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 38,
+    "fen_string": "BRKK|BYYR|BYYR|BYKW|RKKW/-/-YRKW|--Y-K|-WBYR|--W--|-R--B/W|--|---|----|-----/BK/BY---|-B--K|---YR|R-WB-|-----/B|YY|KK-|----|-----/YY/0,0/1/0",
+    "description": "Generated position 39",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 39,
+    "fen_string": "BBBY|YRKK|RRRR|BYYY|BRRR/-/B----|-BYRK|-W-YR|-KW--|YRK-B/-|--|---|----|-----/BR/BY---|W----|-WBYR|RK-B-|-R-WB/-|W-|---|----|-----/WW/0,0/1/0",
+    "description": "Generated position 40",
+    "created_at": 1754522566.888085
+  },
+  {
+    "id": 40,
+    "fen_string": "BBYR|BYYY|YYYR|BYKK|YRRK/-/BYR--|W---K|K-BY-|-KW-Y|--K--/-|W-|KK-|----|-----/KK/-----|WB--K|K-B-R|RKW-Y|Y-K-B/W|RR|---|----|-----/BW/0,0/1/0",
+    "description": "Generated position 41",
+    "created_at": 1754522566.8885846
+  },
+  {
+    "id": 41,
+    "fen_string": "BBBB|BBYR|YYRK|BBBB|BYRK/-/B-R--|WB-R-|KW-YR|RK---|-R-WB/-|W-|YYY|----|-----/BB/B-R--|W--R-|--BYR|R-WB-|YR-WB/W|K-|YY-|----|-----/BY/0,0/1/0",
+    "description": "Generated position 42",
+    "created_at": 1754522566.8885846
+  },
+  {
+    "id": 42,
+    "fen_string": "BYRK|BBYY|BBYY|BYYY|BRRW/-/-YRK-|W----|KW-YR|RKW--|Y-K-B/W|--|KKK|----|-----/BB/B-R-W|WB-RK|-W-Y-|R-WB-|-RKWB/R|R-|RR-|----|-----/KB/0,0/1/0",
+    "description": "Generated position 43",
+    "created_at": 1754522566.8885846
+  },
+  {
+    "id": 43,
+    "fen_string": "RRRR|YYYR|BBYR|YRWW|BBYK/-/BY-K-|--YRK|--B--|RKWB-|----B/-|--|RRR|----|-----/WR/B----|W--R-|---Y-|R-WBY|YRKW-/W|--|WWW|----|-----/BR/0,0/1/0",
+    "description": "Generated position 44",
+    "created_at": 1754522566.8885846
+  },
+  {
+    "id": 44,
+    "fen_string": "YRKK|YYRR|BBBY|BBRK|BBYK/-/BY-KW|W-YR-|K---R|-KW--|Y--WB/R|--|---|----|-----/BB/BYR-W|WB-R-|----R|RKWBY|Y-K-B/-|--|BBB|----|-----/BW/0,0/1/0",
+    "description": "Generated position 45",
+    "created_at": 1754522566.8885846
+  }
+]

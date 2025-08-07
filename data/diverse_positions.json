@@ -1,0 +1,20 @@
+[
+  {
+    "id": 0,
+    "fen_string": "YYRR|BBBY|BYYR|BBRR|BBBR/-/-----|-----|-----|-----|-----/K|R-|---|----|-----/-/-----|-----|-----|-----|-----/-|B-|B--|----|-----/-/0,0/1/0",
+    "description": "Generated position 1",
+    "created_at": 1754522489.1708646
+  },
+  {
+    "id": 1,
+    "fen_string": "YYYR|BBYR|BYYR|YRRR|BYYK/-/-----|-----|-----|-----|-----/Y|--|---|----|-----/-/-----|-----|-----|-----|-----/-|WW|WW-|----|-----/-/0,0/1/0",
+    "description": "Generated position 2",
+    "created_at": 1754522489.1718686
+  },
+  {
+    "id": 2,
+    "fen_string": "BYYY|BBBY|BBYR|BKWW|YYRR/-/-----|--Y--|K---R|RK--Y|-R--B/R|BB|WWW|----|RR---/BKKYBBB/B---W|-----|-WB-R|R----|Y---B/W|R-|---|KK--|Y----/RRKRBYR/0,0/1/0",
+    "description": "Generated position 3",
+    "created_at": 1754522489.1718686
+  }
+]
