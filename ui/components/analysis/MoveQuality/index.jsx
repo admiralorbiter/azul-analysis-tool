@@ -24,6 +24,7 @@ const QualityTierIndicator = window.QualityTierIndicator || (() => <div>QualityT
 const QualityScoreBreakdown = window.QualityScoreBreakdown || (() => <div>QualityScoreBreakdown not loaded</div>);
 const ConfidenceIndicator = window.ConfidenceIndicator || (() => <div>ConfidenceIndicator not loaded</div>);
 const EducationalContent = window.EducationalContent || (() => <div>EducationalContent not loaded</div>);
+const PatternInsights = window.PatternInsights || (() => <div />);
 const DetailedAnalysis = window.DetailedAnalysis || (() => <div>DetailedAnalysis not loaded</div>);
 
 // Import utilities (aliased to avoid accidental global re-declarations elsewhere)
@@ -314,6 +315,7 @@ const MoveQualityDisplay = ({
 
     const quality = moveAnalysis.best_move;
     const config = qualityTierConfig[quality.quality_tier] || qualityTierConfig['='];
+    const fenString = getFenString(gameState);
 
     return (
         <div className={`move-quality-display ${className}`} style={{
@@ -377,6 +379,9 @@ const MoveQualityDisplay = ({
 
             {/* Educational content */}
             <EducationalContent quality={quality} config={config} />
+
+            {/* Pattern Insights */}
+            <PatternInsights fenString={fenString} />
 
             {/* Detailed analysis */}
             <DetailedAnalysis 
