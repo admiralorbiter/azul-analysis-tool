@@ -470,6 +470,99 @@ header {
     max-width: 80rem;
 }
 
+/* Collapsible Tool Panels (Game Controls) */
+.tool-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.tool-panel + .tool-panel {
+    margin-top: 12px;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    outline: none;
+}
+
+.panel-header:hover {
+    background: #f3f4f6;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.panel-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-badge {
+    font-size: 11px;
+    color: #374151;
+    background: #e5e7eb;
+    border-radius: 9999px;
+    padding: 2px 8px;
+}
+
+.panel-chevron {
+    transition: transform 0.2s ease;
+    color: #4b5563;
+}
+
+.panel-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+.panel-content {
+    padding: 10px;
+}
+
+.panel-toolbar {
+    display: flex;
+    gap: 6px;
+}
+
+.panel-action {
+    font-size: 12px;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.panel-action:hover {
+    background: #dbeafe;
+}
+
 /* Button Variants */
 .bg-blue-600 {
     background-color: #2563eb;
