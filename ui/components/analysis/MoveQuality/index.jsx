@@ -259,6 +259,7 @@ const MoveQualityDisplay = ({
                     </div>
                     <button
                         onClick={handleAnalyzeClick}
+                        data-help="Run move quality analysis for the current board"
                         style={{
                             padding: '6px 12px',
                             backgroundColor: '#007bff',
@@ -293,6 +294,7 @@ const MoveQualityDisplay = ({
                     </div>
                     <button
                         onClick={handleAnalyzeClick}
+                        data-help="Analyze move quality for the current position"
                         style={{
                             padding: '8px 16px',
                             backgroundColor: '#007bff',
@@ -333,7 +335,8 @@ const MoveQualityDisplay = ({
                     fontSize: '14px', 
                     color: '#333',
                     fontWeight: '600'
-                }}>
+                }}
+                data-help="Summary of the best move and contributing factors">
                     Move Quality Assessment
                 </h3>
                 {isRealData && (

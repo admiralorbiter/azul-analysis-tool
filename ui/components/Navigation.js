@@ -18,44 +18,53 @@ function Navigation({ currentPage, onPageChange, workspaceMode = 'ANALYSIS', onW
                 React.createElement('div', { className: 'flex space-x-2 flex-wrap' },
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'main' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('main')
+                    onClick: () => onPageChange('main'),
+                    'data-help': 'Go to the main interface'
                 }, 'Main Interface'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'exhaustive-analysis' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('exhaustive-analysis')
+                    onClick: () => onPageChange('exhaustive-analysis'),
+                    'data-help': 'Open exhaustive search and analysis tools'
                 }, '🔬 Exhaustive'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'performance-analytics' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('performance-analytics')
+                    onClick: () => onPageChange('performance-analytics'),
+                    'data-help': 'View performance analytics and metrics'
                 }, '📈 Analytics'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'advanced-analysis' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('advanced-analysis')
+                    onClick: () => onPageChange('advanced-analysis'),
+                    'data-help': 'Access advanced analysis lab'
                 }, '🔍 Advanced'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'tactical-training' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('tactical-training')
+                    onClick: () => onPageChange('tactical-training'),
+                    'data-help': 'Open tactical training center'
                 }, '🎯 Training'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'game-theory' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('game-theory')
+                    onClick: () => onPageChange('game-theory'),
+                    'data-help': 'Open game theory analysis'
                 }, '🎯 Game Theory'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'neural' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('neural')
+                    onClick: () => onPageChange('neural'),
+                    'data-help': 'Neural training and evaluation'
                 }, '🧠 Neural'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'dynamic-optimization' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('dynamic-optimization')
+                    onClick: () => onPageChange('dynamic-optimization'),
+                    'data-help': 'Dynamic optimization tools'
                 }, '⚡ Dynamic'),
                 React.createElement('button', {
                     className: `px-3 py-2 rounded text-sm ${currentPage === 'test-move-quality' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`,
-                    onClick: () => onPageChange('test-move-quality')
+                    onClick: () => onPageChange('test-move-quality'),
+                    'data-help': 'Test page for move quality'
                 }, '🧪 Test')
                 )
             ),
             React.createElement('div', { className: 'flex items-center justify-between' },
-                React.createElement('div', { className: 'text-sm text-gray-600' }, `Workspace: ${workspaceMode}`),
+                React.createElement('div', { className: 'text-sm text-gray-600', 'data-help': 'Current workspace mode' }, `Workspace: ${workspaceMode}`),
                 React.createElement('div', { className: 'flex gap-2 flex-wrap' },
                     WorkspaceButton('ANALYSIS', 'Analysis'),
                     WorkspaceButton('RESEARCH', 'Research'),

@@ -201,11 +201,11 @@ window.GameControls = function GameControls({
             className: 'bg-white rounded p-4 shadow-sm h-full overflow-y-auto'
         },
             React.createElement('div', { className: 'flex items-center justify-between mb-3' },
-                React.createElement('h3', { className: 'font-medium text-lg text-blue-700' }, '🎮 Game Controls'),
+                React.createElement('h3', { className: 'font-medium text-lg text-blue-700', 'data-help': 'Primary controls for running analyses and managing tools' }, '🎮 Game Controls'),
                 React.createElement('div', { className: 'panel-toolbar' },
-                    React.createElement('button', { className: `panel-action ${showAllTools ? 'active' : ''}`, onClick: () => setShowAllTools(v => !v), title: showAllTools ? 'Hide advanced tools' : 'Show all tools' }, showAllTools ? 'Hide advanced' : 'Show all'),
-                    React.createElement('button', { className: 'panel-action', onClick: () => setAllPanels(true), title: 'Expand all' }, 'Expand all'),
-                    React.createElement('button', { className: 'panel-action', onClick: () => setAllPanels(false), title: 'Collapse all' }, 'Collapse all')
+                    React.createElement('button', { className: `panel-action ${showAllTools ? 'active' : ''}`, onClick: () => setShowAllTools(v => !v), title: showAllTools ? 'Hide advanced tools' : 'Show all tools', 'data-help': 'Show or hide advanced tools in all panels' }, showAllTools ? 'Hide advanced' : 'Show all'),
+                    React.createElement('button', { className: 'panel-action', onClick: () => setAllPanels(true), title: 'Expand all', 'data-help': 'Expand all tool panels' }, 'Expand all'),
+                    React.createElement('button', { className: 'panel-action', onClick: () => setAllPanels(false), title: 'Collapse all', 'data-help': 'Collapse all tool panels' }, 'Collapse all')
                 )
             ),
 
@@ -234,12 +234,12 @@ window.GameControls = function GameControls({
                 ),
                 // Analysis results
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '📊 Analysis Results'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Summary of engine or tool outputs for the current position' }, '📊 Analysis Results'),
                     React.createElement(AnalysisResults, { variations, loading, engineThinking })
                 ),
                 // Move controls
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '↶↷ Move Controls'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Undo/redo moves in the current position' }, '↶↷ Move Controls'),
                     React.createElement('div', { className: 'grid grid-cols-2 gap-2 mb-3' },
                         React.createElement('button', { className: 'btn-warning btn-xs', onClick: handleUndo, disabled: moveHistory.length === 0 || loading }, '↶ Undo'),
                         React.createElement('button', { className: 'btn-secondary btn-xs', onClick: handleRedo, disabled: loading }, '↷ Redo')
@@ -247,7 +247,7 @@ window.GameControls = function GameControls({
                 ),
                 // Move Quality
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🎯 Move Quality Assessment'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Evaluate move quality and see best move recommendations' }, '🎯 Move Quality Assessment'),
                     React.createElement(window.MoveQualityDisplay, {
                         gameState,
                         currentPlayer,
@@ -285,7 +285,7 @@ window.GameControls = function GameControls({
                 toolCount: (1 + ((workspaceMode === 'ANALYSIS' || workspaceMode === 'COMPETITIVE' || showAllTools) ? 2 : 0))
             },
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🏆 Comprehensive Pattern Analysis'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Detect and categorize patterns across the board' }, '🏆 Comprehensive Pattern Analysis'),
                     React.createElement(ComprehensivePatternAnalysis, {
                         gameState,
                         currentPlayer,
@@ -299,7 +299,7 @@ window.GameControls = function GameControls({
                     })
                 ),
                 (workspaceMode === 'ANALYSIS' || workspaceMode === 'COMPETITIVE' || showAllTools) && React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🎯 Scoring Optimization Analysis'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Find scoring optimization opportunities for higher points' }, '🎯 Scoring Optimization Analysis'),
                     React.createElement(ScoringOptimizationAnalysis, {
                         gameState,
                         currentPlayer,
@@ -311,7 +311,7 @@ window.GameControls = function GameControls({
                     })
                 ),
                 (workspaceMode === 'ANALYSIS' || workspaceMode === 'COMPETITIVE' || showAllTools) && React.createElement('div', { className: 'mb-2' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🎯 Strategic Pattern Analysis'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Identify strategic themes like factory control and endgames' }, '🎯 Strategic Pattern Analysis'),
                     React.createElement(StrategicPatternAnalysis, {
                         gameState,
                         currentPlayer,
@@ -336,7 +336,7 @@ window.GameControls = function GameControls({
             },
                 // Analysis tools
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🔍 Analysis Tools'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Expert tools for deep analysis and configuration' }, '🔍 Analysis Tools'),
                     React.createElement(AdvancedAnalysisControls, {
                         loading: loading,
                         setLoading: () => {},
@@ -361,7 +361,7 @@ window.GameControls = function GameControls({
                 ),
                 // Alternative moves
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🔄 Alternative Move Analysis'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Compare and evaluate alternative moves' }, '🔄 Alternative Move Analysis'),
                     React.createElement(window.AlternativeMoveAnalysis, {
                         gameState,
                         currentPlayer,
@@ -376,7 +376,7 @@ window.GameControls = function GameControls({
                 ),
                 // Game theory
                 React.createElement('div', { className: 'mb-2' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🎯 Game Theory Analysis'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Analyze positions with game theory concepts' }, '🎯 Game Theory Analysis'),
                     React.createElement(GameTheoryAnalysis, {
                         gameState,
                         onAnalysisComplete: (analysis) => {
@@ -398,7 +398,7 @@ window.GameControls = function GameControls({
             },
                 // Quick actions
                 React.createElement('div', { className: 'mb-4' },
-                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '⚡ Quick Actions'),
+                    React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700', 'data-help': 'Common utilities for configuration and developer tools' }, '⚡ Quick Actions'),
                     React.createElement('div', { className: 'grid grid-cols-2 gap-2' },
                         React.createElement('button', { className: 'btn-primary btn-xs', onClick: () => setConfigExpanded(!configExpanded) }, configExpanded ? '⚙️ Hide Config' : '⚙️ Show Config'),
                         React.createElement('button', { className: 'btn-secondary btn-xs', onClick: () => setDevToolsExpanded(!devToolsExpanded) }, devToolsExpanded ? '🔧 Hide Dev Tools' : '🔧 Show Dev Tools'),
