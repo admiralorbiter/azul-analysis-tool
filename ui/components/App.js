@@ -45,6 +45,15 @@ const {
 function App() {
     // Routing State
     const [currentPage, setCurrentPage] = useState('main');
+    // Workspace mode with persistence
+    const [workspaceMode, setWorkspaceMode] = useState(() => {
+        try {
+            return window.localStorage?.getItem('ui.workspaceMode') || 'ANALYSIS';
+        } catch { return 'ANALYSIS'; }
+    });
+    useEffect(() => {
+        try { window.localStorage?.setItem('ui.workspaceMode', workspaceMode); } catch {}
+    }, [workspaceMode]);
     
     // Position Library State (R1.2)
     const [showPositionLibrary, setShowPositionLibrary] = useState(false);
@@ -231,7 +240,9 @@ function App() {
     },
         React.createElement(Navigation, {
             currentPage: currentPage,
-            onPageChange: setCurrentPage
+            onPageChange: setCurrentPage,
+            workspaceMode: workspaceMode,
+            onWorkspaceChange: setWorkspaceMode
         }),
         
         currentPage === 'main' && React.createElement('div', {
