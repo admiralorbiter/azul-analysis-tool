@@ -13,8 +13,8 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/azul-solver.git
-cd azul-solver
+git clone https://github.com/your-username/azul-analysis-tool.git
+cd azul-analysis-tool
 ```
 
 ### 2. Install Dependencies
@@ -123,7 +123,7 @@ python main.py profile --budget 4.0 --hint-budget 0.2 --move-budget 0.001
 
 ### Access the Web UI
 1. Start the server: `python main.py serve`
-2. Open your browser to: `http://localhost:8000/ui/`
+2. Open your browser to: `http://localhost:8000/`
 3. Start playing with drag-and-drop tile placement!
 
 ### Web UI Features
@@ -134,7 +134,7 @@ python main.py profile --budget 4.0 --hint-budget 0.2 --move-budget 0.001
 - **State Persistence** - Game state persists across moves for seamless play
 
 ### Interactive Play Example
-1. **Load the Web UI**: Navigate to `http://localhost:8000/ui/`
+1. **Load the Web UI**: Navigate to `http://localhost:8000/`
 2. **Drag a Tile**: Click and drag a tile from any factory to a player's pattern line
 3. **Execute Move**: The move is automatically validated and applied
 4. **Continue Playing**: Make multiple moves in sequence - the state persists
@@ -199,11 +199,11 @@ python -m pytest tests/test_api.py::test_health_endpoint -sts
 
 ### Project Structure
 ```
-AZUL-RESEARCH/
+azul-analysis-tool/
 ├── core/           # Game engine (complete)
 ├── api/            # REST API (complete)
 ├── ui/             # Web interface (complete)
-├── neural/         # Neural components (planned)
+├── neural/         # Neural components
 ├── tests/          # Test suite
 ├── docs/           # Documentation
 ├── scripts/        # Debug & profiling
@@ -261,7 +261,7 @@ python scripts/benchmark_move_generator.py
 **Import Errors:**
 ```bash
 # Ensure you're in the project directory
-cd azul-solver
+cd azul-analysis-tool
 
 # Install dependencies
 pip install -r requirements.txt

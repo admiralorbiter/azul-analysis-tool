@@ -25,8 +25,8 @@ This guide covers setting up the development environment for the Azul Solver & A
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/azul-research.git
-cd azul-research
+git clone https://github.com/your-username/azul-analysis-tool.git
+cd azul-analysis-tool
 ```
 
 ### 2. Python Environment Setup

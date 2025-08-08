@@ -170,7 +170,7 @@ ERROR: Connection refused: localhost:8000
 **Check Server Status:**
 ```bash
 # Check if server is running
-curl http://localhost:8000/health
+curl http://localhost:8000/healthz
 
 # Start server if needed
 python main.py serve
@@ -182,7 +182,7 @@ import requests
 
 def check_server(base_url="http://localhost:8000"):
     try:
-        response = requests.get(f"{base_url}/health", timeout=5)
+        response = requests.get(f"{base_url}/healthz", timeout=5)
         return response.status_code == 200
     except requests.exceptions.ConnectionError:
         return False

@@ -12,8 +12,8 @@
 
 ### **1. Clone the Repository**
 ```bash
-git clone https://github.com/your-username/AZUL-RESEARCH.git
-cd AZUL-RESEARCH
+git clone https://github.com/your-username/azul-analysis-tool.git
+cd azul-analysis-tool
 ```
 
 ### **2. Install Dependencies**

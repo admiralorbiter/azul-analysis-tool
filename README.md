@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ```bash
 python start_server.py
 ```
-Then open `http://localhost:8000/ui/` in your browser.
+Then open `http://localhost:8000/` in your browser.
 
 ## 🎯 **Key Features**
 
@@ -87,7 +87,7 @@ python tools/position_manager.py add
 - Real data indicators and alternative move analysis
 
 ### Backend
-- FastAPI-based REST API
+- Flask-based REST API
 - Advanced pattern detection algorithms
 - Neural network integration for move evaluation
 - Dynamic position loading system
@@ -155,4 +155,4 @@ azul-analysis-tool/
 
 ## 📄 **License**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See the [LICENSE](LICENSE) file for details.

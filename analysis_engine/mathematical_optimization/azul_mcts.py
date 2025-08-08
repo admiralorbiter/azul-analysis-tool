@@ -300,7 +300,9 @@ class AzulMCTS:
             self._rollout_policy_instance = HeavyRolloutPolicy(self.evaluator, self.move_generator)
         elif rollout_policy == RolloutPolicy.NEURAL:
             if not NEURAL_AVAILABLE:
-                raise ValueError("Neural rollout policy requires PyTorch. Install with: pip install azul-solver[neural]")
+                raise ValueError(
+                    "Neural rollout policy requires PyTorch. Install torch and torchvision (see requirements.txt) or enable the 'neural' extras."
+                )
             # Create neural model and policy
             model, encoder = create_azul_net(device="cpu")
             self._rollout_policy_instance = AzulNeuralRolloutPolicy(

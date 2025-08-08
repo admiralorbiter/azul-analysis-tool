@@ -41,9 +41,9 @@ curl -X POST http://localhost:8000/api/v1/auth/session
 
 ### Using Authentication
 ```bash
-# Include X-Session-ID header on protected endpoints
+# Include X-Session-ID header on protected endpoints where required
 curl -H "X-Session-ID: abc123def456" \
-  http://localhost:8000/api/v1/health
+  http://localhost:8000/api/v1/stats
 ```
 
 **Note**: Interactive endpoints (`/api/v1/execute_move`, `/api/v1/game_state`, `/api/v1/reset_game`) do not require authentication for web UI integration.
@@ -419,11 +419,10 @@ The API is configured with CORS support for web UI integration:
 - Headers: Content-Type, X-Session-ID, Authorization
 
 ### Static File Serving
-The API serves static files from the `ui/` directory:
+The API serves the Web UI at the root path and also under `/ui/` for compatibility:
 ```
+http://localhost:8000/
 http://localhost:8000/ui/index.html
-http://localhost:8000/ui/static/css/style.css
-http://localhost:8000/ui/static/js/app.js
 ```
 
 ## 📝 FEN String Format

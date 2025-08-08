@@ -238,10 +238,10 @@ Input Layer (Game State) → Hidden Layers → Output Layer (Move Probabilities)
 
 ### Authentication
 
-- **JWT Tokens**: JSON Web Tokens for API authentication
-- **Token Expiration**: Configurable token expiration times
-- **Refresh Tokens**: Automatic token refresh mechanism
-- **Role-Based Access**: Different access levels for users
+- **Session Header**: `X-Session-ID` for protected endpoints
+- **Public Endpoints**: Health/stats and some interactive endpoints are public for UI convenience
+- **Rate Limiting**: Combined with session-based access control
+- Note: JWT/refresh tokens are not in use currently; if adopted later, update this section
 
 ### Rate Limiting
 

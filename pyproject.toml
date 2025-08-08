@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "azul-solver"
+name = "azul-analysis-tool"
 version = "0.1.0"
 description = "Azul Solver & Analysis Toolkit - Python-based engine, web UI, and research tools"
 readme = "README.md"
@@ -48,7 +48,18 @@ dev = [
     "pre-commit>=3.3.0",
 ]
 all = [
-    "azul-solver[gui,neural,dev]"
+    # GUI
+    "tkinter",
+    # Neural
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    # Dev
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "ruff>=0.0.280",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
 ]
 
 [project.scripts]
@@ -56,9 +67,9 @@ azcli = "tools.cli:main"
 azserver = "api.server:main"
 
 [project.urls]
-Homepage = "https://github.com/your-username/azul-solver"
-Repository = "https://github.com/your-username/azul-solver.git"
-Issues = "https://github.com/your-username/azul-solver/issues"
+Homepage = "https://github.com/your-username/azul-analysis-tool"
+Repository = "https://github.com/your-username/azul-analysis-tool.git"
+Issues = "https://github.com/your-username/azul-analysis-tool/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

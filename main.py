@@ -352,7 +352,7 @@ def train(config: str, device: str, epochs: int, samples: int):
         click.echo(f"   Model saved to: models/azul_net_{config}.pth")
         
     except ImportError:
-        click.echo("❌ Neural training requires PyTorch. Install with: pip install azul-solver[neural]")
+        click.echo("❌ Neural training requires PyTorch. Install with: pip install -r requirements.txt (torch) or use optional extras from pyproject")
         return 1
     except Exception as e:
         click.echo(f"❌ Training failed: {e}")
@@ -411,7 +411,7 @@ def evaluate(model, positions, games, device):
         click.echo("\n✅ Evaluation complete!")
         
     except ImportError:
-        click.echo("❌ Neural evaluation requires PyTorch. Install with: pip install azul-solver[neural]")
+        click.echo("❌ Neural evaluation requires PyTorch. Install with: pip install -r requirements.txt (torch) or use optional extras from pyproject")
         return 1
     except Exception as e:
         click.echo(f"❌ Evaluation failed: {e}")
