@@ -15,6 +15,7 @@ from core.azul_model import AzulState
 from core.azul_model import AzulGameRule
 # MoveGenerator doesn't exist, using game_rule.getLegalActions instead
 from core.azul_utils import Tile, Action, TileGrab
+from api.utils.state_converter import convert_azul_state_to_frontend
 
 
 class TestBackendCenterPoolLogic:
@@ -394,4 +395,313 @@ class TestBackendCenterPoolLogic:
 
 if __name__ == "__main__":
     # Run the tests
-    pytest.main([__file__, "-v"]) 
+    pytest.main([__file__, "-v"])
+
+
+class TestDataFormatCompatibility:
+    """Test that frontend can handle backend data formats correctly."""
+    
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.state = AzulState(2)
+        self.game_rule = AzulGameRule(2)
+    
+    def test_center_pool_format_compatibility(self):
+        """Test that frontend can handle both array and dictionary center pool formats."""
+        # Test 1: Backend sends dictionary format (what actually happens)
+        backend_state = AzulState(2)
+        backend_state.centre_pool.tiles = {Tile.BLUE: 2, Tile.YELLOW: 1}
+        
+        # Convert to frontend format
+        frontend_state = convert_azul_state_to_frontend(backend_state)
+        
+        # Verify backend sends dictionary format
+        assert isinstance(frontend_state['center'], dict), "Backend should send center as dictionary"
+        assert frontend_state['center'] == {"0": 2, "1": 1}, "Center should be in dictionary format"
+        
+        # Test 2: Frontend should be able to handle this format
+        center_data = frontend_state['center']
+        
+        # Simulate frontend conversion logic (like in CenterPool.js)
+        def convert_center_to_array(center_dict):
+            """Convert center dictionary to array for display."""
+            if not center_dict:
+                return []
+            
+            if isinstance(center_dict, list):
+                return center_dict
+            
+            tiles_array = []
+            color_map = {'0': 'B', '1': 'Y', '2': 'R', '3': 'K', '4': 'W'}
+            
+            for tile_type, count in center_dict.items():
+                color = color_map.get(tile_type)
+                if color and count > 0:
+                    for _ in range(count):
+                        tiles_array.append(color)
+            
+            return tiles_array
+        
+        # Test the conversion
+        display_array = convert_center_to_array(center_data)
+        assert display_array == ['B', 'B', 'Y'], "Should convert to display array correctly"
+        assert len(display_array) == 3, "Should have correct number of tiles"
+    
+    def test_factory_move_to_center_data_flow(self):
+        """Test the complete data flow from factory move to center display."""
+        # 1. Set up factory with tiles
+        factory_index = 0
+        self.state.factories[factory_index].tiles = {Tile.BLUE: 2, Tile.YELLOW: 1, Tile.RED: 1}
+        
+        # 2. Execute factory move (take blue tiles)
+        tile_grab = TileGrab()
+        tile_grab.tile_type = Tile.BLUE
+        tile_grab.number = 2
+        tile_grab.pattern_line_dest = 0
+        tile_grab.num_to_pattern_line = 1
+        tile_grab.num_to_floor_line = 1
+        
+        move = (Action.TAKE_FROM_FACTORY, factory_index, tile_grab)
+        new_state = self.game_rule.generateSuccessor(self.state, move, 0)
+        
+        # 3. Convert to frontend format
+        frontend_state = convert_azul_state_to_frontend(new_state)
+        
+        # 4. Verify backend logic worked
+        assert new_state.centre_pool.tiles.get(Tile.YELLOW, 0) == 1, "Yellow tile should be in center"
+        assert new_state.centre_pool.tiles.get(Tile.RED, 0) == 1, "Red tile should be in center"
+        
+        # 5. Verify frontend format
+        assert isinstance(frontend_state['center'], dict), "Frontend should receive dictionary"
+        assert frontend_state['center'].get('1', 0) == 1, "Yellow tile count should be 1"
+        assert frontend_state['center'].get('2', 0) == 1, "Red tile count should be 1"
+        
+        # 6. Test frontend can render this
+        center_data = frontend_state['center']
+        display_array = self._convert_center_to_array(center_data)
+        assert 'Y' in display_array, "Should display yellow tile"
+        assert 'R' in display_array, "Should display red tile"
+        assert len(display_array) == 2, "Should have 2 tiles in display"
+    
+    def test_empty_center_pool_handling(self):
+        """Test that empty center pool is handled correctly."""
+        # Backend empty center
+        backend_state = AzulState(2)
+        frontend_state = convert_azul_state_to_frontend(backend_state)
+        
+        # Test both formats
+        center_data = frontend_state['center']
+        
+        # Dictionary format
+        if isinstance(center_data, dict):
+            display_array = self._convert_center_to_array(center_data)
+            assert display_array == [], "Empty center should convert to empty array"
+        
+        # Array format (if backend ever sends this)
+        elif isinstance(center_data, list):
+            assert center_data == [], "Empty center should be empty array"
+    
+    def test_center_pool_with_first_player_marker(self):
+        """Test center pool format when first player marker is present."""
+        # Set up state with center tiles and first player marker
+        backend_state = AzulState(2)
+        backend_state.centre_pool.tiles = {Tile.BLUE: 1}
+        backend_state.first_agent_taken = True
+        backend_state.next_first_agent = 0
+        
+        frontend_state = convert_azul_state_to_frontend(backend_state)
+        
+        # Verify format
+        assert isinstance(frontend_state['center'], dict), "Center should be dictionary"
+        assert frontend_state['center'].get('0', 0) == 1, "Should have blue tile"
+        # Note: first_player_taken is not included in convert_azul_state_to_frontend
+        # It's handled separately in the API response
+    
+    def test_frontend_component_data_handling(self):
+        """Test that frontend components can handle backend data formats."""
+        # Simulate the data that frontend components receive
+        mock_game_state = {
+            'center': {"0": 2, "1": 1},  # Backend format
+            'factories': [['B', 'B', 'Y'], []],  # Array format
+            'first_player_taken': False
+        }
+        
+        # Test CenterPool component logic
+        def simulate_center_pool_logic(game_state):
+            """Simulate the logic from CenterPool.js getTilesArray()."""
+            center = game_state.get('center', [])
+            
+            if not center:
+                return []
+            
+            if isinstance(center, list):
+                return center
+            
+            # Handle dictionary format
+            if isinstance(center, dict):
+                tiles_array = []
+                color_map = {'0': 'B', '1': 'Y', '2': 'R', '3': 'K', '4': 'W'}
+                
+                for tile_type, count in center.items():
+                    color = color_map.get(tile_type)
+                    if color and count > 0:
+                        for _ in range(count):
+                            tiles_array.append(color)
+                
+                return tiles_array
+            
+            return []
+        
+        # Test the logic
+        display_tiles = simulate_center_pool_logic(mock_game_state)
+        assert display_tiles == ['B', 'B', 'Y'], "Should convert dictionary to array"
+        assert len(display_tiles) == 3, "Should have correct tile count"
+    
+    def test_use_analysis_hook_data_handling(self):
+        """Test that useAnalysis hook can handle backend data formats."""
+        # Simulate the data that useAnalysis hook receives
+        mock_game_state = {
+            'center': {"0": 2, "1": 1},
+            'factories': [['B', 'B', 'Y'], []],
+            'first_player_taken': False
+        }
+        
+        # Test applyMoveLocally logic for center pool updates
+        def simulate_apply_move_locally(game_state, factory_index, tile_color, num_to_pattern_line, num_to_floor_line):
+            """Simulate the center pool update logic from applyMoveLocally."""
+            new_state = game_state.copy()
+            center_pool = new_state.get('center', {})
+            
+            # Handle center pool as dictionary format
+            if isinstance(center_pool, dict):
+                tile_type = self._get_tile_type(tile_color)
+                tile_type_str = str(tile_type)
+                current_count = center_pool.get(tile_type_str, 0)
+                tiles_to_remove = num_to_pattern_line + num_to_floor_line
+                new_count = max(0, current_count - tiles_to_remove)
+                
+                if new_count == 0:
+                    center_pool.pop(tile_type_str, None)
+                else:
+                    center_pool[tile_type_str] = new_count
+            else:
+                # Handle array format
+                tiles_to_remove = num_to_pattern_line + num_to_floor_line
+                removed = 0
+                for i in range(len(center_pool) - 1, -1, -1):
+                    if center_pool[i] == tile_color and removed < tiles_to_remove:
+                        center_pool.pop(i)
+                        removed += 1
+            
+            return new_state
+        
+        # Test the logic
+        updated_state = simulate_apply_move_locally(mock_game_state, 0, 'B', 1, 0)
+        center_pool = updated_state['center']
+        
+        # Should have removed 1 blue tile (2-1=1)
+        assert center_pool.get('0', 0) == 1, "Should have 1 blue tile remaining"
+        assert center_pool.get('1', 0) == 1, "Should still have 1 yellow tile"
+    
+    def _convert_center_to_array(self, center_data):
+        """Helper method to convert center data to array format."""
+        if not center_data:
+            return []
+        
+        if isinstance(center_data, list):
+            return center_data
+        
+        tiles_array = []
+        color_map = {'0': 'B', '1': 'Y', '2': 'R', '3': 'K', '4': 'W'}
+        
+        for tile_type, count in center_data.items():
+            color = color_map.get(tile_type)
+            if color and count > 0:
+                for _ in range(count):
+                    tiles_array.append(color)
+        
+        return tiles_array
+    
+    def _get_tile_type(self, tile_color):
+        """Helper method to get tile type from color."""
+        color_to_type = {'B': 0, 'Y': 1, 'R': 2, 'K': 3, 'W': 4}
+        return color_to_type.get(tile_color, 0)
+
+
+class TestFrontendBackendContract:
+    """Test the contract between frontend expectations and backend outputs."""
+    
+    def test_backend_center_pool_contract(self):
+        """Test that backend always sends center pool in expected format."""
+        state = AzulState(2)
+        
+        # Add some tiles to center
+        state.centre_pool.tiles = {Tile.BLUE: 2, Tile.YELLOW: 1}
+        
+        # Convert to frontend format
+        frontend_state = convert_azul_state_to_frontend(state)
+        
+        # Contract: Backend should always send center as dictionary
+        assert isinstance(frontend_state['center'], dict), "Backend must send center as dictionary"
+        
+        # Contract: Dictionary keys should be strings
+        for key in frontend_state['center'].keys():
+            assert isinstance(key, str), "Center dictionary keys must be strings"
+        
+        # Contract: Dictionary values should be integers
+        for value in frontend_state['center'].values():
+            assert isinstance(value, int), "Center dictionary values must be integers"
+    
+    def test_frontend_center_pool_contract(self):
+        """Test that frontend can handle the backend's center pool format."""
+        # Simulate backend output
+        backend_center = {"0": 2, "1": 1, "2": 0, "3": 1}
+        
+        # Frontend contract: Should be able to convert to display array
+        def frontend_conversion_logic(center_dict):
+            """Frontend must be able to convert backend format to display format."""
+            if not isinstance(center_dict, dict):
+                raise ValueError("Frontend expects center to be dictionary from backend")
+            
+            tiles_array = []
+            color_map = {'0': 'B', '1': 'Y', '2': 'R', '3': 'K', '4': 'W'}
+            
+            for tile_type, count in center_dict.items():
+                if not isinstance(tile_type, str):
+                    raise ValueError("Frontend expects tile type keys to be strings")
+                if not isinstance(count, int):
+                    raise ValueError("Frontend expects tile counts to be integers")
+                
+                color = color_map.get(tile_type)
+                if color and count > 0:
+                    for _ in range(count):
+                        tiles_array.append(color)
+            
+            return tiles_array
+        
+        # Test the contract
+        display_array = frontend_conversion_logic(backend_center)
+        assert display_array == ['B', 'B', 'Y', 'K'], "Should convert correctly"
+        assert len(display_array) == 4, "Should have correct total tiles"
+    
+    def test_data_format_regression_prevention(self):
+        """Test to prevent future data format regressions."""
+        # This test documents the expected data formats
+        expected_formats = {
+            'center': 'dict',  # Backend sends dictionary
+            'factories': 'list',  # Backend sends array of arrays
+            'players': 'list'  # Backend sends array of player objects
+        }
+        
+        # Test with actual backend conversion
+        state = AzulState(2)
+        frontend_state = convert_azul_state_to_frontend(state)
+        
+        # Verify each field has expected type
+        for field, expected_type in expected_formats.items():
+            assert field in frontend_state, f"Field '{field}' should exist"
+            
+            if expected_type == 'dict':
+                assert isinstance(frontend_state[field], dict), f"'{field}' should be dictionary"
+            elif expected_type == 'list':
+                assert isinstance(frontend_state[field], list), f"'{field}' should be list" 
