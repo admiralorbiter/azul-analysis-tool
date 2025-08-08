@@ -76,6 +76,7 @@ ui/components/
 ```
 
 ### **1.2 Code Splitting Implementation**
+Note: Deferred — We will attempt this in the final phase as a stretch goal due to recurring integration risk; proceed without lazy loading for now.
 
 #### **Current Loading**
 ```javascript
@@ -713,8 +714,8 @@ const usePersistedState = (key, initialState) => {
 - [x] **Component Restructuring**
   - [x] Create new directory structure
   - [x] Split large components into smaller modules
-  - [x] Implement lazy loading
-  - [x] Add loading boundaries
+  - [ ] Implement lazy loading — Deferred to Week 7–8 (Stretch Goal)
+  - [ ] Add loading boundaries (with lazy loading) — Deferred
 
 - [ ] **State Management**
   - [ ] Implement centralized state management
@@ -772,6 +773,7 @@ const usePersistedState = (key, initialState) => {
   - [ ] Add component memoization
   - [ ] Optimize bundle size
   - [ ] Add performance monitoring
+  - [ ] Implement lazy loading/code splitting — Stretch Goal
 
 - [ ] **Accessibility**
   - [ ] Add keyboard navigation
@@ -839,7 +841,7 @@ const usePersistedState = (key, initialState) => {
    - Verified main page integration via `components/game/GameControls.js` — Move Quality now works on default board
    - Removed temporary test artifacts: `ui/simple_test.html`, `ui/test_refactored_components.html`
 2. **Apply same pattern to other large components** - ExhaustiveAnalysisDashboard, AlternativeMoveAnalysis
-3. **Implement lazy loading** - Load components only when needed
+3. **Implement lazy loading** — Stretch Goal (final phase) — Load components only when needed
 4. **Add performance monitoring** - Track loading times and memory usage
 
 ## ✅ Hardening Completed (MoveQuality)

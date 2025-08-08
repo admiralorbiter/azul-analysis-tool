@@ -31,7 +31,7 @@
 #### **4. Performance & Responsiveness**
 - **Issue**: Large component files and potential performance bottlenecks
 - **Impact**: Slower loading times and potential memory issues
-- **Solution**: Optimize component loading and implement lazy loading
+- **Solution**: Focus on render/state optimizations now; defer code splitting/lazy loading to a stretch goal (final phase)
 
 #### **5. User Experience Flow**
 - **Issue**: No clear onboarding or guidance for new users
@@ -44,7 +44,7 @@
 1. **Information Architecture Redesign**
 2. **Navigation Simplification**
 3. **Progressive Disclosure Implementation**
-4. **Performance Optimization**
+4. **Performance Optimization (excluding code splitting; lazy loading deferred to stretch goal)**
 
 ### **P2 (High) - Enhanced Functionality**
 1. **User Onboarding System**
@@ -159,12 +159,9 @@ const ToolCategories = {
 
 #### **Proposed Solutions**
 
-**A. Implement Code Splitting**
-```javascript
-// Lazy load components
-const MoveQualityDisplay = React.lazy(() => import('./components/MoveQualityDisplay'));
-const ExhaustiveAnalysis = React.lazy(() => import('./components/ExhaustiveAnalysisDashboard'));
-```
+**A. Code Splitting (Deferred — Stretch Goal)**
+- Decision: We will not implement React.lazy/code splitting during P1–P3 due to recurring integration risk.
+- Plan: Attempt in the final phase only if capacity allows.
 
 **B. Optimize Component Loading**
 - Load only visible components
@@ -316,7 +313,7 @@ const Customization = {
 - [x] Remove temporary test artifacts
 - [x] Implement progressive disclosure system
 - [x] Redesign navigation structure
-- [ ] Optimize component loading
+- [x] Document performance risk; defer component loading optimization to Sprint 4
 - [ ] Add basic contextual help
 
 ### **Sprint 2: User Experience (Week 3-4)**
@@ -336,6 +333,7 @@ const Customization = {
 - [ ] Bug fixes and performance improvements
 - [ ] Documentation updates
 - [ ] Final polish and deployment
+- [ ] Optimize component loading (lazy loading/code splitting) — Stretch Goal
 
 ## 🎯 **Success Metrics**
 
@@ -398,8 +396,9 @@ const AppState = {
 ```
 
 ### **Performance Optimizations**
+Deferred — reference only (to be implemented as a stretch goal in final phase):
 ```javascript
-// Lazy loading and code splitting
+// Lazy loading and code splitting (Deferred)
 const LazyComponents = {
   MoveQuality: React.lazy(() => import('./analysis/MoveQuality')),
   ExhaustiveSearch: React.lazy(() => import('./research/ExhaustiveSearch')),
