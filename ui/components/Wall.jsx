@@ -1,9 +1,7 @@
 // Wall Component with enhanced visual design
 // Using global React and window.gameConstants for compatibility
 
-// Debug log to confirm component is loaded
-console.log('Enhanced Wall component loaded');
-console.log('Tile colors available:', window.gameConstants?.TILE_COLORS);
+
 
 function Wall({ 
     wall, 
@@ -17,6 +15,19 @@ function Wall({
     selectedElement = null 
 }) {
     const wallRef = React.useRef(null);
+    const [colorsLoaded, setColorsLoaded] = React.useState(false);
+    
+    // Check if gameConstants are loaded
+    React.useEffect(() => {
+        const checkColors = () => {
+            if (window.gameConstants?.TILE_COLORS) {
+                setColorsLoaded(true);
+            } else {
+                setTimeout(checkColors, 100);
+            }
+        };
+        checkColors();
+    }, []);
     
     // Azul wall color pattern - each row has a different starting color
     const wallColorPattern = [
@@ -101,7 +112,7 @@ function Wall({
                 },
                     React.createElement('div', {
                         className: 'color-indicator',
-                        style: { backgroundColor: window.gameConstants?.TILE_COLORS?.[color] || '#6b7280' }
+                        style: { backgroundColor: colorsLoaded ? (window.gameConstants?.TILE_COLORS?.[color] || '#6b7280') : '#6b7280' }
                     }),
                     React.createElement('span', {
                         className: 'color-letter'
@@ -129,6 +140,8 @@ function Wall({
                 row.map((cell, colIndex) => {
                     const isValidDestination = selectedTile && onDestinationClick && !cell;
                     const expectedColor = wallColorPattern[rowIndex][colIndex];
+                    
+
                     
                     // Check if this wall cell is selected in edit mode
                     const isEditSelected = selectedElement && 
@@ -168,7 +181,9 @@ function Wall({
                             }) :
                             React.createElement('div', {
                                 className: 'color-pattern-indicator',
-                                style: { backgroundColor: window.gameConstants?.TILE_COLORS?.[expectedColor] || '#e5e7eb' }
+                                style: { 
+                                    backgroundColor: colorsLoaded ? (window.gameConstants?.TILE_COLORS?.[expectedColor] || '#e5e7eb') : '#e5e7eb'
+                                }
                             })
                     );
                 })

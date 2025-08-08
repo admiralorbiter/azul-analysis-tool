@@ -259,7 +259,7 @@ def convert_azul_state_to_frontend(azul_state):
             for row in range(5):
                 wall_row = []
                 for col in range(5):
-                    if agent.grid_state[row][col] != -1:
+                    if agent.grid_state[row][col] > 0:  # Only cells with actual tiles (value > 0)
                         tile_string = convert_tile_type_to_string(agent.grid_state[row][col])
                         wall_row.append(tile_string)
                     else:
@@ -282,11 +282,11 @@ def convert_azul_state_to_frontend(azul_state):
 def convert_tile_type_to_string(tile_type):
     """Convert tile type integer to tile color string."""
     tile_mapping = {
-        0: 'blue',
-        1: 'yellow', 
-        2: 'red',
-        3: 'black',
-        4: 'white'
+        0: 'B',  # Blue
+        1: 'Y',  # Yellow
+        2: 'R',  # Red
+        3: 'K',  # Black
+        4: 'W'   # White
     }
     
     return tile_mapping.get(tile_type, 'unknown')

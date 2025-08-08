@@ -1,18 +1,8 @@
 // Helper Utility Functions
 
-// Tile color mapping - Updated to match BGA colors
-const TILE_COLORS = {
-    'R': '#dc2626', // Bright vibrant red (BGA style)
-    'Y': '#f59e0b', // Yellow with orange tint (BGA style)
-    'B': '#06b6d4', // Bright teal/cyan blue (BGA style)
-    'W': '#f8fafc', // Light off-white/cream (BGA style)
-    'K': '#0f172a', // Very dark teal/black (BGA style)
-    'W': '#f1f5f9'  // White (empty) - lighter gray
-};
-
-// Get tile color
+// Get tile color - use global gameConstants
 function getTileColor(tile) {
-    return TILE_COLORS[tile] || '#6b7280';
+    return window.gameConstants?.TILE_COLORS?.[tile] || '#6b7280';
 }
 
 // Format move description
@@ -114,7 +104,6 @@ function formatTimestamp(timestamp) {
 
 // Export functions to window.helpers
 window.helpers = {
-    TILE_COLORS,
     getTileColor,
     formatMoveDescription,
     formatSelectedElement,

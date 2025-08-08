@@ -94,21 +94,7 @@ const VISUAL_CONFIG = {
     INFO_COLOR: '#06b6d4'  // Updated to match BGA blue
 };
 
-// Export for ES6 modules
-export {
-    TILE_TYPES,
-    TILE_COLORS,
-    GAME_MODES,
-    ELEMENT_TYPES,
-    CONTEXT_MENU_ACTIONS,
-    STATUS_TYPES,
-    DEFAULT_GAME_CONFIG,
-    API_ENDPOINTS,
-    DRAG_CONFIG,
-    VISUAL_CONFIG
-};
-
-// Also attach to window for backward compatibility
+// Attach to window for browser compatibility
 window.gameConstants = window.gameConstants || {};
 window.gameConstants.TILE_TYPES = TILE_TYPES;
 window.gameConstants.TILE_COLORS = TILE_COLORS;
