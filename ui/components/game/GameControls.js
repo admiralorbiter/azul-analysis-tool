@@ -176,6 +176,7 @@ window.GameControls = function GameControls({
                 React.createElement(ComprehensivePatternAnalysis, {
                     gameState: gameState,
                     currentPlayer: currentPlayer,
+                    autoAnalyze: autoRefreshEnabled,
                     onComprehensiveAnalysis: (analysis) => {
                         if (analysis.success && analysis.total_patterns > 0) {
                             const categories = Object.keys(analysis.patterns_by_category || {}).filter(cat => 

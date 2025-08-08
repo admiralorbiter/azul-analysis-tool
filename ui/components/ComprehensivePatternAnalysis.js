@@ -1,12 +1,20 @@
 // ComprehensivePatternAnalysis.js - Enhanced Pattern Analysis UI Component with Educational Overlays
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 
-function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected, showEducational = true }) {
+function ComprehensivePatternAnalysis({
+    gameState,
+    currentPlayer = 0,
+    onPatternDetected,
+    onComprehensiveAnalysis,
+    showEducational = true,
+    autoAnalyze = true
+}) {
     const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showDetails, setShowDetails] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const lastAnalyzedRef = useRef({ fen: null, player: null });
     
     // Comprehensive pattern detection API call
     const detectComprehensivePatterns = async () => {
@@ -21,8 +29,6 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
         }
         
         // Always try to analyze patterns, regardless of FEN string format
-        console.log('ComprehensivePatternAnalysis: Making API call with fen_string:', gameState.fen_string);
-        
         console.log('ComprehensivePatternAnalysis: Making API call with fen_string:', gameState.fen_string);
         setLoading(true);
         setError(null);
@@ -53,9 +59,8 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
             setComprehensiveAnalysis(data);
             
             // Notify parent component
-            if (onPatternDetected) {
-                onPatternDetected(data);
-            }
+            if (onComprehensiveAnalysis) onComprehensiveAnalysis(data);
+            if (onPatternDetected) onPatternDetected(data);
             
         } catch (err) {
             console.error('Comprehensive pattern detection error:', err);
@@ -65,24 +70,50 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
         }
     };
     
-    // Auto-detect patterns when game state changes
+    // Auto-detect patterns only when FEN or player changes (and autoAnalyze is enabled)
     useEffect(() => {
-        console.log('ComprehensivePatternAnalysis: useEffect triggered');
-        console.log('ComprehensivePatternAnalysis: gameState changed:', gameState);
-        
-        // Reset state when game state changes
+        const fen = gameState?.fen_string || null;
+        if (!autoAnalyze) {
+            console.log('ComprehensivePatternAnalysis: autoAnalyze disabled; skipping auto-detect');
+            return;
+        }
+        if (!fen) {
+            console.log('ComprehensivePatternAnalysis: No gameState or fen_string, skipping detectComprehensivePatterns');
+            return;
+        }
+
+        const changed =
+            lastAnalyzedRef.current.fen !== fen ||
+            lastAnalyzedRef.current.player !== currentPlayer;
+
+        if (!changed) {
+            return; // No meaningful change; avoid re-running
+        }
+
+        // Prepare for new analysis when the position actually changes
         setComprehensiveAnalysis(null);
         setError(null);
         setShowDetails(false);
         setSelectedCategory('all');
-        
-        if (gameState && gameState.fen_string) {
-            console.log('ComprehensivePatternAnalysis: Calling detectComprehensivePatterns');
-            detectComprehensivePatterns();
-        } else {
-            console.log('ComprehensivePatternAnalysis: No gameState or fen_string, skipping detectComprehensivePatterns');
-        }
-    }, [gameState]);
+
+        lastAnalyzedRef.current = { fen, player: currentPlayer };
+        console.log('ComprehensivePatternAnalysis: Calling detectComprehensivePatterns');
+        detectComprehensivePatterns();
+    }, [gameState?.fen_string, currentPlayer, autoAnalyze]);
+
+    // Log when a new analysis result arrives (avoid render-time spam)
+    useEffect(() => {
+        if (!comprehensiveAnalysis) return;
+        const categories = Object.keys(comprehensiveAnalysis.patterns_by_category || {});
+        const hasPatterns = categories.some(
+            cat => (comprehensiveAnalysis.patterns_by_category[cat] || []).length > 0
+        );
+        console.log('ComprehensivePatternAnalysis: comprehensiveAnalysis:', comprehensiveAnalysis);
+        console.log('ComprehensivePatternAnalysis: categories:', categories);
+        console.log('ComprehensivePatternAnalysis: hasPatterns:', hasPatterns);
+        console.log('ComprehensivePatternAnalysis: total_patterns:', comprehensiveAnalysis.total_patterns);
+        console.log('ComprehensivePatternAnalysis: quality_metrics:', comprehensiveAnalysis.quality_metrics);
+    }, [comprehensiveAnalysis]);
     
     // Color mapping for display
     const colorMap = {
@@ -186,12 +217,7 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
     const categories = Object.keys(comprehensiveAnalysis.patterns_by_category || {});
     const hasPatterns = categories.some(cat => comprehensiveAnalysis.patterns_by_category[cat].length > 0);
     
-    // Debug logging
-    console.log('ComprehensivePatternAnalysis: comprehensiveAnalysis:', comprehensiveAnalysis);
-    console.log('ComprehensivePatternAnalysis: categories:', categories);
-    console.log('ComprehensivePatternAnalysis: hasPatterns:', hasPatterns);
-    console.log('ComprehensivePatternAnalysis: total_patterns:', comprehensiveAnalysis.total_patterns);
-    console.log('ComprehensivePatternAnalysis: quality_metrics:', comprehensiveAnalysis.quality_metrics);
+    // Debug logging moved to useEffect to avoid render-time spam
     
     return (
         <div className="comprehensive-pattern-analysis">
@@ -454,4 +480,19 @@ function ComprehensivePatternAnalysis({ gameState, currentPlayer = 0, onPatternD
     );
 }
 
-window.ComprehensivePatternAnalysis = ComprehensivePatternAnalysis; 
+// Memoize to avoid re-renders unless relevant props change
+const MemoizedComprehensivePatternAnalysis = React.memo(
+    ComprehensivePatternAnalysis,
+    (prevProps, nextProps) => {
+        const prevFen = prevProps.gameState?.fen_string;
+        const nextFen = nextProps.gameState?.fen_string;
+        return (
+            prevFen === nextFen &&
+            prevProps.currentPlayer === nextProps.currentPlayer &&
+            prevProps.showEducational === nextProps.showEducational &&
+            prevProps.autoAnalyze === nextProps.autoAnalyze
+        );
+    }
+);
+
+window.ComprehensivePatternAnalysis = MemoizedComprehensivePatternAnalysis;
