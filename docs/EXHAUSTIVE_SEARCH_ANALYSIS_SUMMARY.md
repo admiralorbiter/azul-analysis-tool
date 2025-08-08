@@ -292,6 +292,8 @@ Database: C:\Users\admir\Github\azul-analysis-tool\data\robust_exhaustive_analys
 
 ## 📋 **Next Steps**
 
+For authoritative next steps, refer to `DEVELOPMENT_PRIORITIES.md`.
+
 ### **Immediate Actions**
 1. ✅ **COMPLETED**: Multi-engine analysis integration
 2. ✅ **COMPLETED**: Quality assessment system

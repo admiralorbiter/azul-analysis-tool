@@ -108,6 +108,8 @@ python robust_exhaustive_analyzer.py --mode quick --positions 5
 
 ## 🎯 **Next Steps**
 
+See `DEVELOPMENT_PRIORITIES.md` for the single source of truth on next steps.
+
 ### **Immediate Opportunities**
 1. **Educational Integration**: Pattern recognition and learning features
 2. **Advanced Visualizations**: Chart.js integration for better data visualization

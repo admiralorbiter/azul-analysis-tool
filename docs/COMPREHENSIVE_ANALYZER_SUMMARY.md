@@ -294,6 +294,8 @@ CREATE TABLE analysis_stats (
 
 ## 📋 **Next Steps**
 
+For current project priorities and next steps, see `DEVELOPMENT_PRIORITIES.md`. This section is intentionally minimal to avoid duplication.
+
 ### **Immediate Actions**
 1. ✅ **COMPLETED**: Multi-engine analysis integration
 2. ✅ **COMPLETED**: Quality assessment system

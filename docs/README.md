@@ -38,7 +38,7 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 ### **📋 Planning & Status** (`planning/`)
 - **[Roadmap](planning/roadmap.md)** - Development roadmap and milestones
 - **[Competitive Features](planning/competitive-features.md)** - Feature planning and status
-- **[Documentation Status](DOCUMENTATION_STATUS.md)** - Documentation organization status
+- **[Documentation Overview](DOCUMENTATION_OVERVIEW.md)** - Structure, status, and maintenance
 
 ### **📁 Archive** (`archive/`)
 - **legacy/** - Superseded implementation guides and planning documents
@@ -79,8 +79,8 @@ This documentation provides complete coverage of the Azul Solver & Analysis Tool
 
 ### **🚧 In Progress**
 - **Strategic Pattern Analysis**: Factory control and endgame counting
-- **Move Quality Assessment**: 5-tier move quality system
-- **Alternative Move Analysis**: Top 3-5 alternative moves with explanations
+- **Educational Integration (Phase 2)**: Pattern recognition display, insights panel, learning paths
+- **Real-time Analysis Updates**: Live quality updates and interactive board
 
 ### **📋 Planned Features**
 - **Game Analysis**: Complete game study tools
@@ -197,15 +197,7 @@ docs/
 
 ## 🚀 **Next Steps**
 
-### **Immediate Actions**
-- **Phase 2.4**: Complete Strategic Pattern Analysis ✅ **COMPLETED**
-- **Move Quality Assessment**: Implement 5-tier move quality system
-- **Alternative Move Analysis**: Add top 3-5 alternative moves with explanations
-
-### **Future Development**
-- **Phase 3**: Game Analysis & Study Tools
-- **Phase 4**: Training & Improvement Tools
-- **Phase 5**: Advanced Research Tools
+See `DEVELOPMENT_PRIORITIES.md` for the authoritative, up-to-date priorities and next steps.
 
 ---
 

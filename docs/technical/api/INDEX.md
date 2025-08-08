@@ -10,12 +10,13 @@ Quick links to category pages for the REST API.
 - Move Quality: see `move-quality-endpoints.md`
 - Pattern Detection: see `pattern-detection-endpoints.md`
 - Neural: see `neural-endpoints.md`
-- Comprehensive Analysis (exhaustive): sessions, start/stop, results
+- Comprehensive Analysis (exhaustive): see `exhaustive-analysis-endpoints.md`
 
 ## Category Pages
 - [Pattern Detection](pattern-detection-endpoints.md)
 - [Move Quality](move-quality-endpoints.md)
 - [Neural](neural-endpoints.md)
+- [Exhaustive Analysis](exhaustive-analysis-endpoints.md)
 
 Notes
 - Use `X-Session-ID` where required by endpoint; some read-only endpoints are public.
