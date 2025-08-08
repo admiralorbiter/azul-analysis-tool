@@ -60,7 +60,7 @@ curl -X POST http://localhost:8000/api/v1/assess-move-quality \
 ### **Technical Documentation**
 - **[API Reference](../../technical/api/move-quality-endpoints.md)** - Complete API documentation
 - **[Technical Implementation](../../technical/implementation/move-quality.md)** - Technical details
-- **[Integration Guide](../../guides/analysis/move-quality.md)** - User guide for move quality
+- **[Integration Guide](./assessment.md)** - User guide for move quality (canonical)
 
 ### **Planning & Progress**
 - **[Planning Documents](planning/)** - Development plans and progress tracking
@@ -74,7 +74,7 @@ curl -X POST http://localhost:8000/api/v1/assess-move-quality \
 
 ### **Analysis Tools**
 - **[Competitive Analysis](../competitive/)** - Move quality in competitive context
-- **[Game Theory](../../guides/competitive/advanced-analysis.md)** - Strategic move analysis
+- **[Game Theory](../competitive/analysis.md)** - Strategic move analysis
 
 ## 📊 **System Status**
 

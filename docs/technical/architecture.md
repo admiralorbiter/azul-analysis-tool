@@ -350,7 +350,7 @@ Nginx → Gunicorn → Flask App → (SQLite/PostgreSQL) → (Redis)
 
 ## Related Documentation
 
-- [API Reference](api/endpoints.md) - Complete API documentation
+- [API Reference](api/INDEX.md) - Complete API documentation
 - [Development Setup](development/setup.md) - Development environment setup
 - [Neural Training Guide](../../guides/neural/training.md) - Neural system user guide
 - [Pattern Detection Guide](../../guides/analysis/pattern-detection.md) - Analysis system user guide 

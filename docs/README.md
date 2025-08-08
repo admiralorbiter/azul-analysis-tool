@@ -199,6 +199,9 @@ docs/
 
 See `DEVELOPMENT_PRIORITIES.md` for the authoritative, up-to-date priorities and next steps.
 
+—
+Last Reviewed: 2025-08-08
+
 ---
 
 **Last Updated**: Priority-based development  

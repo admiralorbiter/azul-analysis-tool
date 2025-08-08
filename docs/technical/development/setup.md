@@ -584,6 +584,6 @@ services:
 ## Related Documentation
 
 - [System Architecture](../architecture.md) - System architecture overview
-- [API Reference](../api/endpoints.md) - Complete API documentation
+- [API Reference](../api/INDEX.md) - Complete API documentation
 - [Neural Training Guide](../../guides/neural/training.md) - Neural system setup
 - [Quick Start Guide](../../QUICK_START.md) - Quick setup guide 

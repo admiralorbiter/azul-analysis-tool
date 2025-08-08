@@ -8,7 +8,7 @@
 Essential setup and basic usage for all users.
 
 ### **[Quick Start for New Users](getting-started/quick-start-guide.md)**
-5-minute setup guide for complete beginners.
+Pointer: redirects to canonical Quick Start and API Quick Start.
 
 ### **[Installation](getting-started/installation.md)**
 Detailed installation instructions and system requirements.
@@ -22,30 +22,30 @@ Core functionality and common use cases.
 ## 🔍 **Analysis Guides**
 
 ### **[Pattern Detection](analysis/pattern-detection.md)**
-Identify tactical opportunities and blocking moves.
+Pointer: canonical in `systems/move-quality/patterns.md`.
 
 ### **[Scoring Optimization](analysis/scoring-optimization.md)**
-Find high-value scoring moves and wall completion opportunities.
+Pointer: canonical overview and technical implementation.
 
 ### **[Floor Line Patterns](analysis/floor-line-patterns.md)**
-Manage penalties strategically and optimize floor line usage.
+Pointer: canonical in `systems/move-quality/patterns.md`.
 
 ### **[Move Quality Assessment](analysis/move-quality.md)**
-Evaluate move strength with 5-tier rating system.
+Pointer: canonical in `systems/move-quality/assessment.md`.
 
 ### **[Strategic Analysis](analysis/strategic-analysis.md)**
-Advanced strategic decision making and position evaluation.
+Pointer: canonical in `systems/competitive/analysis.md`.
 
 ## 🏆 **Competitive Features**
 
 ### **[Position Editor](competitive/position-editor.md)**
-Set up any board position for analysis with comprehensive validation.
+Pointer: canonical in `systems/position-library/editor.md`.
 
 ### **[Position Library](competitive/position-library.md)**
-Organize and search through curated positions for study.
+Pointer: canonical in `systems/position-library/README.md`.
 
 ### **[Advanced Analysis](competitive/advanced-analysis.md)**
-Advanced analysis tools for competitive players.
+Pointer: canonical in `systems/competitive/analysis.md`.
 
 ## 🧠 **Neural Features**
 
@@ -133,4 +133,4 @@ Setting up the development environment.
 
 ---
 
-**Start with the [Quick Start for New Users](getting-started/quick-start-guide.md) for a 5-minute setup, or the [Quick Start](../QUICK_START.md) guide for essential setup and usage!** 🎯 
+**Start with the [Quick Start](../QUICK_START.md) (canonical). For API integration, see [API Quick Start](../api/QUICK_START.md).** 🎯

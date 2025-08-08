@@ -159,8 +159,8 @@ GET /api/v1/positions/educational/progress
 
 ### **Advanced Learning**
 - **[Competitive Analysis](../competitive/)** - Tournament-level analysis
-- **[Game Theory](../../guides/competitive/advanced-analysis.md)** - Strategic analysis
-- **[Pattern Detection](../../guides/analysis/pattern-detection.md)** - Pattern recognition
+- **[Game Theory](../competitive/analysis.md)** - Strategic analysis
+- **[Pattern Detection](../move-quality/patterns.md)** - Pattern recognition
 
 ---
 

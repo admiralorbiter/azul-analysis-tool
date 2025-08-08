@@ -155,7 +155,7 @@ GET /api/v1/competitive/educational/progress
 ### **Advanced Learning**
 - **[Move Quality](../move-quality/)** - Competitive move evaluation
 - **[Position Library](../position-library/)** - Competitive position management
-- **[Game Theory](../../guides/competitive/advanced-analysis.md)** - Strategic analysis
+- **[Game Theory](./analysis.md)** - Strategic analysis
 
 ---
 

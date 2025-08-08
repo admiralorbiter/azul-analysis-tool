@@ -21,3 +21,6 @@ Quick links to category pages for the REST API.
 Notes
 - Use `X-Session-ID` where required by endpoint; some read-only endpoints are public.
 - For a complete list of registered endpoints, see the code under `api/routes/` and the API info at `GET /api` when the server is running.
+ 
+—
+Last Reviewed: 2025-08-08

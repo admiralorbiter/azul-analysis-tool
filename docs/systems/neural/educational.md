@@ -153,7 +153,7 @@ GET /api/v1/neural/educational/progress
 
 ### **Advanced Learning**
 - **[Competitive Analysis](../competitive/)** - Neural-enhanced competitive analysis
-- **[Game Theory](../../guides/competitive/advanced-analysis.md)** - Neural opponent modeling
+- **[Game Theory](../competitive/analysis.md)** - Neural opponent modeling
 - **[Position Library](../position-library/)** - Neural training data management
 
 ---

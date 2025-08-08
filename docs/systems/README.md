@@ -72,9 +72,9 @@ Position Library → FEN System → Analysis Systems → Results
 ## 🚀 **Quick Navigation**
 
 ### **For Users**
-- **[Getting Started](../../guides/getting-started/first-steps.md)** - Start here for new users
+- **[Getting Started](../../QUICK_START.md)** - Start here for new users (canonical)
 - **[API Reference](../../technical/api/)** - Complete API documentation
-- **[User Guides](../../guides/)** - Comprehensive user documentation
+- **[User Guides](../../guides/)** - User docs (mostly pointers to system docs)
 
 ### **For Developers**
 - **[Technical Implementation](../../technical/implementation/)** - Technical details

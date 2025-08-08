@@ -613,8 +613,8 @@ def test_strategic_analysis_api():
 
 ## Related Documentation
 
-- [Strategic Analysis Guide](../../guides/analysis/strategic-analysis.md) - User guide for strategic analysis
-- [Pattern Detection Guide](../../guides/analysis/pattern-detection.md) - Pattern detection user guide
-- [Scoring Optimization Guide](../../guides/analysis/scoring-optimization.md) - Scoring optimization user guide
-- [API Reference](../api/endpoints.md) - Complete API documentation
+- [Strategic Analysis Guide](../../systems/competitive/analysis.md) - User guide for strategic analysis
+- [Pattern Detection Guide](../../systems/move-quality/patterns.md) - Pattern detection user guide
+- [Scoring Optimization Guide](../../systems/move-quality/README.md) - Scoring optimization overview
+- [API Reference](../api/INDEX.md) - Complete API documentation
 - [System Architecture](../architecture.md) - System architecture overview 

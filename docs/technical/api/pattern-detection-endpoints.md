@@ -246,4 +246,4 @@ The API integrates with the core pattern detection engine:
 
 - [Pattern Detection User Guide](../guides/analysis/pattern-detection.md) - User guide for pattern detection
 - [Pattern Detection Technical Guide](../implementation/pattern-detection.md) - Technical implementation details
-- [API Reference](../api/endpoints.md) - Complete API documentation 
+- [API Reference](INDEX.md) - Complete API documentation 

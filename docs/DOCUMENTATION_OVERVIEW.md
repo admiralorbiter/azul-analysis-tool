@@ -24,6 +24,12 @@
 - **[archive/](archive/)** - Historical documentation and completed features
 - **[archive/ARCHIVE_SUMMARY.md](archive/ARCHIVE_SUMMARY.md)** - Archive overview and rationale
 
+## 📊 Docs Status Dashboard
+- Core docs (README, Quick Start, Progress, Priorities): Last Reviewed 2025-08-08
+- Systems docs: Canonical for features; Last Reviewed 2025-08-08
+- API docs (Index + exhaustive endpoints): Last Reviewed 2025-08-08
+- Guides: Condensed to pointers to canonical system docs; Last Reviewed 2025-08-08
+
 ## 📁 **Documentation Structure**
 
 ```
@@ -184,3 +190,6 @@ docs/
 **Status**: **Clean & Organized** ✅
 
 The documentation is now clean, organized, and focused on priority-based development. The structure is maintainable and scalable for continued development. 
+ 
+—
+Last Reviewed: 2025-08-08

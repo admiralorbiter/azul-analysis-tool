@@ -135,7 +135,7 @@ Strategic planning in competitive Azul involves long-term thinking, risk assessm
 - **[Neural System](../neural/)** - Neural-enhanced strategic analysis
 
 ### **Advanced Concepts**
-- **[Game Theory](../../guides/competitive/advanced-analysis.md)** - Advanced game theory concepts
+- **[Game Theory](./analysis.md)** - Advanced game theory concepts
 - **[Move Quality](../move-quality/)** - Strategic move evaluation
 - **[Position Library](../position-library/)** - Strategic position management
 

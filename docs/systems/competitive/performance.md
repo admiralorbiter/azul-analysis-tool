@@ -135,7 +135,7 @@ Performance tracking in competitive Azul involves systematic monitoring of skill
 - **[Neural System](../neural/)** - Neural-enhanced performance analysis
 
 ### **Advanced Concepts**
-- **[Game Theory](../../guides/competitive/advanced-analysis.md)** - Advanced game theory concepts
+- **[Game Theory](./analysis.md)** - Advanced game theory concepts
 - **[Move Quality](../move-quality/)** - Performance-based move evaluation
 - **[Position Library](../position-library/)** - Performance-based position management
 
