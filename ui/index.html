@@ -91,10 +91,21 @@
     <!-- Strategic Pattern Analysis component (Phase 2.4) -->
     <script type="text/babel" src="./components/StrategicPatternAnalysis.js"></script>
     
-    <!-- Move Quality Analysis component (R2.2) -->
-    <script type="text/babel" src="./components/MoveQualityAnalysis.js"></script>
-    <!-- Move Quality Display component (Slice 3) -->
-    <script type="text/babel" src="./components/MoveQualityDisplay.jsx"></script>
+    <!-- Move Quality Analysis component (R2.2) - COMMENTED OUT DURING REFACTORING -->
+    <!-- <script type="text/babel" src="./components/MoveQualityAnalysis.js"></script> -->
+    <!-- Move Quality Display component (Slice 3) - REFACTORED -->
+    <!-- MoveQuality Utilities -->
+    <script src="./components/analysis/MoveQuality/utils.js?v=2"></script>
+    <!-- MoveQuality Components -->
+    <script type="text/babel" src="./components/analysis/MoveQuality/QualityTierIndicator.jsx?v=2"></script>
+    <script type="text/babel" src="./components/analysis/MoveQuality/QualityScoreBreakdown.jsx?v=2"></script>
+    <script type="text/babel" src="./components/analysis/MoveQuality/ConfidenceIndicator.jsx?v=2"></script>
+    <script type="text/babel" src="./components/analysis/MoveQuality/EducationalContent.jsx?v=2"></script>
+    <script type="text/babel" src="./components/analysis/MoveQuality/DetailedAnalysis.jsx?v=2"></script>
+    <!-- MoveQuality Main Component -->
+    <script type="text/babel" src="./components/analysis/MoveQuality/index.jsx?v=2"></script>
+    <!-- Legacy MoveQualityDisplay (for backward compatibility) - COMMENTED OUT DURING REFACTORING -->
+    <!-- <script type="text/babel" src="./components/MoveQualityDisplay.jsx"></script> -->
     <!-- Alternative Move Analysis component (Slice 3 Phase 2) -->
     <script type="text/babel" src="./components/AlternativeMoveAnalysis.jsx"></script>
     <!-- Test Move Quality Page -->
