@@ -65,21 +65,50 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                     }
                 }
                 
-                // Move remaining tiles from factory to center
-                const remainingTiles = factory.filter(tile => tile !== tileColor);
-                newState.center.push(...remainingTiles);
+                // Move ALL remaining tiles from factory to center (not just non-selected color)
+                const remainingTiles = factory.filter(tile => tile !== 'W' && tile !== 'E'); // Filter out empty tiles
+                
+                // Update center pool based on its format
+                if (typeof newState.center === 'object' && !Array.isArray(newState.center)) {
+                    // Center pool is in dictionary format: {"0": 2, "1": 1}
+                    remainingTiles.forEach(tile => {
+                        const tileType = getTileType(tile);
+                        const tileTypeStr = tileType.toString();
+                        newState.center[tileTypeStr] = (newState.center[tileTypeStr] || 0) + 1;
+                    });
+                } else {
+                    // Center pool is in array format: ["B", "Y", "R"]
+                    newState.center.push(...remainingTiles);
+                }
                 newState.factories[factoryIndex] = [];
             } else {
                 // Center pool to pattern line move
                 const centerPool = newState.center;
                 const tilesToRemove = numToPatternLine + numToFloor;
                 
-                // Remove the specified number of tiles of this color from the center pool
-                let removed = 0;
-                for (let i = centerPool.length - 1; i >= 0 && removed < tilesToRemove; i--) {
-                    if (centerPool[i] === tileColor) {
-                        centerPool.splice(i, 1);
-                        removed++;
+                // Handle center pool as dictionary format
+                if (typeof centerPool === 'object' && !Array.isArray(centerPool)) {
+                    // Center pool is in dictionary format: {"0": 2, "1": 1}
+                    const tileTypeStr = tileType.toString();
+                    const currentCount = centerPool[tileTypeStr] || 0;
+                    const newCount = Math.max(0, currentCount - tilesToRemove);
+                    
+                    if (newCount === 0) {
+                        delete centerPool[tileTypeStr];
+                    } else {
+                        centerPool[tileTypeStr] = newCount;
+                    }
+                } else {
+                    // Center pool is in array format: ["B", "Y", "R"]
+                    const tilesToRemove = numToPatternLine + numToFloor;
+                    
+                    // Remove the specified number of tiles of this color from the center pool
+                    let removed = 0;
+                    for (let i = centerPool.length - 1; i >= 0 && removed < tilesToRemove; i--) {
+                        if (centerPool[i] === tileColor) {
+                            centerPool.splice(i, 1);
+                            removed++;
+                        }
                     }
                 }
                 
@@ -306,7 +335,22 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                     return;
                 }
                 
-                const tileExists = centerPool.includes(dragData.tile);
+                // Handle center pool as dictionary format
+                let tileExists = false;
+                let tilesOfColor = 0;
+                
+                if (typeof centerPool === 'object' && !Array.isArray(centerPool)) {
+                    // Center pool is in dictionary format: {"0": 2, "1": 1}
+                    const tileType = getTileType(dragData.tile);
+                    const tileTypeStr = tileType.toString();
+                    tilesOfColor = centerPool[tileTypeStr] || 0;
+                    tileExists = tilesOfColor > 0;
+                } else {
+                    // Center pool is in array format: ["B", "Y", "R"]
+                    tileExists = centerPool.includes(dragData.tile);
+                    tilesOfColor = centerPool.filter(tile => tile === dragData.tile).length;
+                }
+                
                 if (!tileExists) {
                     setStatusMessage(`Tile ${dragData.tile} not found in center pool`);
                     console.log('Available tiles in center pool:', centerPool);
@@ -314,8 +358,6 @@ window.useAnalysis = function useAnalysis(gameState, setGameState, setStatusMess
                 }
                 
                 const tileType = getTileType(dragData.tile);
-                
-                const tilesOfColor = centerPool.filter(tile => tile === dragData.tile).length;
                 
                 const activePlayer = gameState?.players?.[currentPlayer];
                 const currentPatternLine = activePlayer?.pattern_lines?.[rowIndex] || [];

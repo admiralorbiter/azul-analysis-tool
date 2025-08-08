@@ -82,7 +82,15 @@ function MoveQualityAnalysis({ gameState, currentPlayer = 0, onMoveRecommendatio
     const analyzePositionComplexity = (gameState) => {
         // Analyze factories, center pool, and player boards to determine complexity
         const factoryCount = gameState.factories?.length || 5;
-        const centerTiles = gameState.center?.length || 0;
+        // Handle center pool as both array and dictionary formats
+        let centerTiles = 0;
+        if (gameState.center) {
+            if (Array.isArray(gameState.center)) {
+                centerTiles = gameState.center.length;
+            } else if (typeof gameState.center === 'object') {
+                centerTiles = Object.values(gameState.center).reduce((sum, count) => sum + count, 0);
+            }
+        }
         const playerBoards = gameState.players?.length || 2;
         
         // Calculate complexity score (0-100)
@@ -155,7 +163,24 @@ function MoveQualityAnalysis({ gameState, currentPlayer = 0, onMoveRecommendatio
     const calculateBlockingScore = (gameState) => {
         // Calculate realistic blocking score based on game state
         const factories = gameState.factories || [];
-        const centerTiles = gameState.center || [];
+        // Handle center pool as both array and dictionary formats
+        let centerTiles = [];
+        if (gameState.center) {
+            if (Array.isArray(gameState.center)) {
+                centerTiles = gameState.center;
+            } else if (typeof gameState.center === 'object') {
+                // Convert dictionary format to array
+                const colorMap = { '0': 'B', '1': 'Y', '2': 'R', '3': 'K', '4': 'W' };
+                Object.entries(gameState.center).forEach(([tileType, count]) => {
+                    const color = colorMap[tileType];
+                    if (color && count > 0) {
+                        for (let i = 0; i < count; i++) {
+                            centerTiles.push(color);
+                        }
+                    }
+                });
+            }
+        }
         return Math.min(30, factories.length * 3 + centerTiles.length * 0.5);
     };
     

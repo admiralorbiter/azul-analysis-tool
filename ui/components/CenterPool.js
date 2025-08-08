@@ -16,12 +16,33 @@ window.CenterPool = function CenterPool({
 }) {
     // Convert center tiles to array format for display
     const getTilesArray = () => {
-        if (!gameState.center || !Array.isArray(gameState.center)) {
+        if (!gameState.center) {
             return [];
         }
         
-        // gameState.center is already an array of tile strings (e.g., ['B', 'Y', 'R'])
-        return gameState.center;
+        if (Array.isArray(gameState.center)) {
+            // gameState.center is already an array of tile strings (e.g., ['B', 'Y', 'R'])
+            return gameState.center;
+        }
+        
+        // Handle dictionary format: {"0": 2, "1": 1} -> ['B', 'B', 'Y']
+        if (typeof gameState.center === 'object' && !Array.isArray(gameState.center)) {
+            const tilesArray = [];
+            const colorMap = { '0': 'B', '1': 'Y', '2': 'R', '3': 'K', '4': 'W' };
+            
+            Object.entries(gameState.center).forEach(([tileType, count]) => {
+                const color = colorMap[tileType];
+                if (color && count > 0) {
+                    for (let i = 0; i < count; i++) {
+                        tilesArray.push(color);
+                    }
+                }
+            });
+            
+            return tilesArray;
+        }
+        
+        return [];
     };
 
     const tiles = getTilesArray();

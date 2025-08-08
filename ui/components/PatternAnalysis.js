@@ -26,7 +26,15 @@ function PatternAnalysis({ gameState, currentPlayer = 0, onPatternDetected }) {
             // Analyze position complexity for educational content
             const analyzePositionComplexity = (gameState) => {
                 const factoryCount = gameState.factories?.length || 0;
-                const centerTiles = gameState.center?.length || 0;
+                // Handle center pool as both array and dictionary formats
+        let centerTiles = 0;
+        if (gameState.center) {
+            if (Array.isArray(gameState.center)) {
+                centerTiles = gameState.center.length;
+            } else if (typeof gameState.center === 'object') {
+                centerTiles = Object.values(gameState.center).reduce((sum, count) => sum + count, 0);
+            }
+        }
                 const playerBoards = gameState.players?.length || 0;
                 
                 let complexity = 0;
