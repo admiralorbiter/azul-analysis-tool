@@ -145,6 +145,7 @@ curl -X POST http://localhost:8000/api/v1/assess-move-quality \
 ### **Frontend Components**
 - **MoveQualityDisplay**: Enhanced with real data indicators and improved error handling
 - **AlternativeMoveAnalysis**: New component for side-by-side move comparison
+- **PatternInsights**: Collapsible panel showing strategic themes and tactical opportunities
 - **Real Data Indicators**: Visual indicators for real vs mock data
 - **Interactive Selection**: Clickable move selection with quality indicators
 

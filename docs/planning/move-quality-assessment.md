@@ -53,6 +53,13 @@ Our robust existing systems provide the perfect foundation:
 - Tactical lesson extraction and similar position finder
 - Progressive complexity based on player skill level
 
+### **R2.2.5: Pattern Insights Panel (Phase 2)**
+- UI: Add `PatternInsights.jsx` panel below educational content in Move Quality
+- API: Consume `GET /api/v1/exhaustive-analysis/{position_fen}`
+- Data: Display `strategic_themes` and `tactical_opportunities` from the latest comprehensive analysis
+- Tests: Non-Selenium unit test to ensure endpoint includes insights
+- Behavior: Hidden by default; expands to show insights when available
+
 ## 🚀 **Implementation Phases**
 
 ### **Phase 1: Core Engine (Week 1)**

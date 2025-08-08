@@ -74,6 +74,9 @@ PatternLearning/
    - Alternative move educational analysis
    - Strategic reasoning framework
    - Historical position context
+   - Pattern Insights surfaced directly in Move Quality UI:
+     - `strategic_themes` and `tactical_opportunities` pulled from `GET /api/v1/exhaustive-analysis/{position_fen}`
+     - New UI component `PatternInsights.jsx` integrated below Educational content
 
 2. **Interactive Learning Features**
    - Click-to-explore strategic concepts
@@ -97,6 +100,7 @@ StrategicInsights/
 ├── LearningTips.js           // Contextual learning tips
 ├── HistoricalContext.js      // Historical position analysis
 └── StrategicLibrary.js       // Strategic concept library
+PatternInsights.jsx           // NEW: Surface strategic_themes / tactical_opportunities
 ```
 
 ### **3. 🎯 Progressive Learning System Foundation**
@@ -359,7 +363,7 @@ GET /api/v1/education/progress/analytics/{user_id}
 - **Day 5**: Pattern categorization and difficulty progression
 
 ### **Week 2: Strategic Insights Panel**
-- **Day 1-2**: Comprehensive strategic insights implementation
+- **Day 1-2**: Comprehensive strategic insights implementation (Pattern Insights panel wired to exhaustive-analysis API)
 - **Day 3-4**: Advanced analysis integration
 - **Day 5**: Strategic concept library and historical context
 

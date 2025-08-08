@@ -17,6 +17,7 @@ Quick links to category pages for the REST API.
 - [Move Quality](move-quality-endpoints.md)
 - [Neural](neural-endpoints.md)
 - [Exhaustive Analysis](exhaustive-analysis-endpoints.md)
+- [Move Quality Insights (Position)](exhaustive-analysis-endpoints.md#analysis-object)
 
 Notes
 - Use `X-Session-ID` where required by endpoint; some read-only endpoints are public.

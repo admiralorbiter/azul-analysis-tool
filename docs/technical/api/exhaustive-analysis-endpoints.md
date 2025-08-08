@@ -71,6 +71,52 @@ Base path: `/api/v1`
 - Path: `/exhaustive-analysis/{position_fen}`
 - Response: `{ success, analysis }` (latest for that position)
 
+### Analysis object
+
+The `analysis` object aggregates the latest comprehensive results for a position. Important fields:
+
+- `position_fen`: string – canonical FEN identifier used for the lookup
+- `game_phase`: string – opening|mid|end
+- `total_moves_analyzed`: integer
+- `quality_distribution`: object – JSON map of quality tier → count
+- `average_quality_score`: number
+- `best_move_score`: number
+- `worst_move_score`: number
+- `engine_consensus`: object – per-engine agreement/score
+- `disagreement_level`: number (0.0–1.0)
+- `position_complexity`: number (0.0–1.0)
+- `strategic_themes`: string[] – high-level themes detected for the position
+- `tactical_opportunities`: string[] – concrete tactical opportunities available
+- `analysis_time`: number (seconds)
+- `created_at`: ISO timestamp
+- `moves`: array of per-move comprehensive results
+
+Example (truncated):
+
+```json
+{
+  "success": true,
+  "analysis": {
+    "position_fen": "initial",
+    "total_moves_analyzed": 42,
+    "quality_distribution": {"!!": 1, "!": 7, "=": 25, "?!": 7, "?": 2},
+    "engine_consensus": {"alpha_beta": 0.7, "mcts": 0.68, "neural": 0.69},
+    "position_complexity": 0.62,
+    "strategic_themes": [
+      "Factory control pressure",
+      "Endgame setup available"
+    ],
+    "tactical_opportunities": [
+      "Immediate block on blue",
+      "Double-score setup on row 3"
+    ],
+    "moves": [
+      { "move_data": {"description": "..."}, "overall_quality_score": 82.5, "quality_tier": "!" }
+    ]
+  }
+}
+```
+
 ## Related endpoints
 
 These support discovery and insights around analyzed data:

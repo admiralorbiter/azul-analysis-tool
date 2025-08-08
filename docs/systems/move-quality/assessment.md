@@ -22,6 +22,7 @@ The Move Quality Assessment System has been fully implemented with the following
 ### **Frontend Components**
 - `MoveQualityDisplay.jsx` - Quality visualization
 - `AlternativeMoveAnalysis.jsx` - Move comparison interface
+- `PatternInsights.jsx` - Strategic themes and tactical opportunities panel
 - Educational overlays and tooltips
 
 ## 📁 **Implementation History**
@@ -46,6 +47,16 @@ The Move Quality Assessment System has been fully implemented with the following
 - Learning tips integration
 - Pattern recognition display
 - Position library integration
+
+## 🔌 **Data Sources for Insights**
+
+- API: `POST /api/v1/analyze-move-quality` — primary recommendation
+- API: `POST /api/v1/evaluate-all-moves` — alternatives and distribution
+- API: `GET /api/v1/exhaustive-analysis/{position_fen}` — position-level insights including:
+  - `strategic_themes` (string[])
+  - `tactical_opportunities` (string[])
+
+The UI `PatternInsights` panel consumes the exhaustive-analysis endpoint when available and stays unobtrusive if data isn’t present yet.
 
 ## 📚 **Archived Documentation**
 
