@@ -12,23 +12,38 @@ const ScoringOptimizationAnalysis = window.ScoringOptimizationAnalysis;
 const StrategicPatternAnalysis = window.StrategicPatternAnalysis;
 const GameTheoryAnalysis = window.GameTheoryAnalysis;
 
-// Helper: persisted panel visibility
-function loadPersistedPanels() {
+// Helper: defaults and persisted panel visibility
+function getDefaultPanelsForMode(mode) {
+    switch (mode) {
+        case 'RESEARCH':
+            return { essential: true, helpful: true, advanced: true, settings: false };
+        case 'LEARNING':
+            return { essential: true, helpful: false, advanced: false, settings: false };
+        case 'COMPETITIVE':
+            return { essential: true, helpful: false, advanced: false, settings: false };
+        case 'ANALYSIS':
+        default:
+            return { essential: true, helpful: true, advanced: false, settings: false };
+    }
+}
+
+function loadPersistedPanels(mode) {
     try {
-        const saved = window.localStorage?.getItem('ui.toolPanels');
+        const saved = window.localStorage?.getItem(`ui.toolPanels.${mode}`);
         if (saved) {
             const parsed = JSON.parse(saved);
+            const defaults = getDefaultPanelsForMode(mode);
             return {
-                essential: parsed.essential ?? true,
-                helpful: parsed.helpful ?? true,
-                advanced: parsed.advanced ?? false,
-                settings: parsed.settings ?? false
+                essential: parsed.essential ?? defaults.essential,
+                helpful: parsed.helpful ?? defaults.helpful,
+                advanced: parsed.advanced ?? defaults.advanced,
+                settings: parsed.settings ?? defaults.settings
             };
         }
     } catch (err) {
         console.warn('Failed to load panel visibility from localStorage', err);
     }
-    return { essential: true, helpful: true, advanced: false, settings: false };
+    return getDefaultPanelsForMode(mode);
 }
 
 // Reusable collapsible panel
@@ -119,20 +134,64 @@ window.GameControls = function GameControls({
     
     // Heatmap state
     heatmapEnabled,
-    setHeatmapEnabled
+    setHeatmapEnabled,
+    // Workspace
+    workspaceMode = 'ANALYSIS'
 }) {
-    // Category visibility with persistence
-    const [panelVisibility, setPanelVisibility] = useState(loadPersistedPanels);
+    // Category visibility with persistence (per workspace mode)
+    const [panelVisibility, setPanelVisibility] = useState(() => loadPersistedPanels(workspaceMode));
+    const showAdvanced = workspaceMode === 'RESEARCH' || workspaceMode === 'ANALYSIS';
+    const [showAllTools, setShowAllTools] = useState(() => {
+        try { return window.localStorage?.getItem('ui.showAllTools') === 'true'; } catch { return false; }
+    });
+    useEffect(() => {
+        try { window.localStorage?.setItem('ui.showAllTools', String(showAllTools)); } catch {}
+    }, [showAllTools]);
+    const effectiveShowAdvanced = showAdvanced || showAllTools;
     useEffect(() => {
         try {
-            window.localStorage?.setItem('ui.toolPanels', JSON.stringify(panelVisibility));
+            window.localStorage?.setItem(`ui.toolPanels.${workspaceMode}`, JSON.stringify(panelVisibility));
         } catch (err) {
             console.warn('Failed to persist panel visibility', err);
         }
-    }, [panelVisibility]);
+    }, [panelVisibility, workspaceMode]);
+
+    // Reset recommended defaults when workspace changes
+    useEffect(() => {
+        setPanelVisibility(loadPersistedPanels(workspaceMode));
+    }, [workspaceMode]);
 
     const togglePanel = (panelKey) => setPanelVisibility(prev => ({ ...prev, [panelKey]: !prev[panelKey] }));
-    const setAllPanels = (open) => setPanelVisibility({ essential: open, helpful: open, advanced: open, settings: open });
+    const setAllPanels = (open) => setPanelVisibility({
+        essential: open,
+        helpful: open,
+        advanced: effectiveShowAdvanced ? open : false,
+        settings: open
+    });
+
+    // Suggestions logic
+    function computeToolSuggestions(state) {
+        const suggestions = [];
+        const availableMoves = state?.availableMoves || state?.available_moves || [];
+        const phase = state?.gamePhase || state?.phase;
+        const patternsDetected = state?.detectedPatterns?.length || state?.pattern_analysis?.total_patterns || 0;
+        const remainingTiles = state?.remaining_tiles_count ?? null;
+
+        if (availableMoves.length > 3) {
+            suggestions.push({ tool: 'Move Quality', panel: 'essential', action: () => setPanelVisibility(v => ({ ...v, essential: true })), reason: 'Multiple moves available' });
+        }
+        if (patternsDetected > 0) {
+            suggestions.push({ tool: 'Pattern Analysis', panel: 'essential', action: () => setPanelVisibility(v => ({ ...v, essential: true })), reason: 'Patterns detected' });
+        }
+        if (phase === 'endgame' || (typeof remainingTiles === 'number' && remainingTiles <= 20)) {
+            suggestions.push({ tool: 'Game Theory', panel: 'advanced', action: () => setPanelVisibility(v => ({ ...v, advanced: true })), reason: 'Endgame approaching' });
+        }
+        if (workspaceMode === 'RESEARCH') {
+            suggestions.push({ tool: 'Advanced Controls', panel: 'advanced', action: () => setPanelVisibility(v => ({ ...v, advanced: true })), reason: 'Research mode' });
+        }
+        return suggestions.slice(0, 3);
+    }
+    const suggestions = computeToolSuggestions(gameState || {});
 
     return React.createElement('div', {
         className: 'w-1/4 min-w-80'
@@ -144,6 +203,7 @@ window.GameControls = function GameControls({
             React.createElement('div', { className: 'flex items-center justify-between mb-3' },
                 React.createElement('h3', { className: 'font-medium text-lg text-blue-700' }, '🎮 Game Controls'),
                 React.createElement('div', { className: 'panel-toolbar' },
+                    React.createElement('button', { className: `panel-action ${showAllTools ? 'active' : ''}`, onClick: () => setShowAllTools(v => !v), title: showAllTools ? 'Hide advanced tools' : 'Show all tools' }, showAllTools ? 'Hide advanced' : 'Show all'),
                     React.createElement('button', { className: 'panel-action', onClick: () => setAllPanels(true), title: 'Expand all' }, 'Expand all'),
                     React.createElement('button', { className: 'panel-action', onClick: () => setAllPanels(false), title: 'Collapse all' }, 'Collapse all')
                 )
@@ -158,6 +218,20 @@ window.GameControls = function GameControls({
                 onToggle: () => togglePanel('essential'),
                 toolCount: 4
             },
+                // Suggested tools list
+                suggestions.length > 0 && React.createElement('div', { className: 'mb-3' },
+                    React.createElement('div', { className: 'text-xs text-gray-600 mb-1' }, 'Suggested Tools'),
+                    React.createElement('div', { className: 'flex flex-wrap gap-2' },
+                        suggestions.map((s, idx) => (
+                            React.createElement('button', {
+                                key: `${s.tool}-${idx}`,
+                                className: 'panel-action',
+                                onClick: s.action,
+                                title: s.reason
+                            }, s.tool)
+                        ))
+                    )
+                ),
                 // Analysis results
                 React.createElement('div', { className: 'mb-4' },
                     React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '📊 Analysis Results'),
@@ -208,7 +282,7 @@ window.GameControls = function GameControls({
                 panelId: 'panel-helpful',
                 isOpen: panelVisibility.helpful,
                 onToggle: () => togglePanel('helpful'),
-                toolCount: 3
+                toolCount: (1 + ((workspaceMode === 'ANALYSIS' || workspaceMode === 'COMPETITIVE' || showAllTools) ? 2 : 0))
             },
                 React.createElement('div', { className: 'mb-4' },
                     React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🏆 Comprehensive Pattern Analysis'),
@@ -224,7 +298,7 @@ window.GameControls = function GameControls({
                         }
                     })
                 ),
-                React.createElement('div', { className: 'mb-4' },
+                (workspaceMode === 'ANALYSIS' || workspaceMode === 'COMPETITIVE' || showAllTools) && React.createElement('div', { className: 'mb-4' },
                     React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🎯 Scoring Optimization Analysis'),
                     React.createElement(ScoringOptimizationAnalysis, {
                         gameState,
@@ -236,7 +310,7 @@ window.GameControls = function GameControls({
                         }
                     })
                 ),
-                React.createElement('div', { className: 'mb-2' },
+                (workspaceMode === 'ANALYSIS' || workspaceMode === 'COMPETITIVE' || showAllTools) && React.createElement('div', { className: 'mb-2' },
                     React.createElement('h4', { className: 'font-medium text-sm mb-2 text-gray-700' }, '🎯 Strategic Pattern Analysis'),
                     React.createElement(StrategicPatternAnalysis, {
                         gameState,
@@ -251,8 +325,8 @@ window.GameControls = function GameControls({
                 )
             ),
 
-            // Advanced tools
-            React.createElement(ToolPanel, {
+            // Advanced tools (hidden in Learning/Competitive unless show-all)
+            effectiveShowAdvanced && React.createElement(ToolPanel, {
                 title: 'Advanced',
                 icon: '🧪',
                 panelId: 'panel-advanced',

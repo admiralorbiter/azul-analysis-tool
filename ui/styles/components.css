@@ -563,6 +563,12 @@ header {
     background: #dbeafe;
 }
 
+.panel-action.active {
+    color: #111827;
+    background: #fde68a;
+    border-color: #f59e0b;
+}
+
 /* Button Variants */
 .bg-blue-600 {
     background-color: #2563eb;

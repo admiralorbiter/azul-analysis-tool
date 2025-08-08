@@ -363,7 +363,10 @@ function App() {
                         handleRedo: handleRedo,
                         
                         // Heatmap state
-                        heatmapEnabled: heatmapEnabled
+                        heatmapEnabled: heatmapEnabled,
+
+                        // Workspace mode
+                        workspaceMode: workspaceMode
                     }),
                     
                     // Right - Game Board (75% width for maximum board space)
